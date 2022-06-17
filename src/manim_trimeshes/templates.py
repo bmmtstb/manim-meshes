@@ -51,6 +51,33 @@ def create_pyramid() -> trimesh.Trimesh:
     )
 
 
+def create_coplanar_triangles() -> trimesh.Trimesh:
+    """
+    create a basic 3D pyramid
+    """
+    vertices = [
+        [-1, 1, 0],
+        [1, 2, 0],
+        [1, 0, 0],
+        [0, 0, 0],
+        [-1, -1, 0],
+        [1, -1, 0],
+        [-1, 2, 0]
+    ]
+    faces = [
+        [0, 1, 2],
+        [2, 3, 0],
+        [3, 5, 4],
+        [3, 2, 5],
+        [4, 0, 3],
+        [6, 1, 0]
+    ]
+    return trimesh.Trimesh(
+        vertices=vertices,
+        faces=faces,
+    )
+
+
 def create_model(filepath: str = "", name: str = "") -> trimesh.Trimesh:
     """
     load a model from file in /data/models/
