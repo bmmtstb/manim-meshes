@@ -24,6 +24,7 @@ jobs:
         python -m pip install poetry pylint
     - name: Install poetry
       run: |
+        poetry cache clear . --all
         poetry install
     - name: Lint with pylint
       run: |

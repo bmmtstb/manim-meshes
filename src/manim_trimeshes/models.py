@@ -3,12 +3,12 @@ manim models for trimesh objects
 """
 # python imports
 from typing import *
+from colour import Color
 # third-party imports
 import trimesh
-from colour import Color
 from manim import *
-import numpy as np
 from manim.mobject.opengl.opengl_compatibility import ConvertToOpenGL
+import numpy as np
 
 
 class TrimeshObject(Polyhedron):
@@ -71,8 +71,8 @@ class PointCloudObject(Group):
             [Point(p, color=BLUE, stroke_width=2, **kwargs) for p in self.mesh.vertices]
         super().__init__(*self.mesh_points, *args, **kwargs)
 
-
-    def get_point(self, point_idx):
+    def get_point(self, point_idx: int) -> Point:
+        """get point at index"""
         return self.mesh_points[point_idx]
 
     def align_points_with_larger(self, larger_mobject):
@@ -111,10 +111,10 @@ class ManimMesh(VGroup, metaclass=ConvertToOpenGL):
     def _setup(self):
         """set the current mesh up as manim objects"""
         faces = VGroup()
-        for f in self.mesh.faces:
-            triangle = [self.mesh.vertices[i] for i in f]
-            face = ThreeDVMobject()
-            face.set_points_as_corners(
+        for face_indices in self.mesh.faces:
+            triangle = [self.mesh.vertices[i] for i in face_indices]
+            new_face = ThreeDVMobject()
+            new_face.set_points_as_corners(
                 [
                     triangle[0],
                     triangle[1],
@@ -122,7 +122,7 @@ class ManimMesh(VGroup, metaclass=ConvertToOpenGL):
                     triangle[0]
                 ],
             )
-            faces.add(face)
+            faces.add(new_face)
         faces.set_fill(color=self.fill_color, opacity=self.fill_opacity)
         faces.set_stroke(
             color=self.stroke_color,
@@ -185,6 +185,7 @@ class Manim2DMesh(ManimMesh):
         )
 
     def get_circle(self, face_idx: int):
+        """create a circum-circle around face with given id"""
         face = self.mesh.faces[face_idx]
         vertices = [self.mesh.vertices[i] for i in face]
         center, radius = get_triangle_circum_circle_params(*vertices)
