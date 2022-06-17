@@ -1,13 +1,14 @@
 # Manim for Meshes
 
-
-## Introduction
+!! Work in progress !!
 
 Manim-Trimeshes implements manim functionalities for triangular meshes.
 
+It was developed as a Project for Fraunhofer-GRIS at TU-Darmstadt, but is publicly available for everyone.
+
 ## Installation
 
-If published, can be installed using:
+If published to pypi, can be installed using:
 
 ``pip install manim-trimeshes``
 

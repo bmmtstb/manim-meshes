@@ -105,6 +105,7 @@ class ManimMesh(VGroup, metaclass=ConvertToOpenGL):
         self._setup()
 
     def _setup(self):
+        """set the current mesh up as manim obejcts"""
         faces = VGroup()
         for f in self.mesh.faces:
             triangle = [self.mesh.vertices[i] for i in f]
@@ -127,10 +128,5 @@ class ManimMesh(VGroup, metaclass=ConvertToOpenGL):
         self.add(*faces)
 
     def get_face(self, face_idx):
+        """get the faces with the given id"""
         return self.submobjects[face_idx]
-
-
-
-
-
-
