@@ -5,9 +5,9 @@ name: Python package
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "master", "dev" ]
   pull_request:
-    branches: [ "master" ]
+    branches: [ "master", "dev" ]
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -21,10 +21,12 @@ jobs:
       uses: actions/setup-python@v3
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
+    - name: Update pip and install pip dependencies
       run: |
         python -m pip install --upgrade pip
         python -m pip install poetry pylint
+    - name: Install poetry
+      run: |
         python -m poetry install
     - name: Lint with pylint
       run: |
