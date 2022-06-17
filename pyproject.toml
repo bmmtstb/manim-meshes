@@ -1,0 +1,31 @@
+[tool.poetry]
+name = "manim-trimeshes"
+version = "0.0.1"
+description = "Triangular Meshes for manim."
+authors = ["Brizar <martin.steinborn@stud.tu-darmstadt.de>"]
+
+[tool.poetry.dependencies]
+python = "3.8.*"
+decorator = "^5.0.9"
+manim = "^0.15.2"
+manimgl = "^1.6.1"
+numpy = "*"
+trimesh = "^3.12.5"
+
+[tool.poetry.dev-dependencies]
+decorator = "^5.0.9"
+manim = "^0.15.2"
+manimgl = "^1.6.1"
+meshio = "^5.3.4"
+numpy = "*"
+pylint = "*"
+pytest = "^7.1.2"
+trimesh = "^3.12.5"
+typing = "*"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.plugins."manim.plugins"]
+"manim_trimeshes" = "module:object.attr"
