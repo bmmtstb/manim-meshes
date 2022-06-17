@@ -153,3 +153,4 @@ cython_debug/
 # custome excludes
 media/
 .idea
+poetry.lock
