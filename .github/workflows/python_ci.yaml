@@ -27,7 +27,7 @@ jobs:
         python -m pip install poetry pylint
     - name: Install poetry
       run: |
-        python -m poetry install
+        poetry install
     - name: Lint with pylint
       run: |
         pylint $(git ls-files '*.py' -x 'test_*.py')
