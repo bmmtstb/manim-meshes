@@ -13,6 +13,7 @@ from manim_trimeshes.templates import create_pyramid, create_model, create_copla
 
 class PyramidScene(ThreeDScene):
     """4 sided pyramid"""
+
     def construct(self):
         self.set_camera_orientation(phi=75 * DEGREES, theta=30 * DEGREES)
         mesh = create_pyramid()
@@ -22,6 +23,7 @@ class PyramidScene(ThreeDScene):
 
 class PyramidPointsScene(ThreeDScene):
     """4 sided pyramid as point cloud"""
+
     def construct(self):
         self.set_camera_orientation(phi=75 * DEGREES, theta=30 * DEGREES)
         mesh = create_pyramid()
@@ -60,6 +62,7 @@ class PyramidPointsScene(ThreeDScene):
 
 class ConePointsScene(ThreeDScene):
     """Display a cone"""
+
     def construct(self):
         self.set_camera_orientation(phi=70 * DEGREES, zoom=0.40)
         mesh = create_model(name="tail_topper")
@@ -76,7 +79,6 @@ class ConePointsScene(ThreeDScene):
                 run_time=5
             ),
         )
-
 
 
 # class SquirrelScene(ThreeDScene):
@@ -119,6 +121,7 @@ class ConePointsScene(ThreeDScene):
 
 class ConeScene2(ThreeDScene):
     """Display a cone"""
+
     def construct(self):
         self.set_camera_orientation(phi=70 * DEGREES, zoom=0.40)
         mesh = create_model(name="tail_topper")
@@ -127,8 +130,10 @@ class ConeScene2(ThreeDScene):
         manim_mesh_obj = ManimMesh(mesh=mesh)
         self.add(manim_mesh_obj)
 
+
 class ConePointsScene2(ThreeDScene):
     """Display a cone"""
+
     def construct(self):
         self.set_camera_orientation(phi=70 * DEGREES, zoom=0.40)
         mesh = create_model(name="tail_topper")
@@ -137,8 +142,10 @@ class ConePointsScene2(ThreeDScene):
         points_obj = PointCloudObject(mesh=mesh)
         self.add(points_obj)
 
+
 class SuzanneScene(ThreeDScene):
     """suzanne mesh"""
+
     def construct(self):
         self.camera.set_phi(90 * DEGREES)
         mesh = create_model(name="suzanne")
@@ -155,9 +162,9 @@ class SuzanneScene(ThreeDScene):
         )
 
 
-
 class SuzannePointsScene(ThreeDScene):
     """suzanne as point cloud"""
+
     def construct(self):
         self.camera.set_phi(90 * DEGREES)
         mesh = create_model(name="suzanne")
@@ -173,8 +180,10 @@ class SuzannePointsScene(ThreeDScene):
             )
         )
 
+
 class PyramidScene2(ThreeDScene):
     """pyramid mesh, changes a face color"""
+
     def construct(self):
         self.set_camera_orientation(70 * DEGREES, 30 * DEGREES)
         mesh = create_pyramid()
@@ -185,9 +194,9 @@ class PyramidScene2(ThreeDScene):
         )
 
 
-
 class PyramidPointsScene2(ThreeDScene):
     """pyramid as point cloud, changes a point color"""
+
     def construct(self):
         self.set_camera_orientation(70 * DEGREES, 30 * DEGREES)
         mesh = create_pyramid()
@@ -197,8 +206,10 @@ class PyramidPointsScene2(ThreeDScene):
             points_obj.get_point(0).animate.set_color(YELLOW)
         )
 
+
 class TriangleScene(ThreeDScene):
     """pyramid as point cloud, changes a point color"""
+
     def construct(self):
         mesh = create_coplanar_triangles()
 

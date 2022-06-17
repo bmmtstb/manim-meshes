@@ -79,11 +79,12 @@ class PointCloudObject(Group):
         pass
 
 
-# another Mesh implementation, a little bit faster + looks better (but has no vertex dots, even necessary...?)
-# inspired by class 'Surface'
 class ManimMesh(VGroup, metaclass=ConvertToOpenGL):
     """
-    TODO
+    another Mesh implementation, a little bit faster + looks better
+    -> FIXME has no vertex dots, necessary?
+
+    inspired by manim class 'Surface'
     """
 
     def __init__(
@@ -135,20 +136,26 @@ class ManimMesh(VGroup, metaclass=ConvertToOpenGL):
         return self.submobjects[face_idx]
 
 
-# TODO: move to other class
-def get_circle_params(p1, p2, p3):
+# TODO: move to "Triangle-class"
+def get_triangle_circum_circle_params(
+        pt1: np.ndarray,
+        pt2: np.ndarray,
+        pt3: np.ndarray
+) -> (np.ndarray, np.ndarray):
     """
-    TODO
+    Given the three corner-points of a triangle, calculate the parameters of the circum-circle
+    :param: three corner-points of one triangle
+    :returns: center point, radius
     """
-    div = 2*np.linalg.norm(np.cross(p1-p2, p2-p3))**2
-    alpha = np.linalg.norm(p2-p3)**2*(p1-p2).dot(p1-p3)/div
-    beta = np.linalg.norm(p1-p3)**2*(p2-p1).dot(p2-p3)/div
-    gamma = np.linalg.norm(p1-p2)**2*(p3-p1).dot(p3-p2)/div
-    c = alpha*p1 + beta*p2 + gamma*p3
-    div = 2 * np.linalg.norm(np.cross(p1 - p2, p2 - p3))
-    r = np.linalg.norm(p1-p2)*np.linalg.norm(p2-p3)*np.linalg.norm(p3-p1)/div
-    return c, r
-###
+    div = 2 * np.linalg.norm(np.cross(pt1 - pt2, pt2 - pt3)) ** 2
+    alpha = np.linalg.norm(pt2 - pt3) ** 2 * (pt1 - pt2).dot(pt1 - pt3) / div
+    beta = np.linalg.norm(pt1 - pt3) ** 2 * (pt2 - pt1).dot(pt2 - pt3) / div
+    gamma = np.linalg.norm(pt1 - pt2) ** 2 * (pt3 - pt1).dot(pt3 - pt2) / div
+    center = alpha * pt1 + beta * pt2 + gamma * pt3
+    div = 2 * np.linalg.norm(np.cross(pt1 - pt2, pt2 - pt3))
+    radius = np.linalg.norm(pt1 - pt2) * np.linalg.norm(pt2 - pt3) * np.linalg.norm(pt3 - pt1) / div
+    return center, radius
+
 
 class Manim2DMesh(ManimMesh):
     """
@@ -177,22 +184,24 @@ class Manim2DMesh(ManimMesh):
             **kwargs,
         )
 
-    def get_circle(self, face_idx):
+    def get_circle(self, face_idx: int):
         face = self.mesh.faces[face_idx]
         vertices = [self.mesh.vertices[i] for i in face]
-        c, r = get_circle_params(*vertices)
-        circ = Circle(r, stroke_width=2)
-        circ.move_to(c)
+        center, radius = get_triangle_circum_circle_params(*vertices)
+        circ = Circle(radius, stroke_width=2)
+        circ.move_to(center)
         return circ
 
-    def get_points_violating_delaunay(self, face_idx_1):
-        ps = []
+    def get_points_violating_delaunay(self, face_idx_1: int):
+        """given a triangle by id, get all points violating delaunay criterion"""
+        points = []
         face_1 = self.mesh.faces[face_idx_1]
-        c, r = get_circle_params(*[self.mesh.vertices[i] for i in face_1])
-        for i in range(len(self.mesh.vertices)):  # todo: make more efficient
-            if i not in face_1:
-                v = self.mesh.vertices[i]
-                d = np.linalg.norm(c-v)
-                if d < r:  # inside circle
-                    ps.append(Dot(v, radius=0.03, color=RED))
-        return ps
+        center, radius = get_triangle_circum_circle_params(*[self.mesh.vertices[i] for i in face_1])
+        # TODO: don't loop all vertices, only loop ones that are "close"
+        for _, point in enumerate(self.mesh.vertices):
+            point = np.asarray(point)
+            if point not in face_1:
+                distance = np.linalg.norm(center - point)
+                if distance < radius:  # inside circle
+                    points.append(Dot(point, radius=0.03, color=RED))
+        return points
