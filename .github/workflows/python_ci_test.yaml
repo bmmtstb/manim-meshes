@@ -16,10 +16,12 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
         architecture: x64
-    - name: install pip dependencies
-      uses: BSFishy/pip-action@v1
-      with:
-        packages: poetry pylint
+    - name: Install Pango
+      run: sudo apt-get install libsdl-pango-dev
+#    - name: install pip dependencies
+#      uses: BSFishy/pip-action@v1
+#      with:
+#        packages: poetry pylint
     - name: Install poetry
       uses: snok/install-poetry@v1
       with:
@@ -40,5 +42,6 @@ jobs:
         pylint $(git ls-files '*.py' -x 'test_*.py')
     - name: Test with pytest
       run: |
+        source .venv/bin/activate
         pytest tests/
         coverage report
