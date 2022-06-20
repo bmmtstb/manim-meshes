@@ -6,7 +6,6 @@ Authorship information according to Python Coding Guidelines
 # import trimesh
 
 __author__ = "Martin Steinborn"
-__version__ = "0.0.1"
 __license__ = "MIT"
 __status__ = "Development"
 

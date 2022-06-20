@@ -4,7 +4,6 @@ define a few basic mesh-structures to be used as examples or test
 # python imports
 import pathlib
 # third-party imports
-import numpy as np
 import trimesh
 
 

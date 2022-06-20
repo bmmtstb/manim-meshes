@@ -31,7 +31,7 @@ jobs:
         pylint $(git ls-files '*.py' -x 'test_*.py')
     - name: Test with pytest
       run: |
-        pytest
+        python -m poetry run pytest
   build:
     needs: test
     runs-on: ubuntu-latest
