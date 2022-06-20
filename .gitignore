@@ -150,7 +150,16 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
-# custome excludes
-media/
+# ##################
+# custome excludes #
+# ##################
 .idea
 poetry.lock
+
+# exclude manim rendered examples
+/media/
+
+# exclude poetry build
+/dist/
+*.tar.gz
+*.whl
