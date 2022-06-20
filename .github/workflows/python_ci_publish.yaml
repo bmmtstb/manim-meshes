@@ -1,7 +1,9 @@
-name: Python Test, Lint and Build
+name: Poetry Build
 
 on:
   push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
     branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
@@ -52,9 +54,8 @@ jobs:
     - name: Build whl
       run: |
         python -m poetry build
-    - name: Publish to PyPi
+    - name: Publish to PyPi using JRubics Script
+      uses: JRubics/poetry-publish@v1.11
       with:
-        user: __token__
-        password: ${{ secrets.PYPI_POETRY_API }}
-      run: |
-        python -m poetry publish -u $user -p $password
+        python-version: ${{ matrix.python-version }}
+        pypi_token: ${{ secrets.PYPI_POETRY_API }}
