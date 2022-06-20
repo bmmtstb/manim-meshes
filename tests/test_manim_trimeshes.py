@@ -1,13 +1,7 @@
 """
 tests for manim-trimeshes plugin
 """
-from manim_trimeshes import __version__
 from manim_trimeshes.templates import create_triangle, create_model, create_pyramid
-
-
-def test_version():
-    """dummy test to check current version of this plugin"""
-    assert __version__ == '0.0.1'
 
 
 def test_basic_triangle():

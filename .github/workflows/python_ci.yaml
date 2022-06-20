@@ -32,25 +32,29 @@ jobs:
     - name: Test with pytest
       run: |
         pytest
-#  build:
-#    needs: test
-#    runs-on: ubuntu-latest
-#    strategy:
-#      fail-fast: false
-#      matrix:
-#        python-version: ["3.8"]
-#    steps:
-#    - uses: actions/checkout@v3
-#    - name: Set up Python ${{ matrix.python-version }}
-#      uses: actions/setup-python@v3
-#      with:
-#        python-version: ${{ matrix.python-version }}
-#    - name: Install dependencies
-#      run: |
-#        python -m pip install --upgrade pip
-#        python -m pip install poetry
-#    - name: Build and Install
-#      run: |
-#        python -m poetry build
-# FIXME need username / pw / api ?
-#        python -m poetry publish
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.8"]
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install poetry
+    - name: Build whl
+      run: |
+        python -m poetry build
+    - name: Publish to PyPi
+      with:
+        user: __token__
+        password: ${{ secrets.PYPI_POETRY_API }}
+      run: |
+        python -m poetry publish -u $user -p $password

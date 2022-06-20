@@ -1,7 +1,8 @@
 [tool.poetry]
 name = "manim-trimeshes"
-version = "0.0.1"
+version = "0.0.2-alpha.0"
 description = "Triangular Meshes for manim."
+readme = "README.md"
 authors = ["Brizar <martin.steinborn@stud.tu-darmstadt.de>"]
 keywords = ["animation", "manim", "trimeshes", "mesh"]
 license = "MIT"
@@ -25,8 +26,6 @@ pylint = "*"
 pytest = "^7.1.2"
 trimesh = "^3.12.5"
 typing = "*"
-
-
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
