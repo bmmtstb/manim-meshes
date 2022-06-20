@@ -39,6 +39,7 @@ jobs:
       run: poetry install --no-interaction --no-root
     - name: Lint with pylint
       run: |
+        source .venv/bin/activate
         pylint $(git ls-files '*.py' -x 'test_*.py')
     - name: Test with pytest
       run: |
