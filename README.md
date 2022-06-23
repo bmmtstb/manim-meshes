@@ -6,7 +6,7 @@
 
 Manim-Trimeshes implements manim functionalities for triangular meshes using the python [trimesh](https://pypi.org/project/trimesh/ "trimesh on pypi") library.
 
-It is mainly developed as a Project for Fraunhofer-GRIS at TU-Darmstadt, but is publicly available for everyone interested in rendering and animating tri-meshes.
+It is mainly developed as a Project for Interactive Graphics Systems Group (GRIS) at TU Darmstadt, but is publicly available for everyone interested in rendering and animating tri-meshes.
 
 ## Installation
 
