@@ -2,16 +2,16 @@
 manim models for trimesh objects
 """
 # python imports
-from typing import *
+from typing import List, Tuple
 from colour import Color
 # third-party imports
 import trimesh
-from manim import *
+import manim as m
 from manim.mobject.opengl.opengl_compatibility import ConvertToOpenGL
 import numpy as np
 
 
-class TrimeshObject(Polyhedron):
+class TrimeshObject(m.Polyhedron):
     """
     manim-trimeshes.models.TrimeshObject
 
@@ -40,11 +40,11 @@ class TrimeshObject(Polyhedron):
     def create_faces(
         self,
         face_coords: List[List[List or np.ndarray]],
-    ) -> VGroup:
+    ) -> m.VGroup:
         """Creates VGroup of faces from a list of face coordinates."""
-        face_group = VGroup()
+        face_group = m.VGroup()
         for face in face_coords:
-            face_group.add(Polygon(*face, **self.faces_config))
+            face_group.add(m.Polygon(*face, **self.faces_config))
         return face_group
 
     def update_mesh(self, mesh: trimesh.Trimesh):
@@ -63,15 +63,15 @@ class TrimeshObject(Polyhedron):
         raise NotImplementedError
 
 
-class PointCloudObject(Group):
+class PointCloudObject(m.Group):
     """use a mesh to display a point-cloud"""
     def __init__(self, mesh: trimesh.Trimesh, *args, **kwargs):
         self.mesh: trimesh.Trimesh = mesh
         self.mesh_points = \
-            [Point(p, color=BLUE, stroke_width=2, **kwargs) for p in self.mesh.vertices]
+            [m.Point(p, color=m.BLUE, stroke_width=2, **kwargs) for p in self.mesh.vertices]
         super().__init__(*self.mesh_points, *args, **kwargs)
 
-    def get_point(self, point_idx: int) -> Point:
+    def get_point(self, point_idx: int) -> m.Point:
         """get point at index"""
         return self.mesh_points[point_idx]
 
@@ -79,7 +79,7 @@ class PointCloudObject(Group):
         pass
 
 
-class ManimMesh(VGroup, metaclass=ConvertToOpenGL):
+class ManimMesh(m.VGroup, metaclass=ConvertToOpenGL):
     """
     another Mesh implementation, a little bit faster + looks better
     -> FIXME has no vertex dots, necessary?
@@ -90,9 +90,9 @@ class ManimMesh(VGroup, metaclass=ConvertToOpenGL):
     def __init__(
         self,
         mesh: trimesh.Trimesh,
-        fill_color: Color = BLUE_D,
+        fill_color: Color = m.BLUE_D,
         fill_opacity: float = 0.4,
-        stroke_color: Color = LIGHT_GREY,
+        stroke_color: Color = m.LIGHT_GREY,
         stroke_width: float = 0.3,
         pre_function_handle_to_anchor_scale_factor: float = 0.00001,
         **kwargs
@@ -110,10 +110,10 @@ class ManimMesh(VGroup, metaclass=ConvertToOpenGL):
 
     def _setup(self):
         """set the current mesh up as manim objects"""
-        faces = VGroup()
+        faces = m.VGroup()
         for face_indices in self.mesh.faces:
             triangle = [self.mesh.vertices[i] for i in face_indices]
-            new_face = ThreeDVMobject()
+            new_face = m.ThreeDVMobject()
             new_face.set_points_as_corners(
                 [
                     triangle[0],
@@ -125,7 +125,7 @@ class ManimMesh(VGroup, metaclass=ConvertToOpenGL):
             faces.add(new_face)
         faces.set_fill(color=self.fill_color, opacity=self.fill_opacity)
         faces.set_stroke(
-            color=self.stroke_color,
+            # color=self.stroke_color,
             width=self.stroke_width,
             opacity=self.stroke_opacity,
         )
@@ -164,9 +164,9 @@ class Manim2DMesh(ManimMesh):
     def __init__(
         self,
         mesh: trimesh.Trimesh,
-        fill_color: Color = BLUE_D,
+        fill_color: Color = m.BLUE_D,
         fill_opacity: float = 0.4,
-        stroke_color: Color = LIGHT_GREY,
+        stroke_color: Color = m.LIGHT_GREY,
         stroke_width: float = 0.3,
         pre_function_handle_to_anchor_scale_factor: float = 0.00001,
         **kwargs,
@@ -189,7 +189,7 @@ class Manim2DMesh(ManimMesh):
         face = self.mesh.faces[face_idx]
         vertices = [self.mesh.vertices[i] for i in face]
         center, radius = get_triangle_circum_circle_params(*vertices)
-        circ = Circle(radius, stroke_width=2)
+        circ = m.Circle(radius, stroke_width=2)
         circ.move_to(center)
         return circ
 
@@ -198,11 +198,11 @@ class Manim2DMesh(ManimMesh):
         points = []
         face_1 = self.mesh.faces[face_idx_1]
         center, radius = get_triangle_circum_circle_params(*[self.mesh.vertices[i] for i in face_1])
-        # TODO: don't loop all vertices, only loop ones that are "close"
+        # TODO: [improve to be faster] don't loop all vertices, only loop ones that are "close"
         for _, point in enumerate(self.mesh.vertices):
             point = np.asarray(point)
             if point not in face_1:
                 distance = np.linalg.norm(center - point)
                 if distance < radius:  # inside circle
-                    points.append(Dot(point, radius=0.03, color=RED))
+                    points.append(m.Dot(point, radius=0.03, color=m.RED))
         return points
