@@ -1,4 +1,4 @@
-name: Python Test, Lint and Build
+name: Python Test and Lint
 
 on: [push, pull_request]
 jobs:
@@ -11,8 +11,6 @@ jobs:
     steps:
     - name: Checkout git repository
       uses: actions/checkout@v3
-    - name: Set PythonPath
-      run: echo "PYTHONPATH=./src/" >> $GITHUB_ENV
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
       with:
@@ -39,6 +37,8 @@ jobs:
     - name: Install dependencies using poetry
       if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
       run: poetry install --no-interaction --no-root
+    - name: Set PythonPath
+      run: echo "PYTHONPATH=./src/" >> $GITHUB_ENV
     - name: Lint with pylint
       run: |
         source .venv/bin/activate
