@@ -116,7 +116,8 @@ class ManimMesh(m.VGroup, metaclass=ConvertToOpenGL):
 
     def _setup_edges(self):
         """set the edges as manim objects"""
-        raise NotImplementedError
+        edges = m.VGroup()
+        self.add(*edges)
 
     def _setup_faces(self):
         """set the current mesh up as manim objects"""
@@ -133,7 +134,10 @@ class ManimMesh(m.VGroup, metaclass=ConvertToOpenGL):
                 ],
             )
             faces.add(new_face)
-        faces.set_fill(color=self.fill_color, opacity=self.fill_opacity)
+        faces.set_fill(
+            color=self.fill_color,
+            opacity=self.fill_opacity
+        )
         faces.set_stroke(
             # color=self.stroke_color,
             width=self.stroke_width,
@@ -145,16 +149,21 @@ class ManimMesh(m.VGroup, metaclass=ConvertToOpenGL):
         """get the faces with the given id"""
         return self.submobjects[face_idx]
 
+    def align_points_with_larger(self, larger_mobject):
+        """abstract from super - please the linter"""
+        raise NotImplementedError
+
 
 class Manim2DMesh(ManimMesh):
     """
     TODO
     """
+
     def __init__(
         self,
         mesh: trimesh.Trimesh,
-        params: Parameters = None,
         *args,
+        params: Parameters = None,
         **kwargs,
     ) -> None:
         if len(mesh.facets[0]) < len(mesh.faces):
@@ -168,6 +177,7 @@ class Manim2DMesh(ManimMesh):
             stroke_width=get_param_or_default("stroke_width", params, M2DM),
             pre_function_handle_to_anchor_scale_factor=get_param_or_default(
                 "pre_function_handle_to_anchor_scale_factor", params, M2DM),
+            *args,
             **kwargs,
         )
 
@@ -213,3 +223,7 @@ class Manim2DMesh(ManimMesh):
         div = 2 * np.linalg.norm(np.cross(pt1 - pt2, pt2 - pt3))
         radius = np.linalg.norm(pt1 - pt2) * np.linalg.norm(pt2 - pt3) * np.linalg.norm(pt3 - pt1) / div
         return center, radius
+
+    def align_points_with_larger(self, larger_mobject):
+        """abstract from super - please the linter"""
+        raise NotImplementedError

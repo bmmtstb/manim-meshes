@@ -2,7 +2,6 @@
 test for params.py
 """
 # python imports
-from typing import Dict
 from colour import Color
 # third-party imports
 import manim as m
