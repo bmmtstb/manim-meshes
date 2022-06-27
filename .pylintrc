@@ -239,6 +239,7 @@ good-names=i,
            k,
            ex,
            Run,
+           e,
            _
 
 # Good variable names regexes, separated by a comma. If names match any regex,
@@ -399,7 +400,7 @@ indent-after-paren=4
 indent-string='    '
 
 # Maximum number of characters on a single line.
-max-line-length=100
+max-line-length=120
 
 # Maximum number of lines in a module.
 max-module-lines=1000
@@ -567,7 +568,7 @@ exclude-too-few-public-methods=
 ignored-parents=
 
 # Maximum number of arguments for function / method.
-max-args=7
+max-args=20
 
 # Maximum number of attributes for a class (see R0902).
 max-attributes=20

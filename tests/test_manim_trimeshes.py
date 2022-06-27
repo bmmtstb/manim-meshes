@@ -1,5 +1,5 @@
 """
-tests for manim-trimeshes plugin
+tests for manim-meshes plugin
 """
 from manim_trimeshes.templates import create_triangle, create_model, create_pyramid
 

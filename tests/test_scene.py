@@ -7,7 +7,7 @@ from manim import *
 
 # local imports
 
-from manim_trimeshes.models import TrimeshObject, PointCloudObject, ManimMesh, Manim2DMesh
+from manim_trimeshes.models import TrimeshObject, ManimMesh, Manim2DMesh
 from manim_trimeshes.templates import create_pyramid, create_model, create_coplanar_triangles
 
 
@@ -19,25 +19,6 @@ class PyramidScene(ThreeDScene):
         mesh = create_pyramid()
         trimesh_obj = TrimeshObject(mesh=mesh)
         self.add(trimesh_obj)
-
-
-class PyramidPointsScene(ThreeDScene):
-    """4 sided pyramid as point cloud"""
-
-    def construct(self):
-        self.set_camera_orientation(phi=75 * DEGREES, theta=30 * DEGREES)
-        mesh = create_pyramid()
-        trimesh_obj = PointCloudObject(mesh=mesh)
-        self.add(trimesh_obj)
-        self.play(
-            Rotate(
-                trimesh_obj,
-                angle=2 * PI,
-                about_point=ORIGIN,
-                rate_func=linear,
-                run_time=5
-            ),
-        )
 
 
 # class HandleScene(ThreeDScene):
@@ -58,27 +39,6 @@ class PyramidPointsScene(ThreeDScene):
 #         mesh.apply_translation([0, -8, 0])
 #         trimesh_obj = TrimeshObject(mesh=mesh)
 #         self.add(trimesh_obj)
-
-
-class ConePointsScene(ThreeDScene):
-    """Display a cone"""
-
-    def construct(self):
-        self.set_camera_orientation(phi=70 * DEGREES, zoom=0.40)
-        mesh = create_model(name="tail_topper")
-        mesh.apply_scale(scaling=0.2)
-        mesh.apply_translation([0, -8, 0])
-        points_obj = PointCloudObject(mesh=mesh)
-        self.add(points_obj)
-        self.play(
-            Rotate(
-                points_obj,
-                angle=2 * PI,
-                about_point=ORIGIN,
-                rate_func=linear,
-                run_time=5
-            ),
-        )
 
 
 # class SquirrelScene(ThreeDScene):
@@ -131,16 +91,6 @@ class ConeScene2(ThreeDScene):
         self.add(manim_mesh_obj)
 
 
-class ConePointsScene2(ThreeDScene):
-    """Display a cone"""
-
-    def construct(self):
-        self.set_camera_orientation(phi=70 * DEGREES, zoom=0.40)
-        mesh = create_model(name="tail_topper")
-        mesh.apply_scale(scaling=0.3)
-        mesh.apply_translation([0, -8, 0])
-        points_obj = PointCloudObject(mesh=mesh)
-        self.add(points_obj)
 
 
 class SuzanneScene(ThreeDScene):
@@ -162,25 +112,6 @@ class SuzanneScene(ThreeDScene):
         )
 
 
-class SuzannePointsScene(ThreeDScene):
-    """suzanne as point cloud"""
-
-    def construct(self):
-        self.camera.set_phi(90 * DEGREES)
-        mesh = create_model(name="suzanne")
-        points_obj = PointCloudObject(mesh=mesh)
-        self.add(points_obj)
-        self.play(
-            Rotate(
-                points_obj,
-                angle=2 * PI,
-                about_point=ORIGIN,
-                rate_func=linear,
-                run_time=5
-            )
-        )
-
-
 class PyramidScene2(ThreeDScene):
     """pyramid mesh, changes a face color"""
 
@@ -191,19 +122,6 @@ class PyramidScene2(ThreeDScene):
         self.add(manim_mesh_obj)
         self.play(
             manim_mesh_obj.get_face(0).animate.set_fill(RED, 0.8)
-        )
-
-
-class PyramidPointsScene2(ThreeDScene):
-    """pyramid as point cloud, changes a point color"""
-
-    def construct(self):
-        self.set_camera_orientation(70 * DEGREES, 30 * DEGREES)
-        mesh = create_pyramid()
-        points_obj = PointCloudObject(mesh=mesh)
-        self.add(points_obj)
-        self.play(
-            points_obj.get_point(0).animate.set_color(YELLOW)
         )
 
 
