@@ -38,7 +38,9 @@ jobs:
       if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
       run: poetry install --no-interaction --no-root
     - name: Set PythonPath
-      run: echo "PYTHONPATH=./src/" >> $GITHUB_ENV
+      run: | 
+        echo "PYTHONPATH=./src/" >> $GITHUB_ENV
+#        echo "./src/" >> $GITHUB_PATH
     - name: Lint with pylint
       run: |
         source .venv/bin/activate

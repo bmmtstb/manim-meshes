@@ -11,8 +11,7 @@ def test_basic_triangle():
     """test creation of one basic triangle mesh"""
     tri_mesh = create_triangle()
     assert len(tri_mesh.vertices) == 3
-    assert np.ndarray(tri_mesh.triangles).shape[0] == 1
-    assert tri_mesh.body_count() == 1
+    assert np.asarray(tri_mesh.triangles).shape[0] == 1
     assert not tri_mesh.is_volume
     assert not tri_mesh.is_watertight
 
@@ -21,8 +20,7 @@ def test_basic_pyramid():
     """test creation of one basic triangle mesh"""
     mesh = create_pyramid()
     assert len(mesh.vertices) == 5
-    assert np.ndarray(mesh.triangles).shape[0] == 6
-    assert mesh.body_count() == 1
+    assert np.asarray(mesh.triangles).shape[0] == 6
     assert mesh.is_volume
     assert mesh.is_watertight
 
