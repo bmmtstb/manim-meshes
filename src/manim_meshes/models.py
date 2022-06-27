@@ -116,16 +116,16 @@ class ManimMesh(m.VGroup, metaclass=ConvertToOpenGL):
 
     def _setup_vertices(self):
         """set the vertices as manim objects"""
-        vertices = m.VGroup()
-        for vert_coord in np.asarray(self.mesh.vertices):
-            # FIXME does not print right now
-            vertices.add(m.VectorizedPoint(
-                location=vert_coord,
-                color=m.BLUE,
-                fill_opacity=self.verts_fill_opacity,
-                stroke_width=self.verts_stroke_width,
-            ))
-        self.add(*vertices)
+        # vertices = m.Group()
+        # for vert_coord in np.asarray(self.mesh.vertices):
+        #     # FIXME does not print right now
+        #     vertices.add(m.Point(
+        #         location=vert_coord,
+        #         color=m.BLUE,
+        #         # fill_opacity=self.verts_fill_opacity,
+        #         # stroke_width=self.verts_stroke_width,
+        #     ))
+        # self.add(*vertices)
 
     def _setup_edges(self):
         """set the edges as manim objects"""
