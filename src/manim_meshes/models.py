@@ -81,13 +81,24 @@ class ManimMesh(m.VGroup, metaclass=ConvertToOpenGL):
         self.mesh: trimesh.Trimesh = mesh
 
         # set all the parameters
-        self.faces_stroke_color = get_param_or_default("faces_stroke_color", params, M3DM)
-        self.faces_stroke_width = get_param_or_default("faces_stroke_width", params, M3DM)
-        self.fill_color = get_param_or_default("fill_color", params, M3DM)
-        self.fill_opacity = get_param_or_default("fill_opacity", params, M3DM)
         self.display_vertices = get_param_or_default("display_vertices", params, M3DM)
         self.display_edges = get_param_or_default("display_edges", params, M3DM)
         self.display_faces = get_param_or_default("display_faces", params, M3DM)
+        self.edges_fill_color = get_param_or_default("edges_fill_color", params, M3DM)
+        self.edges_fill_opacity = get_param_or_default("edges_fill_opacity", params, M3DM)
+        self.edges_stroke_color = get_param_or_default("edges_stroke_color", params, M3DM)
+        self.edges_stroke_opacity = get_param_or_default("edges_stroke_opacity", params, M3DM)
+        self.edges_stroke_width = get_param_or_default("edges_stroke_width", params, M3DM)
+        self.faces_fill_color = get_param_or_default("faces_fill_color", params, M3DM)
+        self.faces_fill_opacity = get_param_or_default("faces_fill_opacity", params, M3DM)
+        self.faces_stroke_color = get_param_or_default("faces_stroke_color", params, M3DM)
+        self.faces_stroke_opacity = get_param_or_default("faces_stroke_opacity", params, M3DM)
+        self.faces_stroke_width = get_param_or_default("faces_stroke_width", params, M3DM)
+        self.verts_fill_color = get_param_or_default("verts_fill_color", params, M3DM)
+        self.verts_fill_opacity = get_param_or_default("verts_fill_opacity", params, M3DM)
+        self.verts_stroke_color = get_param_or_default("verts_stroke_color", params, M3DM)
+        self.verts_stroke_opacity = get_param_or_default("verts_stroke_opacity", params, M3DM)
+        self.verts_stroke_width = get_param_or_default("verts_stroke_width", params, M3DM)
 
         self.pre_function_handle_to_anchor_scale_factor = (
             get_param_or_default("pre_function_handle_to_anchor_scale_factor", params, M3DM)
@@ -107,17 +118,32 @@ class ManimMesh(m.VGroup, metaclass=ConvertToOpenGL):
         """set the vertices as manim objects"""
         vertices = m.VGroup()
         for vert_coord in np.asarray(self.mesh.vertices):
-            vertices.add(m.Point(
-                vert_coord,
+            # FIXME does not print right now
+            vertices.add(m.VectorizedPoint(
+                location=vert_coord,
                 color=m.BLUE,
-                stroke_width=self.stroke_width,
+                fill_opacity=self.verts_fill_opacity,
+                stroke_width=self.verts_stroke_width,
             ))
         self.add(*vertices)
 
     def _setup_edges(self):
         """set the edges as manim objects"""
-        edges = m.VGroup()
-        self.add(*edges)
+        # edges = m.VGroup()
+        # vertices = np.asarray(self.mesh.vertices)
+        # for edge_verts in np.asarray(self.mesh.edges):
+        #     vert_1 = vertices[edge_verts[0]]
+        #     vert_2 = vertices[edge_verts[1]]
+        #     # FIXME which object
+        # edges.set_fill(
+        #     color=self.edges_fill_color,
+        #     opacity=self.edges_fill_opacity
+        # )
+        # edges.set_stroke(
+        #     width=self.edge_stroke_width,
+        #     opacity=self.edge_stroke_opacity,
+        # )
+        # self.add(*edges)
 
     def _setup_faces(self):
         """set the current mesh up as manim objects"""
@@ -135,13 +161,13 @@ class ManimMesh(m.VGroup, metaclass=ConvertToOpenGL):
             )
             faces.add(new_face)
         faces.set_fill(
-            color=self.fill_color,
-            opacity=self.fill_opacity
+            color=self.faces_fill_color,
+            opacity=self.faces_fill_opacity
         )
         faces.set_stroke(
-            # color=self.stroke_color,
-            width=self.stroke_width,
-            opacity=self.stroke_opacity,
+            color=self.faces_stroke_color,
+            width=self.faces_stroke_width,
+            opacity=self.faces_stroke_opacity,
         )
         self.add(*faces)
 

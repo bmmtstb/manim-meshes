@@ -21,10 +21,21 @@ M3DM: DefaultParameters = {
     "display_vertices":                           (bool, True),
     "display_edges":                              (bool, True),
     "display_faces":                              (bool, True),
+    "edges_fill_color":                           (Color, Color(m.WHITE)),
+    "edges_fill_opacity":                         (float, 0.4),
+    "edges_stroke_color":                         (Color, Color(m.WHITE)),
+    "edges_stroke_opacity":                       (float, 0.3),
+    "edges_stroke_width":                         (float, 0.3),
+    "faces_fill_color":                           (Color, Color(m.BLUE_D)),
+    "faces_fill_opacity":                         (float, 0.4),
     "faces_stroke_color":                         (Color, Color(m.LIGHT_GREY)),
+    "faces_stroke_opacity":                       (float, 0.3),
     "faces_stroke_width":                         (float, 0.3),
-    "fill_color":                                 (Color, Color(m.BLUE_D)),
-    "fill_opacity":                               (float, 0.4),
+    "verts_fill_color":                           (Color, Color(m.GREEN)),
+    "verts_fill_opacity":                         (float, 0.4),
+    "verts_stroke_color":                         (Color, Color(m.GREEN)),
+    "verts_stroke_opacity":                       (float, 1.0),
+    "verts_stroke_width":                         (float, 1.0),
     "pre_function_handle_to_anchor_scale_factor": (float, 0.00001),
 }
 
@@ -45,7 +56,7 @@ def get_param_or_default(
 ) -> Any:
     """get value from params or get default value"""
     # get value from user given parameters
-    if value in params:
+    if params and value in params:
         if value in default:
             if issubclass(type(params[value]), default[value][0]) or \
                     isinstance(type(params[value]), default[value][0]):

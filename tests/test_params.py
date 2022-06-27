@@ -18,6 +18,12 @@ TEST_PARAMS: DefaultParameters = {
 }
 
 
+def test_params_exist():
+    """test if params is a dict and exists"""
+    param: dict = None
+    assert "testing" == get_param_or_default("string", param, TEST_PARAMS)
+
+
 def test_existing_parameter():
     """given an existing parameter"""
     param = {
