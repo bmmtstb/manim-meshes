@@ -1,7 +1,7 @@
 """
 tests for manim-meshes plugin
 """
-from manim_trimeshes.templates import create_triangle, create_model, create_pyramid
+from manim_meshes.templates import create_triangle, create_model, create_pyramid
 
 
 def test_basic_triangle():

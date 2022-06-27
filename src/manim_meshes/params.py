@@ -21,18 +21,18 @@ M3DM: DefaultParameters = {
     "display_vertices":                           (bool, True),
     "display_edges":                              (bool, True),
     "display_faces":                              (bool, True),
-    "faces_stroke_color":                         (Color, m.LIGHT_GREY),
+    "faces_stroke_color":                         (Color, Color(m.LIGHT_GREY)),
     "faces_stroke_width":                         (float, 0.3),
-    "fill_color":                                 (Color, m.BLUE_D),
+    "fill_color":                                 (Color, Color(m.BLUE_D)),
     "fill_opacity":                               (float, 0.4),
     "pre_function_handle_to_anchor_scale_factor": (float, 0.00001),
 }
 
 # manim_2d_mesh_default_params
 M2DM: DefaultParameters = {
-    "fill_color":                                 (Color, m.BLUE_D),
+    "fill_color":                                 (Color, Color(m.BLUE_D)),
     "fill_opacity":                               (float, 0.4),
-    "stroke_color":                               (Color, m.LIGHT_GREY),
+    "stroke_color":                               (Color, Color(m.LIGHT_GREY)),
     "stroke_width":                               (float, 0.3),
     "pre_function_handle_to_anchor_scale_factor": (float, 0.00001),
 }
@@ -47,10 +47,11 @@ def get_param_or_default(
     # get value from user given parameters
     if value in params:
         if value in default:
-            if default[value][0] == type(value):
+            if issubclass(type(params[value]), default[value][0]) or \
+                    isinstance(type(params[value]), default[value][0]):
                 return params[value]
             try:
-                default[value][0](value)
+                return default[value][0](params[value])
             except (ValueError, TypeError) as e:
                 raise BadParameterException(f'Value {value} does not have correct type '
                                             f'{default[value][0]} and can not be cast.') from e
