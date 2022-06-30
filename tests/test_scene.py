@@ -79,7 +79,7 @@ from manim_meshes.templates import create_pyramid, create_model, create_coplanar
 
 
 ##### ManimMesh #####
-class ConeScene2(m.ThreeDScene):
+class ConeScene(m.ThreeDScene):
     """Display a cone"""
 
     def construct(self):
@@ -110,7 +110,7 @@ class SuzanneScene(m.ThreeDScene):
         )
 
 
-class PyramidScene2(m.ThreeDScene):
+class PyramidScene(m.ThreeDScene):
     """pyramid mesh, changes a face color"""
 
     def construct(self):
@@ -124,7 +124,7 @@ class PyramidScene2(m.ThreeDScene):
 
 
 class TriangleScene(m.ThreeDScene):
-    """pyramid as point cloud, changes a point color"""
+    """simple 2D mesh scene, visualizes delaunay criterion"""
 
     def construct(self):
         mesh = create_coplanar_triangles()

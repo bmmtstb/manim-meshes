@@ -73,8 +73,8 @@ class ManimMesh(m.VGroup, metaclass=ConvertToOpenGL):
     def __init__(
         self,
         mesh: Mesh,
-        *args,
         params: Parameters = None,
+        *args,
         **kwargs,
     ) -> None:
         super().__init__(*args, **kwargs)
@@ -188,20 +188,20 @@ class Manim2DMesh(ManimMesh):
     def __init__(
         self,
         mesh: Mesh,
-        *args,
         params: Parameters = None,
+        *args,
         **kwargs,
     ) -> None:
-        if any(mesh.get_vertices()[:, 2] == 0):
+        if any(mesh.get_vertices()[:, 2] != 0):
             raise Exception('Mesh is not 2D / z-coordinates not 0!')
         super().__init__(
             mesh,
-            fill_color=get_param_or_default("fill_color", params, M2DM),
-            fill_opacity=get_param_or_default("fill_opacity", params, M2DM),
-            stroke_color=get_param_or_default("stroke_color", params, M2DM),
-            stroke_width=get_param_or_default("stroke_width", params, M2DM),
-            pre_function_handle_to_anchor_scale_factor=get_param_or_default(
-                "pre_function_handle_to_anchor_scale_factor", params, M2DM),
+            {'faces_fill_color': get_param_or_default("faces_fill_color", params, M2DM),
+            'faces_fill_opacity': get_param_or_default("faces_fill_opacity", params, M2DM),
+            'faces_stroke_color': get_param_or_default("faces_stroke_color", params, M2DM),
+            'faces_stroke_width': get_param_or_default("faces_stroke_width", params, M2DM),
+            'pre_function_handle_to_anchor_scale_factor':get_param_or_default(
+                "pre_function_handle_to_anchor_scale_factor", params, M2DM)},
             *args,
             **kwargs,
         )
@@ -221,9 +221,8 @@ class Manim2DMesh(ManimMesh):
         face = self.mesh.get_faces()[face_id]
         center, radius = self._get_triangle_circum_circle_params(*[self.mesh.get_vertices()[i] for i in face])
         # TODO: [improve to be faster] don't loop all vertices, only loop ones that are "close"
-        for _, point in enumerate(self.mesh.get_vertices()):
-            point = np.asarray(point)
-            if point not in face:
+        for idx, point in enumerate(self.mesh.get_vertices()):
+            if idx not in face:
                 distance = np.linalg.norm(center - point)
                 if distance < radius:  # inside circle
                     points.append(m.Dot(point, radius=0.03, color=m.RED))

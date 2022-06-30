@@ -41,10 +41,10 @@ M3DM: DefaultParameters = {
 
 # manim_2d_mesh_default_params
 M2DM: DefaultParameters = {
-    "fill_color":                                 (Color, Color(m.BLUE_D)),
-    "fill_opacity":                               (float, 0.4),
-    "stroke_color":                               (Color, Color(m.LIGHT_GREY)),
-    "stroke_width":                               (float, 0.3),
+    "faces_fill_color":                                 (Color, Color(m.BLUE_D)),
+    "faces_fill_opacity":                               (float, 0.4),
+    "faces_stroke_color":                               (Color, Color(m.LIGHT_GREY)),
+    "faces_stroke_width":                               (float, 0.3),
     "pre_function_handle_to_anchor_scale_factor": (float, 0.00001),
 }
 
