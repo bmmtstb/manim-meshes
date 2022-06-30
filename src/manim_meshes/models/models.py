@@ -2,12 +2,12 @@
 manim models for mesh objects
 """
 # third-party imports
-import trimesh
 import manim as m
 from manim.mobject.opengl.opengl_compatibility import ConvertToOpenGL
 import numpy as np
 # local imports
-from manim_meshes.params import get_param_or_default, M2DM, M3DM, Parameters
+from manim_meshes.models.mesh import Mesh
+from manim_meshes.models.params import get_param_or_default, M2DM, M3DM, Parameters
 
 
 # class TrimeshObject(m.Polyhedron):
@@ -72,13 +72,13 @@ class ManimMesh(m.VGroup, metaclass=ConvertToOpenGL):
 
     def __init__(
         self,
-        mesh: trimesh.Trimesh,
+        mesh: Mesh,
         *args,
         params: Parameters = None,
         **kwargs,
     ) -> None:
         super().__init__(*args, **kwargs)
-        self.mesh: trimesh.Trimesh = mesh
+        self.mesh: Mesh = mesh
 
         # set all the parameters
         self.display_vertices = get_param_or_default("display_vertices", params, M3DM)
@@ -148,8 +148,8 @@ class ManimMesh(m.VGroup, metaclass=ConvertToOpenGL):
     def _setup_faces(self):
         """set the current mesh up as manim objects"""
         faces = m.VGroup()
-        for face_indices in self.mesh.faces:
-            triangle = [self.mesh.vertices[i] for i in face_indices]
+        for face_indices in self.mesh.get_faces():
+            triangle = [self.mesh.get_vertices()[i] for i in face_indices]
             new_face = m.ThreeDVMobject()
             new_face.set_points_as_corners(
                 [
@@ -187,14 +187,13 @@ class Manim2DMesh(ManimMesh):
 
     def __init__(
         self,
-        mesh: trimesh.Trimesh,
+        mesh: Mesh,
         *args,
         params: Parameters = None,
         **kwargs,
     ) -> None:
-        if len(mesh.facets[0]) < len(mesh.faces):
-            raise Exception('Mesh is not 2D!')
-        # Todo: rotate mesh if mesh not already in z-plane
+        if any(mesh.get_vertices()[:, 2] == 0):
+            raise Exception('Mesh is not 2D / z-coordinates not 0!')
         super().__init__(
             mesh,
             fill_color=get_param_or_default("fill_color", params, M2DM),
@@ -207,28 +206,45 @@ class Manim2DMesh(ManimMesh):
             **kwargs,
         )
 
-    def get_circle(self, face_idx: int):
+    def get_circle(self, face_id: int):
         """create a circum-circle around face with given id"""
-        face = self.mesh.faces[face_idx]
-        vertices = [self.mesh.vertices[i] for i in face]
+        face = self.mesh.get_faces()[face_id]
+        vertices = [self.mesh.get_vertices()[i] for i in face]
         center, radius = self._get_triangle_circum_circle_params(*vertices)
         circ = m.Circle(radius, stroke_width=2)
         circ.move_to(center)
         return circ
 
-    def get_points_violating_delaunay(self, face_idx_1: int):
+    def get_points_violating_delaunay(self, face_id: int):
         """given a triangle by id, get all points violating delaunay criterion"""
         points = []
-        face_1 = self.mesh.faces[face_idx_1]
-        center, radius = self._get_triangle_circum_circle_params(*[self.mesh.vertices[i] for i in face_1])
+        face = self.mesh.get_faces()[face_id]
+        center, radius = self._get_triangle_circum_circle_params(*[self.mesh.get_vertices()[i] for i in face])
         # TODO: [improve to be faster] don't loop all vertices, only loop ones that are "close"
-        for _, point in enumerate(self.mesh.vertices):
+        for _, point in enumerate(self.mesh.get_vertices()):
             point = np.asarray(point)
-            if point not in face_1:
+            if point not in face:
                 distance = np.linalg.norm(center - point)
                 if distance < radius:  # inside circle
                     points.append(m.Dot(point, radius=0.03, color=m.RED))
         return points
+
+    def move_vertex_to(self, vertex_id: int, position: np.ndarray):
+        """move vertex and update faces"""
+
+        """face_ids = []  # TODO
+              for face_id in face_ids:
+                  triangle = [self.mesh.get_vertices()[i] for i in self.mesh.get_faces()[face_id]]
+                  face = self.get_face(face_id)
+                  face.set_points_as_corners(
+                      [
+                          triangle[0],
+                          triangle[1],
+                          triangle[2],
+                          triangle[0]
+                      ],
+                  )"""
+        raise NotImplementedError
 
     @staticmethod
     def _get_triangle_circum_circle_params(

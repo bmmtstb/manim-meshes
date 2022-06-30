@@ -244,8 +244,7 @@ good-names=i,
 
 # Good variable names regexes, separated by a comma. If names match any regex,
 # they will always be accepted
-good-names-rgxs=
-# ^[a-z][0-9]?$
+good-names-rgxs=^[a-z]$
 
 # Include a hint for the correct naming format with invalid-name.
 include-naming-hint=no
@@ -278,7 +277,7 @@ name-group=
 
 # Regular expression which should only match function or class names that do
 # not require a docstring.
-no-docstring-rgx=^_
+no-docstring-rgx=^(?: set|get|test)?_
 
 # List of decorators that produce properties, such as abc.abstractproperty. Add
 # to this list to register other decorators that produce valid properties.

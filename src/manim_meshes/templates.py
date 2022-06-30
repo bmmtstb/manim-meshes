@@ -5,9 +5,11 @@ define a few basic mesh-structures to be used as examples or test
 import pathlib
 # third-party imports
 import trimesh
+# local imports
+from manim_meshes.models.mesh import Mesh
 
 
-def create_triangle() -> trimesh.Trimesh:
+def create_triangle() -> Mesh:
     """
     create most basic triangle mesh
     """
@@ -19,13 +21,13 @@ def create_triangle() -> trimesh.Trimesh:
     faces = [
             [0, 1, 2],
     ]
-    return trimesh.Trimesh(
-        vertices=vertices,
+    return Mesh(
+        verts=vertices,
         faces=faces,
     )
 
 
-def create_pyramid() -> trimesh.Trimesh:
+def create_pyramid() -> Mesh:
     """
     create a basic 3D pyramid
     """
@@ -44,15 +46,15 @@ def create_pyramid() -> trimesh.Trimesh:
         [0, 1, 2],
         [2, 3, 0],
     ]
-    return trimesh.Trimesh(
-        vertices=vertices,
+    return Mesh(
+        verts=vertices,
         faces=faces,
     )
 
 
-def create_coplanar_triangles() -> trimesh.Trimesh:
+def create_coplanar_triangles() -> Mesh:
     """
-    create a basic 3D pyramid
+    create a basic 2D mesh
     """
     vertices = [
         [-1, 1, 0],
@@ -71,26 +73,26 @@ def create_coplanar_triangles() -> trimesh.Trimesh:
         [4, 0, 3],
         [6, 1, 0]
     ]
-    return trimesh.Trimesh(
-        vertices=vertices,
+    return Mesh(
+        verts=vertices,
         faces=faces,
     )
 
 
-def create_model(filepath: str = "", name: str = "") -> trimesh.Trimesh:
+def create_model(filepath: str = "", name: str = "") -> Mesh:
     """
     load a model from file in /data/models/
     """
     if len(name) == 0 and len(filepath) == 0:
         raise FileNotFoundError("Either provide a name or a filepath.")
+    path_to_models = "data/models/"
     if name in ["armadillo", "suzanne"]:
-        path_to_models = "data/models/"
         filepath = pathlib.Path(__file__).parent.parent.parent.joinpath(
             path_to_models, name + ".ply")
     elif name in ["Handle", "Land", "Octocat-v1", "squirrel", "tail_topper"]:
-        path_to_models = "data/models/"
         filepath = pathlib.Path(__file__).parent.parent.parent.joinpath(
             path_to_models, name + ".stl")
     elif name != "":
         raise FileNotFoundError(f'{name} is not a valid object name.')
-    return trimesh.load(filepath, force="mesh")
+    tmesh = trimesh.load(filepath, force="mesh")
+    return Mesh(tmesh.vertices, tmesh.faces)

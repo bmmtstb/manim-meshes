@@ -6,8 +6,9 @@ create a few sample test scenes to check efficiency of renderer
 import manim as m
 
 # local imports
+import numpy as np
 
-from manim_meshes.models import ManimMesh, Manim2DMesh
+from manim_meshes.models.models import ManimMesh, Manim2DMesh
 from manim_meshes.templates import create_pyramid, create_model, create_coplanar_triangles
 
 
@@ -85,7 +86,7 @@ class ConeScene2(m.ThreeDScene):
         self.set_camera_orientation(phi=70 * m.DEGREES, zoom=0.40)
         mesh = create_model(name="tail_topper")
         mesh.apply_scale(scaling=0.3)
-        mesh.apply_translation([0, -8, 0])
+        mesh.apply_translation(np.array([0, -8, 0]))
         manim_mesh_obj = ManimMesh(mesh=mesh)
         self.add(manim_mesh_obj)
 
