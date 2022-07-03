@@ -1,3 +1,4 @@
+[![Python Test and Lint](https://github.com/bmmtstb/manim-meshes/actions/workflows/python_ci_test.yaml/badge.svg)](https://github.com/bmmtstb/manim-meshes/actions/workflows/python_ci_test.yaml)
 # Manim for Meshes
 
 > ⚠️ Work in progress
