@@ -25,7 +25,8 @@ If published to pypi, can be installed using:
 
 [//]: # (TODO create working example + video)
 
-In venv Run one of the minimal test examples: `manim tests/test_scene.py PyramidScene`.
+In venv Run one of the minimal test examples: `manim tests/test_scene.py ConeScene`.
+Multiple other examples can be found in the `tests/test_scene.py` file.
 
 
 ## Development
@@ -37,6 +38,9 @@ Install: `poetry install`
 
 Update packages and .lock file: `poetry update`
 
-Publish: `poetry publish --build`
+If you implemented some features, update version using poetry: `poetry version prerelease|patch|minor|major`
+See the Poetry [Documentation](https://python-poetry.org/docs/cli/#version).
+
+Even though if CI works properly, Publish is automatically, it can be done manually with: `poetry publish --build`
 
 [//]: # (TODO decide which git to use)

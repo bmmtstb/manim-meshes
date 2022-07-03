@@ -7,7 +7,7 @@ from manim.mobject.opengl.opengl_compatibility import ConvertToOpenGL
 import numpy as np
 # local imports
 from manim_meshes.models.mesh import Mesh
-from manim_meshes.models.params import get_param_or_default, M2DM, M3DM, Parameters
+from manim_meshes.models.params import get_param_or_default, M2DM, M3DM
 
 
 # class TrimeshObject(m.Polyhedron):
@@ -71,37 +71,39 @@ class ManimMesh(m.VGroup, metaclass=ConvertToOpenGL):
     """
 
     def __init__(
-        self,
-        mesh: Mesh,
-        params: Parameters = None,
-        *args,
-        **kwargs,
+            self,
+            mesh: Mesh,
+            *args,
+            **kwargs,
     ) -> None:
+        """
+        @keyword display_vertices
+        """
         super().__init__(*args, **kwargs)
         self.mesh: Mesh = mesh
 
         # set all the parameters
-        self.display_vertices = get_param_or_default("display_vertices", params, M3DM)
-        self.display_edges = get_param_or_default("display_edges", params, M3DM)
-        self.display_faces = get_param_or_default("display_faces", params, M3DM)
-        self.edges_fill_color = get_param_or_default("edges_fill_color", params, M3DM)
-        self.edges_fill_opacity = get_param_or_default("edges_fill_opacity", params, M3DM)
-        self.edges_stroke_color = get_param_or_default("edges_stroke_color", params, M3DM)
-        self.edges_stroke_opacity = get_param_or_default("edges_stroke_opacity", params, M3DM)
-        self.edges_stroke_width = get_param_or_default("edges_stroke_width", params, M3DM)
-        self.faces_fill_color = get_param_or_default("faces_fill_color", params, M3DM)
-        self.faces_fill_opacity = get_param_or_default("faces_fill_opacity", params, M3DM)
-        self.faces_stroke_color = get_param_or_default("faces_stroke_color", params, M3DM)
-        self.faces_stroke_opacity = get_param_or_default("faces_stroke_opacity", params, M3DM)
-        self.faces_stroke_width = get_param_or_default("faces_stroke_width", params, M3DM)
-        self.verts_fill_color = get_param_or_default("verts_fill_color", params, M3DM)
-        self.verts_fill_opacity = get_param_or_default("verts_fill_opacity", params, M3DM)
-        self.verts_stroke_color = get_param_or_default("verts_stroke_color", params, M3DM)
-        self.verts_stroke_opacity = get_param_or_default("verts_stroke_opacity", params, M3DM)
-        self.verts_stroke_width = get_param_or_default("verts_stroke_width", params, M3DM)
+        self.display_vertices = get_param_or_default("display_vertices", kwargs, M3DM)
+        self.display_edges = get_param_or_default("display_edges", kwargs, M3DM)
+        self.display_faces = get_param_or_default("display_faces", kwargs, M3DM)
+        self.edges_fill_color = get_param_or_default("edges_fill_color", kwargs, M3DM)
+        self.edges_fill_opacity = get_param_or_default("edges_fill_opacity", kwargs, M3DM)
+        self.edges_stroke_color = get_param_or_default("edges_stroke_color", kwargs, M3DM)
+        self.edges_stroke_opacity = get_param_or_default("edges_stroke_opacity", kwargs, M3DM)
+        self.edges_stroke_width = get_param_or_default("edges_stroke_width", kwargs, M3DM)
+        self.faces_fill_color = get_param_or_default("faces_fill_color", kwargs, M3DM)
+        self.faces_fill_opacity = get_param_or_default("faces_fill_opacity", kwargs, M3DM)
+        self.faces_stroke_color = get_param_or_default("faces_stroke_color", kwargs, M3DM)
+        self.faces_stroke_opacity = get_param_or_default("faces_stroke_opacity", kwargs, M3DM)
+        self.faces_stroke_width = get_param_or_default("faces_stroke_width", kwargs, M3DM)
+        self.verts_fill_color = get_param_or_default("verts_fill_color", kwargs, M3DM)
+        self.verts_fill_opacity = get_param_or_default("verts_fill_opacity", kwargs, M3DM)
+        self.verts_stroke_color = get_param_or_default("verts_stroke_color", kwargs, M3DM)
+        self.verts_stroke_opacity = get_param_or_default("verts_stroke_opacity", kwargs, M3DM)
+        self.verts_stroke_width = get_param_or_default("verts_stroke_width", kwargs, M3DM)
 
         self.pre_function_handle_to_anchor_scale_factor = (
-            get_param_or_default("pre_function_handle_to_anchor_scale_factor", params, M3DM)
+            get_param_or_default("pre_function_handle_to_anchor_scale_factor", kwargs, M3DM)
         )
         self._setup()
 
@@ -186,22 +188,21 @@ class Manim2DMesh(ManimMesh):
     """
 
     def __init__(
-        self,
-        mesh: Mesh,
-        params: Parameters = None,
-        *args,
-        **kwargs,
+            self,
+            mesh: Mesh,
+            *args,
+            **kwargs,
     ) -> None:
         if any(mesh.get_vertices()[:, 2] != 0):
             raise Exception('Mesh is not 2D / z-coordinates not 0!')
         super().__init__(
             mesh,
-            {'faces_fill_color': get_param_or_default("faces_fill_color", params, M2DM),
-            'faces_fill_opacity': get_param_or_default("faces_fill_opacity", params, M2DM),
-            'faces_stroke_color': get_param_or_default("faces_stroke_color", params, M2DM),
-            'faces_stroke_width': get_param_or_default("faces_stroke_width", params, M2DM),
-            'pre_function_handle_to_anchor_scale_factor':get_param_or_default(
-                "pre_function_handle_to_anchor_scale_factor", params, M2DM)},
+            faces_fill_color=get_param_or_default("faces_fill_color", kwargs, M2DM),
+            faces_fill_opacity=get_param_or_default("faces_fill_opacity", kwargs, M2DM),
+            faces_stroke_color=get_param_or_default("faces_stroke_color", kwargs, M2DM),
+            faces_stroke_width=get_param_or_default("faces_stroke_width", kwargs, M2DM),
+            pre_function_handle_to_anchor_scale_factor=get_param_or_default(
+                "pre_function_handle_to_anchor_scale_factor", kwargs, M2DM),
             *args,
             **kwargs,
         )
@@ -230,19 +231,18 @@ class Manim2DMesh(ManimMesh):
 
     def move_vertex_to(self, vertex_id: int, position: np.ndarray):
         """move vertex and update faces"""
-
-        """face_ids = []  # TODO
-              for face_id in face_ids:
-                  triangle = [self.mesh.get_vertices()[i] for i in self.mesh.get_faces()[face_id]]
-                  face = self.get_face(face_id)
-                  face.set_points_as_corners(
-                      [
-                          triangle[0],
-                          triangle[1],
-                          triangle[2],
-                          triangle[0]
-                      ],
-                  )"""
+        # face_ids = []  # TODO
+        #       for face_id in face_ids:
+        #           triangle = [self.mesh.get_vertices()[i] for i in self.mesh.get_faces()[face_id]]
+        #           face = self.get_face(face_id)
+        #           face.set_points_as_corners(
+        #               [
+        #                   triangle[0],
+        #                   triangle[1],
+        #                   triangle[2],
+        #                   triangle[0]
+        #               ],
+        #           )
         raise NotImplementedError
 
     @staticmethod
