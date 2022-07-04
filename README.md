@@ -4,7 +4,7 @@
 > 
 > Most of the code will be rearranged or changed to use OpenGL, but OpenGL is not yet used throughout manim-ce. Stay tuned.
 
-Manim-Trimeshes implements manim functionalities for different types of meshes using either basic node-edge data structures or the python [trimesh](https://pypi.org/project/trimesh/ "trimesh on pypi") library.
+Manim-Trimeshes implements manim functionalities for different types of meshes using either basic node-face data structures or for importing the python [trimesh](https://pypi.org/project/trimesh/ "trimesh on pypi") library.
 
 It is mainly developed as a Project for Interactive Graphics Systems Group (GRIS) at TU Darmstadt, but is publicly available for everyone interested in rendering and animating meshes.
 

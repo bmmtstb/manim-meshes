@@ -5,7 +5,7 @@ Authorship information according to Python Coding Guidelines
 # third-party imports
 # import trimesh
 
-__author__ = "Martin Steinborn"
+__authors__ = "Martin Steinborn, Vicky Hagemeister"
 __license__ = "MIT"
 __status__ = "Development"
 
