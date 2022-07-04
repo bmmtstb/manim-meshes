@@ -229,21 +229,21 @@ class Manim2DMesh(ManimMesh):
                     points.append(m.Dot(point, radius=0.03, color=m.RED))
         return points
 
-    def move_vertex_to(self, vertex_id: int, position: np.ndarray):
+    def move_vertex_to(self, vertex_idx: int, position: np.ndarray):
         """move vertex and update faces"""
-        # face_ids = []  # TODO
-        #       for face_id in face_ids:
-        #           triangle = [self.mesh.get_vertices()[i] for i in self.mesh.get_faces()[face_id]]
-        #           face = self.get_face(face_id)
-        #           face.set_points_as_corners(
-        #               [
-        #                   triangle[0],
-        #                   triangle[1],
-        #                   triangle[2],
-        #                   triangle[0]
-        #               ],
-        #           )
-        raise NotImplementedError
+        self.mesh.update_vertex(vertex_idx, position)
+        for face_idx, face in enumerate(self.mesh.get_faces()):
+            if vertex_idx in face:
+                triangle = [self.mesh.get_vertices()[i] for i in face]
+                face = self.get_face(face_idx)
+                face.set_points_as_corners(
+                    [
+                    triangle[0],
+                    triangle[1],
+                    triangle[2],
+                    triangle[0]
+                    ],
+                )
 
     @staticmethod
     def _get_triangle_circum_circle_params(
