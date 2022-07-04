@@ -5,9 +5,9 @@ test mesh functionalities
 import numpy as np
 import pytest
 # local imports
-from manim_meshes.models.mesh import InvalidMeshException, Mesh
+from manim_meshes.models.mesh import Mesh
 from manim_meshes.templates import create_pyramid
-
+from manim_meshes.exceptions import InvalidMeshException
 
 def test_dangling_vertices():
     # node 4 is not used -> has dangling vertices
@@ -73,22 +73,49 @@ def test_faulty_dims_on_vertices():
             ],
             faces=[[0, 1, 2]],
         )
+    with pytest.raises(InvalidMeshException) as _:
+        Mesh(
+            verts=[
+                [1, 0],
+                [0, 1],
+                [0, ],  # missing second value
+            ],
+            faces=[[0, 1, 2]],
+        )
+    with pytest.raises(InvalidMeshException) as _:
+        Mesh(
+            verts=[
+                [1, 0],
+                [0, 1],
+                [1, 1],
+                [0],  # missing second value and vertex unused
+            ],
+            faces=[[0, 1, 2]],
+        )
+
+
+def test_faulty_verts_type_vertices():
+    """2D and 3D vertices should not work"""
+    # set in second layer
+    with pytest.raises(InvalidMeshException) as _:
+        Mesh(
+            verts=[[1, 0], {0, 1}, [0, 0]],
+            faces=[[0, 1, 2]],
+        )
+    # dict
+    with pytest.raises(InvalidMeshException) as _:
+        Mesh(
+            verts=[[1, 0], {0: 1}, [0, 0]],
+            faces=[[0, 1, 2]],
+        )
 
 
 def test_different_dims_on_faces():
     """2D and 3D vertices should not work"""
     try:
         Mesh(
-            verts=[
-                [1, 0],
-                [0, 1],
-                [0, 0],
-                [1, 1],
-            ],
-            faces=[
-                [0, 1, 2],
-                [0, 1, 2, 3],
-            ],
+            verts=[[1, 0], [0, 1], [0, 0], [1, 1]],
+            faces=[[0, 1, 2], [0, 1, 2, 3]],
         )
     except InvalidMeshException as e:
         pytest.fail("Different sized faces should work." + str(e))

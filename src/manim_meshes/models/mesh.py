@@ -1,21 +1,15 @@
 """
 Mesh structure
 """
-# python imports
-from typing import List
 # third-party imports
 import warnings
 import numpy as np
 
 # we need to have support for a list that contains different sizes of arrays, because objects may
 # contain e.g. triangles and squares
+from manim_meshes.exceptions import InvalidMeshException
 from manim_meshes.helpers import is_twice_nested_iterable
-
-VarArray = List[np.ndarray]
-
-
-class InvalidMeshException(Exception):
-    """something with the mesh is wrong"""
+from manim_meshes.types import VarArray
 
 
 class Mesh:
@@ -46,7 +40,7 @@ class Mesh:
             if len(conv_vertices.shape) != 2:
                 raise InvalidMeshException("Could not broadcast to array. Dimensional mismatch for vertices. "
                                            "All vertices should have the same number of dimensions.")
-        except np.VisibleDeprecationWarning as e:
+        except (np.VisibleDeprecationWarning, TypeError) as e:
             raise InvalidMeshException("Dimensional mismatch for vertices. All vertices should have the same number of "
                                        "dimensions.") from e
         # set class variables
@@ -78,7 +72,7 @@ class Mesh:
                                        f'new vertex has dimension {new_vert.shape[1]} .')
         self._vertices[idx] = np.array(new_vert)
 
-    def add_faces(self, new_faces: np.ndarray):
+    def add_faces(self, new_faces: VarArray):
         """adds new faces"""
         for new_face in new_faces:
             if any(v >= len(self._vertices) for v in new_face):
