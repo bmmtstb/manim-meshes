@@ -1,9 +1,12 @@
-from manim.mobject.opengl.opengl_mobject import OpenGLMobject
-from manim_meshes.models.mesh import Mesh
-import moderngl
+"""
+faster meshes (work in progress)
+"""
+
 import numpy as np
 import manim as m
-
+import moderngl
+from manim.mobject.opengl.opengl_mobject import OpenGLMobject
+from manim_meshes.models.mesh import Mesh
 from manim_meshes.templates import create_model
 
 
