@@ -169,3 +169,22 @@ class Mesh:
     def apply_translation(self, translation: np.ndarray):
         """translates all vertices"""
         self._vertices += np.array(translation)
+
+    def apply_rotation(self, angle, axis):
+        """rotates all vertices around an axis
+
+           :param angle: rotation angle in radian
+           :param axis: rotation axis, x (axis=0), y (axis=1) or z (axis=2)
+        """
+        rotation_matrix = np.eye(3)
+        tmp = np.array([[np.cos(angle), -np.sin(angle)],
+                        [np.sin(angle), np.cos(angle)]])
+        if axis == 0:
+            rotation_matrix[1:, 1:] = tmp
+        elif axis == 0:
+            rotation_matrix[2::-2, 2::-2] = tmp
+        elif axis == 0:
+            rotation_matrix[:-1, :-1] = tmp
+        else:
+            raise ValueError('Parameter \'axis\' must be 0, 1 or 2')
+        self._vertices = self._vertices @ rotation_matrix.T
