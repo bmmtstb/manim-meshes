@@ -238,10 +238,10 @@ class Manim2DMesh(ManimMesh):
                 face = self.get_face(face_idx)
                 face.set_points_as_corners(
                     [
-                    triangle[0],
-                    triangle[1],
-                    triangle[2],
-                    triangle[0]
+                        triangle[0],
+                        triangle[1],
+                        triangle[2],
+                        triangle[0]
                     ],
                 )
 

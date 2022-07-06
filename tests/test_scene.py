@@ -119,7 +119,7 @@ class PyramidScene(m.ThreeDScene):
         manim_mesh_obj = ManimMesh(mesh=mesh)
         self.add(manim_mesh_obj)
         self.play(
-            manim_mesh_obj.get_face(0).animate.set_fill(m.RED, 0.8)
+            manim_mesh_obj.get_face(0).animate.set_fill(m.RED, 1)
         )
 
 

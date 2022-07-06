@@ -181,9 +181,9 @@ class Mesh:
                         [np.sin(angle), np.cos(angle)]])
         if axis == 0:
             rotation_matrix[1:, 1:] = tmp
-        elif axis == 0:
+        elif axis == 1:
             rotation_matrix[2::-2, 2::-2] = tmp
-        elif axis == 0:
+        elif axis == 2:
             rotation_matrix[:-1, :-1] = tmp
         else:
             raise ValueError('Parameter \'axis\' must be 0, 1 or 2')
