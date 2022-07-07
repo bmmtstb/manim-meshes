@@ -184,7 +184,7 @@ class ManimMesh(m.VGroup, metaclass=ConvertToOpenGL):
 
 class Manim2DMesh(ManimMesh):
     """
-    TODO
+    2D mesh implementation, z-coordinates must be zero.
     """
 
     def __init__(
@@ -207,31 +207,99 @@ class Manim2DMesh(ManimMesh):
             **kwargs,
         )
 
-    def get_circle(self, face_id: int):
-        """create a circum-circle around face with given id"""
-        face = self.mesh.get_faces()[face_id]
+    def get_circle(self, face_idx: int, **kwargs):
+        """create a circum-circle around face with given idx"""
+        face = self.mesh.get_faces()[face_idx]
         vertices = [self.mesh.get_vertices()[i] for i in face]
         center, radius = self._get_triangle_circum_circle_params(*vertices)
-        circ = m.Circle(radius, stroke_width=2)
-        circ.move_to(center)
+        if 'stroke_width' not in kwargs:
+            kwargs['stroke_width'] = 1.5
+        circ = m.Circle(radius, **kwargs)
+        circ.shift(center)
         return circ
+
+    def edge_flip(self, scene: m.Scene, face_idx_1: int, face_idx_2: int, **kwargs):
+        """
+        Flips the edge shared by the given triangles. Raises an error if the faces are not triangles
+        or do not share exactly one edge.
+        """
+        face_arr_1 = self.mesh.get_faces()[face_idx_1]
+        face_arr_2 = self.mesh.get_faces()[face_idx_2]
+        if len(face_arr_1) != 3 or len(face_arr_2) != 3:
+            raise ValueError("Faces must be triangles!")
+        mask_1, mask_2 = np.isin(face_arr_1, face_arr_2), np.isin(face_arr_2, face_arr_1)
+        if mask_1.sum() != 2:
+            raise ValueError("Faces must share exactly one edge!")
+        # currently ignores resulting winding order (should this be fixed?)
+        v_1, v_2 = face_arr_1[~mask_1][0], face_arr_2[~mask_2][0]  # new shared edge
+        v_3_a, v_3_b = face_arr_1[mask_1][0], face_arr_1[mask_1][1] # new unshared vertices
+        self.mesh.update_face(face_idx_1, np.array([v_1, v_2, v_3_a]))
+        self.mesh.update_face(face_idx_2, np.array([v_1, v_2, v_3_b]))
+        anims = []
+        for face_idx in [face_idx_1, face_idx_2]:
+            face = self.mesh.get_faces()[face_idx]
+            triangle = [self.mesh.get_vertices()[i] for i in face]
+            face = self.get_face(face_idx)
+            new_face = face.copy()
+            new_face.set_points_as_corners(
+                [
+                    triangle[0],
+                    triangle[1],
+                    triangle[2],
+                    triangle[0]
+                ],
+            )
+            if 'run_time' not in kwargs:
+                kwargs['run_time'] = 1
+            anims.append(face.animate(**kwargs).become(new_face))
+        scene.play(*anims)
+
 
     def get_points_violating_delaunay(self, face_id: int):
         """given a triangle by id, get all points violating delaunay criterion"""
-        points = []
+        points, indices = [], []
         face = self.mesh.get_faces()[face_id]
         center, radius = self._get_triangle_circum_circle_params(*[self.mesh.get_vertices()[i] for i in face])
+
         # TODO: [improve to be faster] don't loop all vertices, only loop ones that are "close"
         for idx, point in enumerate(self.mesh.get_vertices()):
             if idx not in face:
                 distance = np.linalg.norm(center - point)
                 if distance < radius:  # inside circle
-                    points.append(m.Dot(point, radius=0.03, color=m.RED))
-        return points
+                    dot = m.Dot(point, radius=0.03, color=m.RED)
+                    dot.add_updater(lambda mo, pointer = self.mesh.get_vertices()[idx]: mo.move_to(pointer))
+                    points.append(dot)
+                    indices.append(idx)
+        return points, indices
 
-    def move_vertex_to(self, vertex_idx: int, position: np.ndarray):
+    def is_point_violating_delaunay(self, vertex_idx: int, face_idx):
+        """
+            returns True if the vertex with index vertex_idx is violating the delaunay criterion
+            w.r.t. the provided face (face_idx).
+        """
+        point = self.mesh.get_vertices()[vertex_idx]
+        face = self.mesh.get_faces()[face_idx]
+        center, radius = self._get_triangle_circum_circle_params(*[self.mesh.get_vertices()[i] for i in face])
+        distance = np.linalg.norm(center - point)
+        return distance < radius
+
+    def shift_vertex(self, scene: m.Scene, vertex_idx: int, shift: np.ndarray, **kwargs):
+        """shift vertex and update faces"""
+        start = self.mesh.get_vertices()[vertex_idx].copy()
+        tracker = m.ValueTracker(0)
+        tracker.add_updater(lambda mo: self._update_vertex(vertex_idx, start + tracker.get_value()*shift))
+        scene.add(tracker)
+        scene.play(tracker.animate(**kwargs).set_value(1))
+        scene.remove(tracker)
+
+    def move_vertex_to(self, scene: m.Scene, vertex_idx: int, pos: np.ndarray, **kwargs):
         """move vertex and update faces"""
-        self.mesh.update_vertex(vertex_idx, position)
+        actual_pos = self.mesh.get_vertices()[vertex_idx].copy()
+        shift = pos - actual_pos
+        self.shift_vertex(scene, vertex_idx, shift, **kwargs)
+
+    def _update_vertex(self,vertex_idx: int, pos: np.ndarray):
+        self.mesh.update_vertex(vertex_idx, pos)
         for face_idx, face in enumerate(self.mesh.get_faces()):
             if vertex_idx in face:
                 triangle = [self.mesh.get_vertices()[i] for i in face]

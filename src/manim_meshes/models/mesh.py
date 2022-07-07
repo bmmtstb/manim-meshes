@@ -35,7 +35,7 @@ class Mesh:
 
         # indirectly check vertices
         try:
-            conv_vertices = np.array(verts)
+            conv_vertices = np.array(verts, dtype=float)
             # if array or inner array could not be broadcast, one of the exceptions should be raised
             if len(conv_vertices.shape) != 2:
                 raise InvalidMeshException("Could not broadcast to array. Dimensional mismatch for vertices. "
@@ -45,8 +45,8 @@ class Mesh:
                                        "dimensions.") from e
         # set class variables
         self._vertices: np.ndarray = conv_vertices
-        self._faces: VarArray = [np.array(f) for f in faces]
-        self._parts: VarArray = [np.array(p) for p in parts] if parts is not None else []
+        self._faces: VarArray = [np.array(f, dtype=int) for f in faces]
+        self._parts: VarArray = [np.array(p, dtype=int) for p in parts] if parts is not None else []
 
         # warn user for creating dangling meshes
         if self.dangling_vert_check():
@@ -67,9 +67,9 @@ class Mesh:
         """update the position of the vertex at given index"""
         if len(self._vertices) <= idx:
             raise IndexError(f'Vertex index {idx} out of range')
-        if self._vertices.shape[1] != new_vert.shape[1]:
+        if self._vertices.shape[1] != new_vert.shape[0]:
             raise InvalidMeshException(f'Current indices have dimension {self._vertices.shape[1]}, while'
-                                       f'new vertex has dimension {new_vert.shape[1]} .')
+                                       f'new vertex has dimension {new_vert.shape[0]} .')
         self._vertices[idx] = np.array(new_vert)
 
     def add_faces(self, new_faces: VarArray):
