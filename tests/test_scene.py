@@ -85,8 +85,8 @@ class ConeScene(m.ThreeDScene):
     def construct(self):
         self.set_camera_orientation(phi=70 * m.DEGREES, zoom=0.40)
         mesh = create_model(name="tail_topper")
-        mesh.apply_scale(scaling=0.3)
-        mesh.apply_translation(np.array([0, -8, 0]))
+        mesh.scale_mesh(scaling=0.3)
+        mesh.translate_mesh(np.array([0, -8, 0]))
         manim_mesh_obj = ManimMesh(mesh=mesh)
         self.add(manim_mesh_obj)
 
