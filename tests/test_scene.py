@@ -175,7 +175,8 @@ class TriangleScene(m.ThreeDScene):
         points_a, _ = mesh_2d.get_points_violating_delaunay(2)
         points_b, _ = mesh_2d.get_points_violating_delaunay(3)
         all_points = []
-        all_points.extend(points_a), all_points.extend(points_b)
+        all_points.extend(points_a)
+        all_points.extend(points_b)
         # show points
         for point in all_points:
             self.play(m.FadeIn(point, run_time=0.3), point.animate().scale(2))

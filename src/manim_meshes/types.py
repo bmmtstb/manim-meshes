@@ -8,11 +8,11 @@ import numpy as np
 
 VarArray = List[np.ndarray]
 
-Vertex = Union[np.ndarray, List[int], Tuple[int]]
+Vertex = Union[np.ndarray, List[int], Tuple[int, ...]]
 Vertices = np.ndarray
 
-Face = Union[np.ndarray, List[int], Tuple[int]]
+Face = Union[np.ndarray, List[int], Tuple[int, ...]]
 Faces = VarArray
 
-Part = Union[np.ndarray, List[int], Tuple[int]]
+Part = Union[np.ndarray, List[int], Tuple[int, ...]]
 Parts = VarArray
