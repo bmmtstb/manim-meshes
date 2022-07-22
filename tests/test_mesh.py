@@ -187,31 +187,167 @@ def test_remove_parts():
 def test_remove_faces():
     m = Mesh(
         verts=np.array([[0, 0, 0], [1, 0, 0], [0, 1, 0], [1, 1, 0]]),
-        faces=[[0, 1, 2], [1, 2, 3], [2, 3, 4]],
-        parts=[[0, 1, 2]]
+        faces=[[0, 1, 2], [1, 2, 3], [2, 3, 4], [1, 3, 4]],
+        parts=[[0, 1, 2], [1, 1, 1]]
     )
     # removing invalid index results in error
     with pytest.raises(IndexError) as _:
         m1 = deepcopy(m)
-        m1.remove_faces([3])
-
-    # TODO
+        m1.remove_faces([4])
+    # removing one dangling face does not change parts
+    m2 = deepcopy(m)
+    m2.remove_faces([3])
+    assert len(m2.get_vertices()) == 4
+    assert len(m2.get_faces()) == 3
+    assert len(m2.get_parts()) == 2
+    assert not m2.dangling_face_check()
+    # removing one non-dangling face removes the part that uses it
+    m3 = deepcopy(m)
+    m3.remove_faces([2])
+    assert len(m3.get_vertices()) == 4
+    assert len(m3.get_faces()) == 3
+    assert len(m3.get_parts()) == 1
+    assert m3.dangling_face_check()
+    # removing all faces works and order does not matter
+    m4 = deepcopy(m)
+    m4.remove_faces([0, 3, 1, 2])
+    assert len(m4.get_vertices()) == 4
+    assert len(m4.get_faces()) == 0
+    assert len(m4.get_parts()) == 0
+    # removing one face may result in multiple part deletions
+    m5 = deepcopy(m)
+    m5.remove_faces([1])
+    assert len(m5.get_vertices()) == 4
+    assert len(m5.get_faces()) == 3
+    assert len(m5.get_parts()) == 0
 
 
 def test_remove_vertices():
-    pass
+    m = Mesh(
+        verts=np.array([[0, 0, 0], [1, 0, 0], [0, 1, 0], [1, 1, 0], [2, 2, 2], [3, 3, 3]]),
+        faces=[[0, 1, 2], [1, 2, 3], [2, 3, 1], [1, 3, 4]],
+        parts=[[1, 1, 1], [0, 1, 2]]
+    )
+    # throws exception if index out of range
+    with pytest.raises(IndexError) as _:
+        m1 = deepcopy(m)
+        m1.remove_vertices([6])
+    # removing unused vertex does not change mesh
+    m2 = deepcopy(m)
+    m2.remove_vertices([5])
+    assert len(m2.get_vertices()) == 5
+    assert len(m2.get_faces()) == 4
+    assert len(m2.get_parts()) == 2
+    # removing faces but not independent parts
+    m3 = deepcopy(m)
+    m3.remove_vertices([4])
+    assert len(m3.get_vertices()) == 5
+    assert len(m3.get_faces()) == 3
+    assert len(m3.get_parts()) == 2
+    assert not m3.dangling_face_check()
+    # removing multiple vertices works and order does not matter
+    m4 = deepcopy(m)
+    m4.remove_vertices([0, 3, 1, 2, 5])  # not 4
+    assert len(m4.get_vertices()) == 1
+    assert len(m4.get_faces()) == 0
+    assert len(m4.get_parts()) == 0
+    # removing vertex results in removing faces and parts only if necessary
+    m5 = deepcopy(m)
+    m5.remove_vertices([0])
+    assert len(m5.get_vertices()) == 5
+    assert len(m5.get_faces()) == 3
+    assert len(m5.get_parts()) == 1
 
 
 def test_add_parts():
-    pass
+    m = Mesh(
+        verts=np.array([[0, 0, 0], [1, 0, 0], [0, 1, 0], [1, 1, 0]]),
+        faces=[[0, 1, 2], [1, 2, 3], [2, 3, 4], [1, 3, 4]],
+        parts=None
+    )
+    # invalid object raises an exception
+    with pytest.raises(InvalidMeshException) as _:
+        m1 = deepcopy(m)
+        # noinspection PyTypeChecker
+        m1.add_parts([1, 2, 3])
+    # index out of range raises an IndexError
+    with pytest.raises(IndexError) as _:
+        m2 = deepcopy(m)
+        m2.add_parts([np.array([2, 3, 4])])
+    # add single to non-existing
+    m3 = deepcopy(m)
+    m3.add_parts([np.array([0, 1, 2])])
+    assert len(m3.get_parts()) == 1
+    # add single to existing - and size can be different
+    m3.add_parts([np.array([1, 2, 3, 3])])
+    assert len(m3.get_parts()) == 2
+    # add multiple to non-existing
+    m4 = deepcopy(m)
+    m4.add_parts([np.array([0, 1, 2]), np.array([1, 2, 3])])
+    assert len(m4.get_parts()) == 2
+    # add multiple to existing
+    m4.add_parts([np.array([1, 1, 1]), np.array([2, 2, 2, 2])])
+    assert len(m4.get_parts()) == 4
 
 
 def test_add_faces():
-    pass
+    m = Mesh(
+        verts=np.array([[0, 0, 0], [1, 0, 0], [0, 1, 0], [1, 1, 0]]),
+        faces=None,
+        parts=None
+    )
+    # invalid object raises an exception
+    with pytest.raises(InvalidMeshException) as _:
+        m1 = deepcopy(m)
+        # noinspection PyTypeChecker
+        m1.add_faces([1, 2, 3])
+    # index out of range raises an IndexError
+    with pytest.raises(IndexError) as _:
+        m2 = deepcopy(m)
+        m2.add_faces([np.array([2, 3, 4])])
+    # add single to non-existing
+    m3 = deepcopy(m)
+    m3.add_faces([np.array([0, 1, 2])])
+    assert len(m3.get_faces()) == 1
+    # add single to existing - and size can be different
+    m3.add_faces([np.array([1, 2, 3, 3])])
+    assert len(m3.get_faces()) == 2
+    # add multiple to non-existing
+    m4 = deepcopy(m)
+    m4.add_faces([np.array([0, 1, 2]), np.array([1, 2, 3])])
+    assert len(m4.get_faces()) == 2
+    # add multiple to existing
+    m4.add_faces([np.array([1, 1, 1]), np.array([2, 2, 2, 2])])
+    assert len(m4.get_faces()) == 4
 
 
 def test_add_vertices():
-    pass
+    m = Mesh(
+        verts=np.array([[0, 0, 0]]),
+        faces=None,
+        parts=None
+    )
+    # invalid object raises an exception
+    with pytest.raises(InvalidMeshException) as _:
+        m1_wrong_nested = deepcopy(m)
+        # noinspection PyTypeChecker
+        m1_wrong_nested.add_vertices(np.array([1, 2, 3]))
+    with pytest.raises(InvalidMeshException) as _:
+        m1_wrong_type = deepcopy(m)
+        # noinspection PyTypeChecker
+        m1_wrong_type.add_vertices([[1, 2, 3]])
+    # add with wrong dimensions raises an exception
+    with pytest.raises(InvalidMeshException) as _:
+        m2 = deepcopy(m)
+        m2.add_vertices(np.array([[2, 3, 4, 5]]))
+    # add single - add same point
+    m3 = deepcopy(m)
+    m3.add_vertices(np.array([[0, 0, 0]]))
+    assert len(m3.get_vertices()) == 2
+    # add multiple
+    m4 = deepcopy(m)
+    m4.add_vertices(np.array([[0, 0, 0], [1,1,1], [1,2,3]]))
+    assert len(m4.get_vertices()) == 4
 
 
 def test_update_part():
@@ -234,12 +370,12 @@ def test__add_and_remove_faces():
     assert len(triangle_mesh.get_faces()) == 4
     assert len(triangle_mesh.get_parts()) == 0
     # add faces
-    triangle_mesh.add_faces([np.array(0, 1, 2, 3)])
+    triangle_mesh.add_faces([np.array([0, 1, 2, 3])])
     assert len(triangle_mesh.get_faces()) == 5
     assert len(triangle_mesh.get_faces()[-1]) == 4
     assert len(triangle_mesh.get_parts()) == 0
     # re-connect faces as parts
-    triangle_mesh.add_parts([np.array([1, 2, 3, 4])])
+    triangle_mesh.add_parts([np.array([0, 1, 2, 3, 4])])
     assert len(triangle_mesh.get_parts()) == 1
     # changed triangle only to quad pyramid mesh
     assert triangle_mesh == quad_mesh

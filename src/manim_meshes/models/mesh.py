@@ -23,7 +23,7 @@ class Mesh:
         """
         Initialize mesh to have correct structure for all variables
         :param verts: array-like list vertices, all with the same dimensions
-        :type verts: Array-like
+        :type verts: Array-like [N x d]
         :param faces: a list of vertex ids that form a face as lists
         :type faces: Array-like or None
         :param parts: list of face ids that form a 3D object as list
@@ -51,6 +51,7 @@ class Mesh:
         self._vertices: Vertices = conv_vertices
         self._faces: Faces = [np.array(f, dtype=int) for f in faces] if faces is not None else []
         self._parts: Parts = [np.array(p, dtype=int) for p in parts] if parts is not None else []
+        self.dim = conv_vertices.shape[1]
 
         # warn user for creating dangling meshes
         if faces is not None and self.dangling_vert_check():
@@ -95,11 +96,24 @@ class Mesh:
     def get_parts(self) -> Parts:
         return self._parts
 
+    def add_vertices(self, new_vertices: Vertices) -> None:
+        """add given vertices to current ones"""
+        if not isinstance(new_vertices, np.ndarray):
+            raise InvalidMeshException(f'new_vertices has invalid type {new_vertices}')
+        if len(new_vertices.shape) != 2 or new_vertices.shape[1] != self.dim:
+            raise InvalidMeshException("new Vertices do not have the same dimensions as current ones.")
+        self._vertices = np.vstack((self._vertices, new_vertices))
+
     def remove_vertices(self, indices: Union[np.ndarray, List[int]]) -> None:
         """remove multiple vertices"""
-        indices = list(set(indices))
-        indices.sort(reverse=True)
-        raise NotImplementedError
+        if any(len(self._vertices) <= idx for idx in indices):
+            raise IndexError('Vertex index out of range')
+        # use indices to update self._faces
+        faces_to_remove = fix_references(self._faces, indices)
+        # remove vertices at all the indices
+        self._vertices = np.delete(self._vertices, indices, axis=0)
+        # remove faces and possibly parts
+        fix_references(self._parts, faces_to_remove)
 
     def update_vertex(self, idx: int, new_vert: Vertex) -> None:
         """update the position of the vertex at given index"""
@@ -121,7 +135,7 @@ class Mesh:
 
         for new_face in new_faces:
             if any(v >= len(self._vertices) for v in new_face):
-                raise InvalidMeshException('Vertex index not defined')
+                raise IndexError('Vertex index not defined')
 
         if isinstance(new_faces, list):
             self._faces += new_faces
@@ -160,17 +174,25 @@ class Mesh:
 
     def add_parts(self, new_parts: Parts) -> None:
         """adds new parts"""
+        if not is_twice_nested_iterable(new_parts):
+            raise InvalidMeshException('new_parts is not a valid nested iterable')
         for new_part in new_parts:
             if any(f >= len(self._faces) for f in new_part):
-                raise InvalidMeshException('Face index not defined')
-        self._parts = np.vstack((self._parts, np.narray(new_parts)))
+                raise IndexError(f'Face index out of range for new part: {new_part}')
+        if isinstance(new_parts, list):
+            self._parts += [np.array(part) for part in new_parts]
+        elif isinstance(new_parts, (np.ndarray, tuple)):
+            for val in new_parts:
+                self._parts.append(np.array(val))
+        else:
+            raise TypeError(f'unknown type for new_part {type(new_parts)}')
 
     def remove_parts(self, indices: Union[np.ndarray, List[int]]) -> None:
         """removes the parts with given indices"""
         if any(len(self._parts) <= idx for idx in indices):
             raise IndexError('Part index out of range')
         # remove indices back to front
-        indices = list(set(indices))
+        indices[:] = list(set(indices))
         indices.sort(reverse=True)
         for idx in indices:
             del self._parts[idx]

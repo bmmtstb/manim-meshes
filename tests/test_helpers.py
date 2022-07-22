@@ -52,7 +52,8 @@ references = [
     ([np.array([0, 1, 3]), np.array([0, 1, 2])], [np.array([0, 1, 2])], [3], [0]),  # remove partly, no updates
     ([np.array([0, 1, 3]), np.array([0, 1, 2])], [np.array([0, 1, 2])], [2], [1]),  # remove partly, update reference
     ([np.array([0, 1, 3])], [np.array([0, 1, 3])], [4], []),  # remove nothing, no updates
-    ([np.array([2, 3, 4, 5, 6]), np.array([1, 2, 3])], [np.array([1, 2, 3, 4, 5]), np.array([0, 1, 2])], [0], []),  # remove nothing, update references, more than 3 values
+    ([np.array([2, 3, 4, 5, 6]), np.array([1, 2, 3])],  # remove nothing, update references, more than 3 values
+     [np.array([1, 2, 3, 4, 5]), np.array([0, 1, 2])], [0], []),
 ]
 
 

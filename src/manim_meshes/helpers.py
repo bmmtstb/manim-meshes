@@ -46,12 +46,12 @@ def fix_references(original: VarArray, indices: Union[np.ndarray, List[int]]) ->
     """
     given a VarArray remove all sub arrays that reference an index of indices
     then shift all the indices after removed indices to link to the correct indices
-    original is edited in place and not returned!
+    original and indices is edited in place (not returned) for higher speed on larger meshes
 
     :returns: a list of indices where original was modified
     """
-    # reverse sort indices, to delete back to front and change following indices accordingly
-    indices = list(set(indices))
+    # reverse sort indices in place to delete back to front and change given indices accordingly
+    indices[:] = list(set(indices))
     indices.sort(reverse=True)
 
     # get list of indices where original references removed indices

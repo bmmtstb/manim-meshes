@@ -232,7 +232,7 @@ class Manim2DMesh(ManimMesh):
             raise ValueError("Faces must share exactly one edge!")
         # currently ignores resulting winding order (should this be fixed?)
         v_1, v_2 = face_arr_1[~mask_1][0], face_arr_2[~mask_2][0]  # new shared edge
-        v_3_a, v_3_b = face_arr_1[mask_1][0], face_arr_1[mask_1][1] # new unshared vertices
+        v_3_a, v_3_b = face_arr_1[mask_1][0], face_arr_1[mask_1][1]  # new unshared vertices
         self.mesh.update_face(face_idx_1, np.array([v_1, v_2, v_3_a]))
         self.mesh.update_face(face_idx_2, np.array([v_1, v_2, v_3_b]))
         anims = []
@@ -253,7 +253,6 @@ class Manim2DMesh(ManimMesh):
                 kwargs['run_time'] = 1
             anims.append(face.animate(**kwargs).become(new_face))
         scene.play(*anims)
-
 
     def get_points_violating_delaunay(self, face_id: int):
         """given a triangle by id, get all points violating delaunay criterion"""
