@@ -725,8 +725,41 @@ def test_apply_rotation():
 
 
 def test_snap_to_grid():
-    # TODO
-    pass
+    m = Mesh(verts=np.arange(21).reshape((7, 3)), faces=None)
+    # test wrong dims on params
+    with pytest.raises(ValueError) as _:  # wrong dims on grid_size
+        deepcopy(m).snap_to_grid((5, 10), (1, 1, 1))
+    with pytest.raises(ValueError) as _:  # wrong dims on thresh
+        deepcopy(m).snap_to_grid((1, 1, 1), (10, 1))
+    # grid <= 0 gives an error
+    with pytest.raises(ValueError) as _:  # negative gridsize
+        deepcopy(m).snap_to_grid((1, -1, 1), (0, 0, 0))
+    with pytest.raises(ValueError) as _:  # negative gridsize
+        deepcopy(m).snap_to_grid((0, 1, 1), (0, 0, 0))
+    # threshold has to be smaller than half grid_size
+    with pytest.raises(ValueError) as _:  # to big threshold
+        deepcopy(m).snap_to_grid((1, 1, 1), (0.5, 0, 0))
+    with pytest.raises(ValueError) as _:  # all thresh 0
+        deepcopy(m).snap_to_grid((1, 1, 1), (0, 0, 0))
+    # threshold = 0 does not change grid
+    m1 = deepcopy(m)
+    m1.snap_to_grid((1, 1, 1), (0.1, 0, 0))
+    assert m1 == m
+    # regular snap works up and down
+    m2 = deepcopy(m)
+    m2.snap_to_grid((5, 10, 15), (1, 3, 5))
+    assert np.array_equal(
+        m2.get_vertices(),
+        np.array([[0, 0, 0], [3, 4, 0], [5, 10, 8], [10, 10, 15], [12, 10, 15], [15, 16, 15], [18, 20, 15]])
+    )
+    # snap to negative numbers works
+    m3 = deepcopy(m)
+    m3.translate_mesh(np.array([-10, -11, -10]))
+    m3.snap_to_grid((5, 6, 7), (1, 2, 3))
+    assert np.array_equal(
+        m3.get_vertices(),
+        np.array([[-10, -12, -7], [-7, -6, -7], [-5, -6, 0], [0, 0, 0], [2, 0, 7], [5, 6, 7], [8, 6, 7]])
+    )
 
 
 def test_remove_duplicate_vertices():

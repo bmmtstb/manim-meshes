@@ -265,16 +265,6 @@ class Mesh:
         unique = np.unique(np.concatenate(self._parts).ravel())
         return any(f_idx not in unique for f_idx in range(len(self._faces)))
 
-    def is_face_ccw(self, face_id: int) -> bool:
-        """check if face is counter-clockwise"""
-        # FIXME is this even possible to check without going through the whole mesh?
-        raise NotImplementedError
-
-    def is_mesh_ccw(self) -> bool:
-        """check full mesh """
-        # FIXME see: is_face_ccw
-        return all(self.is_face_ccw(f_id) for f_id in range(len(self._faces)))
-
     def scale_mesh(self, scaling: float) -> None:
         """scales all vertices """
         self._vertices *= float(scaling)
@@ -299,8 +289,10 @@ class Mesh:
 
     def apply_rotation(self, angle, axis=None) -> None:
         """
-        rotates all vertices around an axis
+        rotates all vertices
         implemented only for 2D and 3D
+        2D is equal to rotation around (non-existent) z axis
+        3D rotates all vertices around the given axis
         :param angle: rotation angle in radians
         :param axis: for 3D - rotation axis, x (axis=0), y (axis=1) or z (axis=2)
         """
@@ -324,18 +316,50 @@ class Mesh:
         else:
             raise NotImplementedError("No implementation for n-Dimensional vector rotation")
 
-    def snap_to_grid(self, grid_sizes: Tuple[float, ...], threshold: Tuple[float, ...]) -> None:
+    def snap_to_grid(self, grid_sizes: Tuple[float, ...], threshold: Tuple[float, ...], steps: int = 1) -> None:
         """
         given vertices of a mesh, move vertices to exact locations if they are close-by.
         e.g. if there is some value 0.999 or 1.001, it would be shifted towards 1.000 if the grid size is 1,
         on the other hand 0.699 would *not* be shifted to 0.700, only iff grid size changed
         Threshold is the amount of movement allowed to snap into the next grid position
+
+        If you want only one dimension to be snapped, use threshold 0 on all other axes
         :param grid_sizes: grid resolution / size in every axis direction
-        :type grid_sizes: tuple with the same size as self.dim,
+        :type grid_sizes: tuple with the same size as self.dim
         :param threshold: defines the threshold of every axis
-        :type threshold: tuple with the same size as self.dim,
+        :type threshold: tuple with the same size as self.dim
+        :param steps: the number of steps to take before hitting the grid (for animation)
+        :type steps: positive integer
         """
-        raise NotImplementedError
+        if len(grid_sizes) != self.dim:
+            raise ValueError(f'Grid sizes dim is incorrect, was {len(grid_sizes)} expected {self.dim}.')
+        if len(threshold) != self.dim:
+            raise ValueError(f'Threshold dim is incorrect, was {len(threshold)} expected {self.dim}.')
+        if any(v <= 0 for v in grid_sizes):
+            raise ValueError("invalid value for grid_sizes. Has to be greater than zero.")
+        if any(2 * threshold[i] >= grid_sizes[i] for i in range(self.dim)):
+            raise ValueError("threshold can not be bigger than half of grid_size for same dimension.")
+        if all(t == 0 for t in threshold):
+            raise ValueError("one value in threshold has to be != 0")
+        if steps <= 0:
+            raise ValueError(f'steps has to be a positive integer, but was {steps}')
+        # look at every dimension separately
+        for d in range(self.dim):
+            curr_vals = self._vertices[:, d]
+            mod = curr_vals % grid_sizes[d]
+            # set everything that is less than threshold to the difference to the next step
+            differences = np.where((mod > 0) & (mod <= threshold[d]), -mod, mod)
+            # set everything that is close to the next step to the (positive) missing difference to the next step
+            differences = np.where(
+                (differences > 0) & (differences >= grid_sizes[d] - threshold[d]),
+                grid_sizes[d] - differences,
+                differences
+            )
+            # set everything that is bigger than Threshold to zero
+            differences = np.where(differences > threshold[d], 0, differences)
+            # add differences to vertices to snap every modified value
+            # possibility to move stepwise for later animation
+            self._vertices[:, d] += (differences / steps)
 
     def remove_duplicate_vertices(self) -> None:
         """remove exact duplicates in vertices"""
@@ -352,3 +376,13 @@ class Mesh:
     def remove_duplicates(self) -> None:
         """remove all duplicates in the current mesh"""
         raise NotImplementedError
+
+    # def is_face_ccw(self, face_id: int) -> bool:
+    #     """check if face is counter-clockwise"""
+    #     # FIXME is this even possible to check without going through the whole mesh?
+    #     raise NotImplementedError
+    #
+    # def is_mesh_ccw(self) -> bool:
+    #     """check full mesh """
+    #     # FIXME see: is_face_ccw
+    #     return all(self.is_face_ccw(f_id) for f_id in range(len(self._faces)))
