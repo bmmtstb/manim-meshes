@@ -542,6 +542,7 @@ def test_parts_w_o_faces():
             parts=[[1, 2, 3, 4]],
         )
 
+
 # TODO
 # test creating mesh with [] and None for faces and parts
 # test "anything" with faces and parts as []
@@ -615,7 +616,134 @@ def test_add_to_mesh():
     assert m7.get_parts()[-1][0] == 0
     assert m7.get_parts()[-1][2] == len(m.get_faces()) - 1
 
-# dangling_face_check
-# scale_mesh
-# translate_mesh
-# translate_vertex
+
+def test_scale_mesh():
+    m = Mesh(
+        verts=np.ones((10, 3)),
+        faces=None
+    )
+    m1 = deepcopy(m)
+    m1.scale_mesh(2)
+    elems, count = np.unique(m1.get_vertices(), return_counts=True)
+    assert len(elems) == 1
+    assert 2 in elems
+    assert np.sum(count) == 10 * 3
+    m1.scale_mesh(0.5)
+    assert m1 == m
+
+
+def test_translate_mesh():
+    m0 = Mesh(
+        verts=np.zeros((10, 3)),
+        faces=None
+    )
+    m1 = Mesh(
+        verts=np.ones((10, 3)),
+        faces=None
+    )
+    # translate up
+    m = deepcopy(m0)
+    m.translate_mesh(np.ones(3))
+    assert m == m1
+    # translate down
+    m = deepcopy(m1)
+    m.translate_mesh(np.array([-1, -1, -1]))
+    assert m == m0
+    # translate with different values per column
+    m = deepcopy(m0)
+    m.translate_mesh(np.array([1, 2, 3]))
+    assert np.sum(m.get_vertices()) == 10 * (3 + 2 + 1)
+    # 2d translation raises error
+    with pytest.raises(ValueError) as _:
+        m_err = deepcopy(m0)
+        m_err.translate_mesh(np.array([[1, 2, 3], [1, 2, 3]]))
+    # wrong dimensions raise error
+    with pytest.raises(ValueError) as _:
+        m_err = deepcopy(m0)
+        m_err.translate_mesh(np.array([1, 2, 3, 4]))
+
+
+def test_translate_vertex():
+    m = Mesh(verts=np.zeros((10, 3)), faces=None)
+    # invalid index raises error
+    with pytest.raises(IndexError) as _:
+        m_err_1 = deepcopy(m)
+        m_err_1.translate_vertex(-1, np.ones(3))
+    with pytest.raises(IndexError) as _:
+        m_err_2 = deepcopy(m)
+        m_err_2.translate_vertex(-1, np.ones(3))
+    # 2d translation raises error
+    with pytest.raises(ValueError) as _:
+        m_err_3 = deepcopy(m)
+        m_err_3.translate_mesh(np.array([[1, 2, 3], [1, 2, 3]]))
+    # wrong dimensions raise error
+    with pytest.raises(ValueError) as _:
+        m_err_4 = deepcopy(m)
+        m_err_4.translate_mesh(np.array([1, 2, 3, 4]))
+    # correct translation of single vertex
+    m1 = deepcopy(m)
+    m1.translate_vertex(1, np.array([3, -1, 5]))
+    assert np.array_equal(m1.get_vertices()[1], np.array([3, -1, 5]))
+    assert np.array_equal(m1.get_vertices()[0], np.zeros(3))
+    assert np.array_equal(m1.get_vertices()[2:], np.zeros((8, 3)))
+
+
+def test_apply_rotation():
+    m = Mesh(verts=np.identity(3), faces=None)
+    # invalid axis raises error
+    with pytest.raises(ValueError) as _:
+        m_err_1 = deepcopy(m)
+        m_err_1.apply_rotation(0, 4)
+    with pytest.raises(ValueError) as _:
+        m_err_2 = deepcopy(m)
+        m_err_2.apply_rotation(0, -1)
+    # turning by 0 or 360° = 2*pi degree keeps Mesh same
+    m1 = deepcopy(m)
+    m1.apply_rotation(0, 1)
+    assert np.allclose(m1.get_vertices(), m.get_vertices())
+    m2 = deepcopy(m)
+    m2.apply_rotation(2 * np.pi, 2)
+    assert np.allclose(m2.get_vertices(), m.get_vertices())
+    # turning single vector around z-axis then around y-axis and finally x-axis, all 90°
+    m3 = Mesh(verts=np.array([[1, 2, 3]]), faces=None)
+    m3.apply_rotation(0.5 * np.pi, 2)
+    assert np.allclose(m3.get_vertices(), np.array([[-2, 1, 3]]))
+    m3.apply_rotation(0.5 * np.pi, 1)
+    assert np.allclose(m3.get_vertices(), np.array([[3, 1, 2]]))
+    m3.apply_rotation(0.5 * np.pi, 0)
+    assert np.allclose(m3.get_vertices(), np.array([[3, -2, 1]]))
+    # turning 2D mesh
+    m_2d = Mesh(verts=np.array([[1, 2], [3, 4]]), faces=None)
+    m_2d.apply_rotation(0.5 * np.pi)
+    assert np.allclose(m_2d.get_vertices(), np.array([[-2, 1], [-4, 3]]))
+    # turning identity by 90 deg around x then turning it back
+    m4 = deepcopy(m)
+    m4.apply_rotation(0.5 * np.pi, 0)
+    assert np.allclose(m4.get_vertices(), np.array([[1, 0, 0], [0, 0, 1], [0, -1, 0]]))
+    m4.apply_rotation(-0.5 * np.pi, 0)
+    assert np.allclose(m4.get_vertices(), np.identity(3))
+
+
+def test_snap_to_grid():
+    # TODO
+    pass
+
+
+def test_remove_duplicate_vertices():
+    # TODO
+    pass
+
+
+def test_remove_duplicate_faces():
+    # TODO
+    pass
+
+
+def test_remove_duplicate_parts():
+    # TODO
+    pass
+
+
+def test_remove_duplicates():
+    # TODO
+    pass

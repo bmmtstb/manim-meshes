@@ -3,7 +3,7 @@ Mesh structure
 """
 # third-party imports
 import warnings
-from typing import List, Union
+from typing import List, Tuple, Union
 
 import numpy as np
 
@@ -280,28 +280,75 @@ class Mesh:
         self._vertices *= float(scaling)
 
     def translate_mesh(self, translation: np.ndarray) -> None:
-        """translates all vertices"""
+        """translates all vertices by a given vector"""
+        if not isinstance(translation, np.ndarray):
+            raise TypeError(f'Translation should be a np.ndarray, but was a {type(translation)} instead')
+        if len(translation.shape) != 1 or translation.shape[0] != self.dim:
+            raise ValueError(f'Translation has wrong dimensions expected {self.dim} was {translation.shape}')
         self._vertices += np.array(translation)
 
     def translate_vertex(self, v_id: int, translation: np.ndarray) -> None:
-        """translate a single vertex"""
+        """translate a single vertex by a given vector"""
+        if 0 > v_id or v_id >= len(self._vertices):
+            raise IndexError(f'Index {v_id} out of bounds for vertices of shape {self._vertices.shape}')
+        if not isinstance(translation, np.ndarray):
+            raise TypeError(f'Translation should be a np.ndarray, but was a {type(translation)} instead')
+        if len(translation.shape) != 1 or translation.shape[0] != self.dim:
+            raise ValueError(f'Translation has wrong dimensions expected {self.dim} was {translation.shape}')
         self._vertices[v_id] += translation
 
-    def apply_rotation(self, angle, axis) -> None:
+    def apply_rotation(self, angle, axis=None) -> None:
         """
         rotates all vertices around an axis
+        implemented only for 2D and 3D
         :param angle: rotation angle in radians
-        :param axis: rotation axis, x (axis=0), y (axis=1) or z (axis=2)
+        :param axis: for 3D - rotation axis, x (axis=0), y (axis=1) or z (axis=2)
         """
-        rotation_matrix = np.eye(3)
-        tmp = np.array([[np.cos(angle), -np.sin(angle)],
-                        [np.sin(angle), np.cos(angle)]])
-        if axis == 0:
-            rotation_matrix[1:, 1:] = tmp
-        elif axis == 1:
-            rotation_matrix[2::-2, 2::-2] = tmp
-        elif axis == 2:
-            rotation_matrix[:-1, :-1] = tmp
+        # define basic rotation matrix
+        rot_2d = np.array([[np.cos(angle), -np.sin(angle)],
+                           [np.sin(angle), np.cos(angle)]])
+        if self.dim == 2:
+            self._vertices = self._vertices @ rot_2d.T  # transposed because we got row vectors not col vecs
+        elif self.dim == 3:  # 3d uses the 2D matrix in different columns
+            rotation_matrix = np.eye(3)
+
+            if axis == 0:
+                rotation_matrix[1:, 1:] = rot_2d
+            elif axis == 1:
+                rotation_matrix[2::-2, 2::-2] = rot_2d
+            elif axis == 2:
+                rotation_matrix[:-1, :-1] = rot_2d
+            else:
+                raise ValueError('In 3D parameter \'axis\' must be 0, 1 or 2')
+            self._vertices = self._vertices @ rotation_matrix.T  # transposed because we got row vectors not col vecs
         else:
-            raise ValueError('Parameter \'axis\' must be 0, 1 or 2')
-        self._vertices = self._vertices @ rotation_matrix.T
+            raise NotImplementedError("No implementation for n-Dimensional vector rotation")
+
+    def snap_to_grid(self, grid_sizes: Tuple[float, ...], threshold: Tuple[float, ...]) -> None:
+        """
+        given vertices of a mesh, move vertices to exact locations if they are close-by.
+        e.g. if there is some value 0.999 or 1.001, it would be shifted towards 1.000 if the grid size is 1,
+        on the other hand 0.699 would *not* be shifted to 0.700, only iff grid size changed
+        Threshold is the amount of movement allowed to snap into the next grid position
+        :param grid_sizes: grid resolution / size in every axis direction
+        :type grid_sizes: tuple with the same size as self.dim,
+        :param threshold: defines the threshold of every axis
+        :type threshold: tuple with the same size as self.dim,
+        """
+        raise NotImplementedError
+
+    def remove_duplicate_vertices(self) -> None:
+        """remove exact duplicates in vertices"""
+        raise NotImplementedError
+
+    def remove_duplicate_faces(self) -> None:
+        """remove duplicates in faces, indices only have to be in the correct order, not at the exact places"""
+        raise NotImplementedError
+
+    def remove_duplicate_parts(self) -> None:
+        """remove duplicates in parts, indices only have to be in the correct order, not at the exact places"""
+        raise NotImplementedError
+
+    def remove_duplicates(self) -> None:
+        """remove all duplicates in the current mesh"""
+        raise NotImplementedError
