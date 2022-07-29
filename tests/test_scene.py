@@ -8,6 +8,7 @@ import manim as m
 # local imports
 import numpy as np
 
+from manim_meshes.models.mesh import Mesh
 from manim_meshes.models.models import ManimMesh, Manim2DMesh
 from manim_meshes.templates import create_pyramid, create_model, create_coplanar_triangles
 
@@ -116,7 +117,7 @@ class PyramidScene(m.ThreeDScene):
     def construct(self):
         self.set_camera_orientation(70 * m.DEGREES, 30 * m.DEGREES)
         mesh = create_pyramid()
-        manim_mesh_obj = ManimMesh(mesh=mesh)
+        manim_mesh_obj = ManimMesh(scene=self, mesh=mesh, display_vertices=True)
         self.add(manim_mesh_obj)
         self.play(
             manim_mesh_obj.get_face(0).animate.set_fill(m.RED, 1)
@@ -135,7 +136,7 @@ class TriangleScene(m.ThreeDScene):
         text.fix_in_frame()
         self.add(text)
         mesh = create_coplanar_triangles()
-        mesh_2d = Manim2DMesh(mesh=mesh)
+        mesh_2d = Manim2DMesh(scene=self, mesh=mesh)
         self.add(mesh_2d)
         triangle = mesh_2d.get_face(0)
         self.play(triangle.animate.set_fill(m.YELLOW, 0.6))  # mark triangle
@@ -200,3 +201,51 @@ class TriangleScene(m.ThreeDScene):
         # unmark triangles
         self.play(triangle_a.animate.set_fill(mesh_2d.faces_fill_color, mesh_2d.faces_fill_opacity),
                   triangle_b.animate.set_fill(mesh_2d.faces_fill_color, mesh_2d.faces_fill_opacity))
+
+
+class SnapToGridScene(m.ThreeDScene):
+    """
+    A basic example of a 2D grid with some points that are close to but not on the grid.
+    Explaining the overall process of grid-snapping
+    """
+
+    def construct(self):
+        self.set_camera_orientation(0, 0)
+        # create a grid and add it to scene
+        u, v = 7, 7
+        grid_vertices = np.array(
+            np.meshgrid(np.linspace(-3, 3, u), np.linspace(-3, 3, v), indexing='ij')
+        ).T.reshape((-1, 2))
+        grid_mesh = Manim2DMesh(
+            scene=self,
+            mesh=Mesh(
+                verts=grid_vertices,
+                faces=[np.array([
+                    i + j * u,  # bottom left
+                    i + j * u + 1,  # bottom right
+                    i + (j + 1) * u + 1,  # top right
+                    i + (j + 1) * u  # top left
+                ]) for j in range(v - 1) for i in range(u - 1)],
+            ),
+            display_vertices=False,
+            faces_stroke_width=0.3,
+            faces_stroke_color=m.BLUE_D,
+        )
+        self.add(grid_mesh)
+        # generate "random" points
+        vertex_mesh = Manim2DMesh(
+            scene=self,
+            mesh=Mesh(
+                verts=np.array([[1, 1], [0.2, 0.1], [0.5, 0.7], [-1, 1.1], [-2.5, -2.3], [-1.1, 0.2], [2.1, 1.7]]),
+                faces=None,
+            ),
+            display_vertices=True,
+        )
+        self.add(vertex_mesh)
+        self.wait(0.5)
+        vertex_mesh.move_to_grid(
+            scene=self,
+            grid_sizes=(1, 1),
+            threshold=(0.3, 0.3),
+            nof_steps=10,
+        )

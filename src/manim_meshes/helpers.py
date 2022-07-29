@@ -2,7 +2,7 @@
 some basic helpers
 """
 # python imports
-from typing import Any, List, Tuple, Union
+from typing import Any, Dict, List, Tuple, Union
 # third-party imports
 import numpy as np
 
@@ -72,3 +72,13 @@ def fix_references(original: VarArray, indices: Union[np.ndarray, List[int]]) ->
         original[:] = [np.subtract(arr, 1, out=arr, where=arr > idx) for arr in original]
 
     return sub_removed
+
+
+def remove_keys_from_dict(d: dict, keys: List[str]) -> Dict[str, Any]:
+    """given a dictionary remove all keys if they are present"""
+    for key in keys:
+        try:
+            del d[key]
+        except KeyError:
+            pass
+    return d if d is not None else {}

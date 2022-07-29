@@ -18,7 +18,7 @@ class BadParameterException(Exception):
 # map from param name to type and default value
 # manim_3d_mesh_default_params
 M3DM: DefaultParameters = {
-    "display_vertices":                           (bool, True),
+    "display_vertices":                           (bool, False),
     "display_edges":                              (bool, True),
     "display_faces":                              (bool, True),
     "edges_fill_color":                           (Color, Color(m.WHITE)),
@@ -41,10 +41,13 @@ M3DM: DefaultParameters = {
 
 # manim_2d_mesh_default_params
 M2DM: DefaultParameters = {
-    "faces_fill_color":                                 (Color, Color(m.BLUE_D)),
-    "faces_fill_opacity":                               (float, 0.4),
-    "faces_stroke_color":                               (Color, Color(m.LIGHT_GREY)),
-    "faces_stroke_width":                               (float, 0.3),
+    "display_vertices":                           (bool, False),
+    "display_edges":                              (bool, True),
+    "display_faces":                              (bool, True),
+    "faces_fill_color":                           (Color, Color(m.BLUE_D)),
+    "faces_fill_opacity":                         (float, 0.4),
+    "faces_stroke_color":                         (Color, Color(m.LIGHT_GREY)),
+    "faces_stroke_width":                         (float, 0.3),
     "pre_function_handle_to_anchor_scale_factor": (float, 0.00001),
 }
 
@@ -70,4 +73,3 @@ def get_param_or_default(
     # get value from default parameters
     if value in default:
         return default[value][1]
-    raise BadParameterException("")

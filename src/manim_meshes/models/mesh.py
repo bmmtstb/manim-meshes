@@ -87,6 +87,13 @@ class Mesh:
     def get_vertices(self) -> Vertices:
         return self._vertices
 
+    def make_vertices_3d(self) -> None:
+        """transforms currents mesh vertices to be 3D, works if dim is <= 3"""
+        if self.dim < 3:
+            self._vertices = np.pad(self._vertices, ((0, 0), (0, 3 - self.dim)))
+        elif self.dim > 3:
+            raise InvalidMeshException(f'Can not Broadcast from {self.dim}-D Mesh to 3D Mesh.')
+
     def get_faces(self) -> Faces:
         return self._faces
 
@@ -119,7 +126,7 @@ class Mesh:
         if isinstance(new_vert, np.ndarray) and len(new_vert.shape) != 1:
             raise TypeError(f'Vertex {new_vert} has incorrect shape, expected 1D-like array.')
         if self._vertices.shape[1] != len(new_vert):
-            raise InvalidMeshException(f'Current indices have dimension {self._vertices.shape[1]}, while'
+            raise InvalidMeshException(f'Current indices have dimension {self._vertices.shape[1]}, while '
                                        f'new vertex has dimension {len(new_vert)} .')
         try:
             self._vertices[idx] = np.array(new_vert)
