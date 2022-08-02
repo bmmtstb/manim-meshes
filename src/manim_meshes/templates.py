@@ -3,9 +3,13 @@ define a few basic mesh-structures to be used as examples or test
 """
 # python imports
 import pathlib
+from typing import List, Tuple
 # third-party imports
+import numpy as np
 import trimesh
 # local imports
+
+
 from manim_meshes.models.mesh import Mesh
 
 
@@ -144,6 +148,44 @@ def create_coplanar_triangles() -> Mesh:
     return Mesh(
         verts=vertices,
         faces=faces,
+    )
+
+
+def create_grid(areas: List[Tuple[float, float, int]]) -> Mesh:
+    """
+    given min, max and mount per direction create a mesh as a grid
+    :param areas: list with one tuple per dimension, with every tuple consisting of
+                 min, max and point-amount in this direction
+    """
+    dim = len(areas)
+    vertices = np.array(
+        np.meshgrid(*[np.linspace(area[0], area[1], int(area[2])) for area in areas], indexing='ij')
+    ).T.reshape((-1, dim))
+
+    if dim == 1:
+        faces = None
+        parts = None
+    elif dim == 2:
+        u, v = areas[0][2], areas[1][2]
+        faces = [np.array([
+                    i + j * u,  # bottom left
+                    i + j * u + 1,  # bottom right
+                    i + (j + 1) * u + 1,  # top right
+                    i + (j + 1) * u  # top left
+                ]) for j in range(v - 1) for i in range(u - 1)]
+        parts = None
+    elif dim == 3:
+        # FIXME implement 3D
+        # u, v, w = areas[0][2], areas[1][2], areas[2][2]
+        # faces = None
+        # parts = None
+        raise NotImplementedError("3D not yet implemented")
+    else:
+        raise ValueError("Only 1D, 2D and 3D meshes implemented.")
+    return Mesh(
+        verts=vertices,
+        faces=faces,
+        parts=parts,
     )
 
 

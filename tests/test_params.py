@@ -2,6 +2,7 @@
 test for params.py
 """
 # python imports
+import pytest
 from colour import Color
 # third-party imports
 import manim as m
@@ -49,21 +50,15 @@ def test_faulty_parameter_dict():
     param = {
         "faulty": False,
     }
-    try:
+    with pytest.raises(BadParameterException) as _:
         get_param_or_default("faulty", param, TEST_PARAMS)
-        assert False
-    except BadParameterException:
-        assert True
 
 
 def test_faulty_parameter_string():
     """given an non existing parameter"""
     param = {}
-    try:
+    with pytest.raises(BadParameterException) as _:
         get_param_or_default("faulty", param, TEST_PARAMS)
-        assert False
-    except BadParameterException:
-        assert True
 
 
 def test_colors():

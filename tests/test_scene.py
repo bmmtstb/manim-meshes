@@ -2,84 +2,16 @@
 create a few sample test scenes to check efficiency of renderer
 """
 # third-party imports
-
 import manim as m
-
 # local imports
 import numpy as np
 
 from manim_meshes.models.mesh import Mesh
 from manim_meshes.models.models import ManimMesh, Manim2DMesh
-from manim_meshes.templates import create_pyramid, create_model, create_coplanar_triangles
+from manim_meshes.templates import create_grid, create_pyramid, create_model, create_coplanar_triangles
 
 
-# class PyramidScene(ThreeDScene):
-#     """4 sided pyramid"""
-#
-#     def construct(self):
-#         self.set_camera_orientation(phi=75 * DEGREES, theta=30 * DEGREES)
-#         mesh = create_pyramid()
-#         trimesh_obj = TrimeshObject(mesh=mesh)
-#         self.add(trimesh_obj)
-
-
-# class HandleScene(ThreeDScene):
-#     """?"""
-#     def construct(self):
-#         self.set_camera_orientation(phi=75 * DEGREES, theta=30 * DEGREES)
-#         mesh = create_model(name="Handle")
-#         trimesh_obj = TrimeshObject(mesh=mesh)
-#         self.add(trimesh_obj)
-
-
-# class ConeScene(ThreeDScene):
-#     """Display a cone"""
-#     def construct(self):
-#         self.set_camera_orientation(phi=70 * DEGREES, zoom=0.40)
-#         mesh = create_model(name="tail_topper")
-#         mesh.apply_scale(scaling=0.3)
-#         mesh.apply_translation([0, -8, 0])
-#         trimesh_obj = TrimeshObject(mesh=mesh)
-#         self.add(trimesh_obj)
-
-
-# class SquirrelScene(ThreeDScene):
-#     """Display a cute squirrel"""
-#     def construct(self):
-#         self.set_camera_orientation(phi=75 * DEGREES, theta=30 * DEGREES)
-#         mesh = create_model(name="squirrel")
-#         trimesh_obj = TrimeshObject(mesh=mesh)
-#         self.add(trimesh_obj)
-
-
-# class LandScene(ThreeDScene):
-#     """?"""
-#     def construct(self):
-#         self.set_camera_orientation(phi=75 * DEGREES, theta=30 * DEGREES)
-#         mesh = create_model(name="Land")
-#         trimesh_obj = TrimeshObject(mesh=mesh)
-#         self.add(trimesh_obj)
-
-
-# class OctocatScene(ThreeDScene):
-#     """Display the Octo-Cat"""
-#     def construct(self):
-#         self.set_camera_orientation(phi=75 * DEGREES, theta=30 * DEGREES)
-#         mesh = create_model(name="Octocat-v1")
-#         trimesh_obj = TrimeshObject(mesh=mesh)
-#         self.add(trimesh_obj)
-
-
-# 32GB RAM OVERFLOW
-# class ArmadilloScene(ThreeDScene):
-#     def construct(self):
-#         self.set_camera_orientation(phi=75 * DEGREES, theta=30 * DEGREES)
-#         mesh = create_model(name="armadillo")
-#         trimesh_obj = TrimeshObject(mesh=mesh)
-#         self.add(trimesh_obj)
-
-
-##### ManimMesh #####
+# #### ManimMesh #####
 class ConeScene(m.ThreeDScene):
     """Display a cone"""
 
@@ -88,7 +20,7 @@ class ConeScene(m.ThreeDScene):
         mesh = create_model(name="tail_topper")
         mesh.scale_mesh(scaling=0.3)
         mesh.translate_mesh(np.array([0, -8, 0]))
-        manim_mesh_obj = ManimMesh(mesh=mesh)
+        manim_mesh_obj = ManimMesh(scene=self, mesh=mesh)
         self.add(manim_mesh_obj)
 
 
@@ -98,7 +30,7 @@ class SuzanneScene(m.ThreeDScene):
     def construct(self):
         self.camera.set_phi(90 * m.DEGREES)
         mesh = create_model(name="suzanne")
-        manim_mesh_obj = ManimMesh(mesh=mesh)
+        manim_mesh_obj = ManimMesh(scene=self, mesh=mesh)
         self.add(manim_mesh_obj)
         self.play(
             m.Rotate(
@@ -130,6 +62,7 @@ class PyramidScene(m.ThreeDScene):
 class TriangleScene(m.ThreeDScene):
     """simple 2D mesh scene, visualizes delaunay criterion"""
 
+    # pylint: disable=too-many-statements
     def construct(self):
         text = m.Text('Delaunay Example').scale(0.5).to_corner(m.UL)
         text.set_color(m.WHITE)
@@ -211,22 +144,9 @@ class SnapToGridScene(m.ThreeDScene):
 
     def construct(self):
         self.set_camera_orientation(0, 0)
-        # create a grid and add it to scene
-        u, v = 7, 7
-        grid_vertices = np.array(
-            np.meshgrid(np.linspace(-3, 3, u), np.linspace(-3, 3, v), indexing='ij')
-        ).T.reshape((-1, 2))
         grid_mesh = Manim2DMesh(
             scene=self,
-            mesh=Mesh(
-                verts=grid_vertices,
-                faces=[np.array([
-                    i + j * u,  # bottom left
-                    i + j * u + 1,  # bottom right
-                    i + (j + 1) * u + 1,  # top right
-                    i + (j + 1) * u  # top left
-                ]) for j in range(v - 1) for i in range(u - 1)],
-            ),
+            mesh=create_grid([(-3, 3, 7), (-3, 3, 7)]),
             display_vertices=False,
             faces_stroke_width=0.3,
             faces_stroke_color=m.BLUE_D,

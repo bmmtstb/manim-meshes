@@ -100,6 +100,12 @@ class Mesh:
     def get_parts(self) -> Parts:
         return self._parts
 
+    def has_vertex(self, vertex: np.ndarray) -> bool:
+        """return whether vertex is in self._vertices"""
+        if len(vertex) != self.dim:
+            return False
+        return any(np.array_equal(vertex, v) for v in self._vertices)
+
     def add_vertices(self, new_vertices: Vertices) -> None:
         """add given vertices to current ones"""
         if not isinstance(new_vertices, np.ndarray):
