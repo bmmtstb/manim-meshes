@@ -181,6 +181,16 @@ class ManimMesh(m.VGroup, metaclass=ConvertToOpenGL):
         """abstract from super - please the linter"""
         raise NotImplementedError
 
+    def depthSortFaces(self, camera_pos):
+        """depth sorts faces, only correct results for non-intersecting meshes"""
+        pass
+
+    def triangleIntersect(self, triangle_1, triangle_2, camera_pos):
+        """calculates if triangle_1 intersects viewing tetrahedron of triangle_2"""
+        pass
+
+
+
 
 class Manim2DMesh(ManimMesh):
     """
