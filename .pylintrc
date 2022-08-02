@@ -244,7 +244,7 @@ good-names=i,
 
 # Good variable names regexes, separated by a comma. If names match any regex,
 # they will always be accepted
-good-names-rgxs=^[a-z]$
+good-names-rgxs=^[a-z][0-9]?$
 
 # Include a hint for the correct naming format with invalid-name.
 include-naming-hint=no
@@ -573,19 +573,19 @@ max-args=20
 max-attributes=20
 
 # Maximum number of boolean expressions in an if statement (see R0916).
-max-bool-expr=5
+max-bool-expr=6
 
 # Maximum number of branch for function / method body.
 max-branches=12
 
 # Maximum number of locals for function / method body.
-max-locals=15
+max-locals=20
 
 # Maximum number of parents for a class (see R0901).
 max-parents=7
 
 # Maximum number of public methods for a class (see R0904).
-max-public-methods=20
+max-public-methods=40
 
 # Maximum number of return / yield for function / method body.
 max-returns=6

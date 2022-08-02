@@ -6,6 +6,10 @@ import manim as m
 from manim.mobject.opengl.opengl_compatibility import ConvertToOpenGL
 import numpy as np
 # local imports
+from typing import Tuple
+
+from manim_meshes.exceptions import InvalidMeshException
+from manim_meshes.helpers import remove_keys_from_dict
 from manim_meshes.models.mesh import Mesh
 from manim_meshes.models.params import get_param_or_default, M2DM, M3DM
 
@@ -70,17 +74,10 @@ class ManimMesh(m.VGroup, metaclass=ConvertToOpenGL):
     inspired by manim class 'Surface'
     """
 
-    def __init__(
-            self,
-            mesh: Mesh,
-            *args,
-            **kwargs,
-    ) -> None:
-        """
-        @keyword display_vertices
-        """
-        super().__init__(*args, **kwargs)
+    def __init__(self, scene: m.Scene, mesh: Mesh, *args, **kwargs) -> None:
+        super().__init__(*args)
         self.mesh: Mesh = mesh
+        self.scene: m.Scene = scene
 
         # set all the parameters
         self.display_vertices = get_param_or_default("display_vertices", kwargs, M3DM)
@@ -117,20 +114,14 @@ class ManimMesh(m.VGroup, metaclass=ConvertToOpenGL):
             self._setup_faces()
 
     def _setup_vertices(self):
-        """set the vertices as manim objects"""
-        # vertices = m.Group()
-        # for vert_coord in np.asarray(self.mesh.vertices):
-        #     # FIXME does not print right now
-        #     vertices.add(m.Point(
-        #         location=vert_coord,
-        #         color=m.BLUE,
-        #         # fill_opacity=self.verts_fill_opacity,
-        #         # stroke_width=self.verts_stroke_width,
-        #     ))
-        # self.add(*vertices)
+        """set the vertices as 3D manim objects"""
+        # Fixme how do we remove them for e.g. moving ?
+        for v in self.mesh.get_vertices():
+            self.scene.add(m.Sphere(v, radius=0.03, color=m.GREEN_A))
 
     def _setup_edges(self):
         """set the edges as manim objects"""
+        # FIXME currently edges are face_stroke_color
         # edges = m.VGroup()
         # vertices = np.asarray(self.mesh.vertices)
         # for edge_verts in np.asarray(self.mesh.edges):
@@ -148,18 +139,18 @@ class ManimMesh(m.VGroup, metaclass=ConvertToOpenGL):
         # self.add(*edges)
 
     def _setup_faces(self):
-        """set the current mesh up as manim objects"""
+        """
+        set the current mesh up as manim objects
+        should work for any sized face, not just triangles
+        """
         faces = m.VGroup()
+        verts_3d = self.mesh.get_vertices()
         for face_indices in self.mesh.get_faces():
-            triangle = [self.mesh.get_vertices()[i] for i in face_indices]
+            face_points = np.array([verts_3d[i] for i in face_indices])
+
             new_face = m.ThreeDVMobject()
             new_face.set_points_as_corners(
-                [
-                    triangle[0],
-                    triangle[1],
-                    triangle[2],
-                    triangle[0]
-                ],
+                face_points,
             )
             faces.add(new_face)
         faces.set_fill(
@@ -181,6 +172,13 @@ class ManimMesh(m.VGroup, metaclass=ConvertToOpenGL):
         """abstract from super - please the linter"""
         raise NotImplementedError
 
+    def move_to_grid(self, scene: m.Scene, grid_sizes: Tuple[float, ...], threshold: Tuple[float, ...], nof_steps: int):
+        """slowly snap to a given grid, uses stepwise mesh.snap_to_grid()"""
+        for step in range(nof_steps, 0, -1):
+            self.mesh.snap_to_grid(grid_sizes, threshold, step)
+            self._setup_vertices()
+            scene.wait(0.5)
+
     def depthSortFaces(self, camera_pos):
         """depth sorts faces, only correct results for non-intersecting meshes"""
         pass
@@ -194,19 +192,27 @@ class ManimMesh(m.VGroup, metaclass=ConvertToOpenGL):
 
 class Manim2DMesh(ManimMesh):
     """
-    2D mesh implementation, z-coordinates must be zero.
+    2D mesh implementation
+    either mesh fully 2D or 3D and all z-coordinate are zero
     """
 
-    def __init__(
-            self,
-            mesh: Mesh,
-            *args,
-            **kwargs,
-    ) -> None:
-        if any(mesh.get_vertices()[:, 2] != 0):
-            raise Exception('Mesh is not 2D / z-coordinates not 0!')
+    def __init__(self, scene: m.Scene, mesh: Mesh, *args, **kwargs) -> None:
+        if mesh.dim == 3:
+            if np.sum(np.abs(mesh.get_vertices()[:, 2] != 0)):
+                raise InvalidMeshException("Mesh has z values != 0 and therefore is not 2D.")
+        elif mesh.dim < 3:
+            # most of manim gl functions work only with 3D vertices, therefore cast mesh now
+            mesh.make_vertices_3d()
+        else:
+            raise InvalidMeshException(
+                f'Mesh is not in the correct format. Expected Dim 2 or 3 with z zero, was {mesh.dim}')
+        # init ManimMesh
         super().__init__(
-            mesh,
+            mesh=mesh,
+            scene=scene,
+            display_vertices=get_param_or_default("display_vertices", kwargs, M2DM),
+            display_edges=get_param_or_default("display_edges", kwargs, M2DM),
+            display_faces=get_param_or_default("display_faces", kwargs, M2DM),
             faces_fill_color=get_param_or_default("faces_fill_color", kwargs, M2DM),
             faces_fill_opacity=get_param_or_default("faces_fill_opacity", kwargs, M2DM),
             faces_stroke_color=get_param_or_default("faces_stroke_color", kwargs, M2DM),
@@ -214,8 +220,15 @@ class Manim2DMesh(ManimMesh):
             pre_function_handle_to_anchor_scale_factor=get_param_or_default(
                 "pre_function_handle_to_anchor_scale_factor", kwargs, M2DM),
             *args,
-            **kwargs,
+            **remove_keys_from_dict(kwargs, list(M2DM.keys())),
         )
+
+    def _setup_vertices(self):
+        """set the vertices as 2D manim objects"""
+        points = m.VGroup()
+        for v in self.mesh.get_vertices():
+            points.add(m.Dot(v, radius=0.03, color=m.RED))
+        self.scene.add(points)
 
     def get_circle(self, face_idx: int, **kwargs):
         """create a circum-circle around face with given idx"""
@@ -242,7 +255,7 @@ class Manim2DMesh(ManimMesh):
             raise ValueError("Faces must share exactly one edge!")
         # currently ignores resulting winding order (should this be fixed?)
         v_1, v_2 = face_arr_1[~mask_1][0], face_arr_2[~mask_2][0]  # new shared edge
-        v_3_a, v_3_b = face_arr_1[mask_1][0], face_arr_1[mask_1][1] # new unshared vertices
+        v_3_a, v_3_b = face_arr_1[mask_1][0], face_arr_1[mask_1][1]  # new unshared vertices
         self.mesh.update_face(face_idx_1, np.array([v_1, v_2, v_3_a]))
         self.mesh.update_face(face_idx_2, np.array([v_1, v_2, v_3_b]))
         anims = []
@@ -263,7 +276,6 @@ class Manim2DMesh(ManimMesh):
                 kwargs['run_time'] = 1
             anims.append(face.animate(**kwargs).become(new_face))
         scene.play(*anims)
-
 
     def get_points_violating_delaunay(self, face_id: int):
         """given a triangle by id, get all points violating delaunay criterion"""
@@ -308,7 +320,7 @@ class Manim2DMesh(ManimMesh):
         shift = pos - actual_pos
         self.shift_vertex(scene, vertex_idx, shift, **kwargs)
 
-    def _update_vertex(self,vertex_idx: int, pos: np.ndarray):
+    def _update_vertex(self, vertex_idx: int, pos: np.ndarray):
         self.mesh.update_vertex(vertex_idx, pos)
         for face_idx, face in enumerate(self.mesh.get_faces()):
             if vertex_idx in face:
