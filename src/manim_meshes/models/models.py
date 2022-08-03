@@ -1,12 +1,13 @@
 """
 manim models for mesh objects
 """
+# python imports
+from typing import Tuple
 # third-party imports
 import manim as m
 from manim.mobject.opengl.opengl_compatibility import ConvertToOpenGL
 import numpy as np
 # local imports
-from typing import Tuple
 
 from manim_meshes.exceptions import InvalidMeshException
 from manim_meshes.helpers import remove_keys_from_dict
@@ -65,7 +66,7 @@ from manim_meshes.models.params import get_param_or_default, M2DM, M3DM
 #         """
 #         raise NotImplementedError
 
-
+# pylint: disable=too-many-instance-attributes
 class ManimMesh(m.VGroup, metaclass=ConvertToOpenGL):
     """
     another Mesh implementation, a little bit faster + looks better

@@ -73,3 +73,4 @@ def get_param_or_default(
     # get value from default parameters
     if value in default:
         return default[value][1]
+    raise BadParameterException(f'Value {value} is not in params and not in default params.')

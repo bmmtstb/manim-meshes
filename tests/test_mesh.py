@@ -34,6 +34,17 @@ def test_mesh_equality_plus_mesh_creation():
     assert tm7 != tm8
 
 
+def test_has_vertex():
+    m = create_pyramid(triangles_only=True)
+    assert m.has_vertex(np.array([1, 1, 0]))
+    assert m.has_vertex(np.array([0, 0, 2]))
+    assert not m.has_vertex(np.array([1, 1, 0, 0]))
+    assert not m.has_vertex(np.array([1, 0, 2]))
+    assert not m.has_vertex(np.array([1, 1]))
+    assert not m.has_vertex(np.array([1, 1, 0, 0]))
+    assert not m.has_vertex(np.array([0, 0, 2.000001]))
+
+
 def test_dangling_vertices():
     # node 4 is not used -> has dangling vertices
     m = Mesh(
