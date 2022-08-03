@@ -11,7 +11,7 @@ import numpy as np
 # contain e.g. triangles and squares
 from manim_meshes.exceptions import InvalidMeshException
 from manim_meshes.helpers import is_vararray_equal, fix_references, is_twice_nested_iterable
-from manim_meshes.types import Vertex, Vertices, Face, Faces, Part, Parts, VarArray
+from manim_meshes.types import Vertex, Vertices, Face, Faces, Part, Parts, VarArray, Edges
 
 
 class Mesh:
@@ -53,6 +53,7 @@ class Mesh:
         self._vertices: Vertices = conv_vertices
         self._faces: Faces = [np.array(f, dtype=int) for f in faces] if faces is not None else []
         self._parts: Parts = [np.array(p, dtype=int) for p in parts] if parts is not None else []
+        self._edges = self.extract_edges()
         self._test_for_dangling = dangling
         self.dim = conv_vertices.shape[1]
 
@@ -105,6 +106,21 @@ class Mesh:
 
     def get_parts(self) -> Parts:
         return self._parts
+
+    def get_edges(self) -> Edges:
+        return self._edges
+
+    def get_edge_index(self, edge):
+        """return index of given edge"""
+        return self._edges.index(edge)
+
+    def get_vertex_edges(self, vertex_idx):
+        """return all edges containing vertex_idx"""
+        vertex_edges = []
+        for edge in self._edges:
+            if vertex_idx in edge:
+                vertex_edges.append(edge)
+        return vertex_edges
 
     def find_vertex(self, vertex: np.ndarray, start: int = 0) -> List[int]:
         """
@@ -216,6 +232,8 @@ class Mesh:
         self._faces[idx] = np.array(new_face)
         if self._test_for_dangling and self.dangling_vert_check():
             warnings.warn('Dangling vertices due to face update')
+        # update edges (FIXME: only update new/deleted edges, not everything)
+        self._edges = self.extract_edges()
 
     def add_parts(self, new_parts: Parts) -> None:
         """adds new parts"""
@@ -452,6 +470,19 @@ class Mesh:
         self.remove_duplicate_vertices()
         self.remove_duplicate_faces()
         self.remove_duplicate_parts()
+
+    def extract_edges(self) -> Edges:
+        """returns all edges of the mesh as list of sorted 2-tuples of vertex indices, e.g. [(1,2), (2,3)]"""
+        edges = []
+        for face in self._faces:
+            last_vertex = face[-1]
+            for _, vertex_idx in enumerate(face):
+                edge = tuple(sorted([last_vertex, vertex_idx]))
+                last_vertex = vertex_idx
+                if edge not in edges:
+                    edges.append(edge)
+
+        return edges
 
     # def is_face_ccw(self, face_id: int) -> bool:
     #     """check if face is counter-clockwise"""

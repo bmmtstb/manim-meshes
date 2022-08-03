@@ -107,12 +107,15 @@ class ManimMesh(m.VGroup, metaclass=ConvertToOpenGL):
 
     def _setup(self):
         """set all the necessary mesh parameters"""
-        if self.display_vertices:
-            self._setup_vertices()
-        if self.display_edges:
-            self._setup_edges()
+        # faces, edges, vertices
+        self.add(m.VGroup(), m.VGroup(), m.VGroup())
+
         if self.display_faces:
             self._setup_faces()
+        if self.display_edges:
+            self._setup_edges()
+        if self.display_vertices:
+            self._setup_vertices()
 
     def _setup_vertices(self):
         """set the vertices as 3D manim objects"""
@@ -122,36 +125,38 @@ class ManimMesh(m.VGroup, metaclass=ConvertToOpenGL):
 
     def _setup_edges(self):
         """set the edges as manim objects"""
-        # FIXME currently edges are face_stroke_color
-        # edges = m.VGroup()
-        # vertices = np.asarray(self.mesh.vertices)
-        # for edge_verts in np.asarray(self.mesh.edges):
-        #     vert_1 = vertices[edge_verts[0]]
-        #     vert_2 = vertices[edge_verts[1]]
-        #     # FIXME which object
-        # edges.set_fill(
-        #     color=self.edges_fill_color,
-        #     opacity=self.edges_fill_opacity
-        # )
-        # edges.set_stroke(
-        #     width=self.edge_stroke_width,
-        #     opacity=self.edge_stroke_opacity,
-        # )
-        # self.add(*edges)
+        edges = self.submobjects[1]
+        vertices = self.mesh.get_vertices()
+        for edge_verts in self.mesh.get_edges():
+            vert_1 = vertices[edge_verts[0]]
+            vert_2 = vertices[edge_verts[1]]
+            edge = m.ThreeDVMobject()
+            edge.set_points_as_corners([vert_1, vert_2])
+            edges.add(edge)
+        edges.set_fill(
+            color=self.edges_fill_color,
+            opacity=self.edges_fill_opacity
+        )
+        edges.set_stroke(
+            color=self.edges_stroke_color,
+            width=self.edges_stroke_width,
+            opacity=self.edges_stroke_opacity,
+        )
+        self.add(edges)
 
     def _setup_faces(self):
         """
         set the current mesh up as manim objects
         should work for any sized face, not just triangles
         """
-        faces = m.VGroup()
+        faces = self.submobjects[0]
         verts_3d = self.mesh.get_vertices()
         for face_indices in self.mesh.get_faces():
-            face_points = np.array([verts_3d[i] for i in face_indices])
-
+            face_points = [verts_3d[i] for i in face_indices]
+            face_points.append(verts_3d[face_indices[0]])
             new_face = m.ThreeDVMobject()
             new_face.set_points_as_corners(
-                face_points,
+                face_points
             )
             faces.add(new_face)
         faces.set_fill(
@@ -163,11 +168,15 @@ class ManimMesh(m.VGroup, metaclass=ConvertToOpenGL):
             width=self.faces_stroke_width,
             opacity=self.faces_stroke_opacity,
         )
-        self.add(*faces)
+        self.add(faces)
 
     def get_face(self, face_idx):
         """get the faces with the given id"""
-        return self.submobjects[face_idx]
+        return self.submobjects[0].submobjects[face_idx]
+
+    def get_edge(self, edge_idx):
+        """get the edge with the given id"""
+        return self.submobjects[1].submobjects[edge_idx]
 
     def align_points_with_larger(self, larger_mobject):
         """abstract from super - please the linter"""
@@ -208,6 +217,11 @@ class Manim2DMesh(ManimMesh):
             faces_fill_opacity=get_param_or_default("faces_fill_opacity", kwargs, M2DM),
             faces_stroke_color=get_param_or_default("faces_stroke_color", kwargs, M2DM),
             faces_stroke_width=get_param_or_default("faces_stroke_width", kwargs, M2DM),
+            edges_fill_color=get_param_or_default("edges_fill_color", kwargs, M2DM),
+            edges_fill_opacity=get_param_or_default("edges_fill_opacity", kwargs, M2DM),
+            edges_stroke_color=get_param_or_default("edges_stroke_color", kwargs, M2DM),
+            edges_stroke_width=get_param_or_default("edges_stroke_width", kwargs, M2DM),
+            edges_stroke_opacity=get_param_or_default("edges_stroke_opacity", kwargs, M2DM),
             pre_function_handle_to_anchor_scale_factor=get_param_or_default(
                 "pre_function_handle_to_anchor_scale_factor", kwargs, M2DM),
             *args,
@@ -227,7 +241,7 @@ class Manim2DMesh(ManimMesh):
         vertices = [self.mesh.get_vertices()[i] for i in face]
         center, radius = self._get_triangle_circum_circle_params(*vertices)
         if 'stroke_width' not in kwargs:
-            kwargs['stroke_width'] = 1.5
+            kwargs['stroke_width'] = 2
         circ = m.Circle(radius, **kwargs)
         circ.shift(center)
         return circ
@@ -247,9 +261,12 @@ class Manim2DMesh(ManimMesh):
         # currently ignores resulting winding order (should this be fixed?)
         v_1, v_2 = face_arr_1[~mask_1][0], face_arr_2[~mask_2][0]  # new shared edge
         v_3_a, v_3_b = face_arr_1[mask_1][0], face_arr_1[mask_1][1]  # new unshared vertices
+        old_edge = self.get_edge(self.mesh.get_edge_index(tuple(sorted([v_3_a, v_3_b]))))
         self.mesh.update_face(face_idx_1, np.array([v_1, v_2, v_3_a]))
         self.mesh.update_face(face_idx_2, np.array([v_1, v_2, v_3_b]))
         anims = []
+        if 'run_time' not in kwargs:
+            kwargs['run_time'] = 1
         for face_idx in [face_idx_1, face_idx_2]:
             face = self.mesh.get_faces()[face_idx]
             triangle = [self.mesh.get_vertices()[i] for i in face]
@@ -263,9 +280,10 @@ class Manim2DMesh(ManimMesh):
                     triangle[0]
                 ],
             )
-            if 'run_time' not in kwargs:
-                kwargs['run_time'] = 1
             anims.append(face.animate(**kwargs).become(new_face))
+        new_edge = old_edge.copy()
+        new_edge.set_points_as_corners([self.mesh.get_vertices()[v_1], self.mesh.get_vertices()[v_2]])
+        anims.append(old_edge.animate(**kwargs).become(new_edge))
         scene.play(*anims)
 
     def get_points_violating_delaunay(self, face_id: int):
@@ -280,7 +298,7 @@ class Manim2DMesh(ManimMesh):
                 distance = np.linalg.norm(center - point)
                 if distance < radius:  # inside circle
                     dot = m.Dot(point, radius=0.03, color=m.RED)
-                    dot.add_updater(lambda mo, pointer = self.mesh.get_vertices()[idx]: mo.move_to(pointer))
+                    dot.add_updater(lambda mo, pointer=self.mesh.get_vertices()[idx]: mo.move_to(pointer))
                     points.append(dot)
                     indices.append(idx)
         return points, indices
@@ -300,7 +318,7 @@ class Manim2DMesh(ManimMesh):
         """shift vertex and update faces"""
         start = self.mesh.get_vertices()[vertex_idx].copy()
         tracker = m.ValueTracker(0)
-        tracker.add_updater(lambda mo: self._update_vertex(vertex_idx, start + tracker.get_value()*shift))
+        tracker.add_updater(lambda mo: self._update_vertex(vertex_idx, start + tracker.get_value() * shift))
         scene.add(tracker)
         scene.play(tracker.animate(**kwargs).set_value(1))
         scene.remove(tracker)
@@ -325,6 +343,15 @@ class Manim2DMesh(ManimMesh):
                         triangle[0]
                     ],
                 )
+        # update edges
+        for edge in self.mesh.get_vertex_edges(vertex_idx):
+            self._update_edge(edge)
+
+    def _update_edge(self, edge: Tuple[int, ...]):
+        e = self.get_edge(self.mesh.get_edge_index(edge))
+        vert_1 = self.mesh.get_vertices()[edge[0]]
+        vert_2 = self.mesh.get_vertices()[edge[1]]
+        e.set_points_as_corners([vert_1, vert_2])
 
     @staticmethod
     def _get_triangle_circum_circle_params(

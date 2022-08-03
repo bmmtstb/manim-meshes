@@ -72,7 +72,7 @@ class TriangleScene(m.ThreeDScene):
         mesh_2d = Manim2DMesh(scene=self, mesh=mesh)
         self.add(mesh_2d)
         triangle = mesh_2d.get_face(0)
-        self.play(triangle.animate.set_fill(m.YELLOW, 0.6))  # mark triangle
+        self.play(triangle.animate.set_fill(m.YELLOW_D, 1))  # mark triangle
         circle = mesh_2d.get_circle(0)  # circumcircle around triangle
         self.play(m.Create(circle))
         points, indices = mesh_2d.get_points_violating_delaunay(0)  # vertex indices and manim point objects
@@ -88,7 +88,6 @@ class TriangleScene(m.ThreeDScene):
         points[0].remove_updater(points[0].non_time_updaters[-1])  # remove last updater
         self.play(m.FadeOut(points[0]), m.Uncreate(circle))
         self.play(triangle.animate.set_fill(mesh_2d.faces_fill_color, mesh_2d.faces_fill_opacity))  # unmark triangle
-        self.wait(0.5)
         # check delaunay for each triangle (except first ~> already checked above)
         for f in range(1, len(mesh_2d.mesh.get_faces())):
             circ = mesh_2d.get_circle(f)  # circumcircle around triangle
@@ -101,7 +100,7 @@ class TriangleScene(m.ThreeDScene):
         self.wait(0.5)
         triangle_a = mesh_2d.get_face(2)
         triangle_b = mesh_2d.get_face(3)
-        self.play(triangle_a.animate.set_fill(m.YELLOW, 0.6), triangle_b.animate.set_fill(m.YELLOW, 0.6))
+        self.play(triangle_a.animate.set_fill(m.YELLOW_D, 1), triangle_b.animate.set_fill(m.YELLOW_D, 1))
         mesh_2d.edge_flip(self, 2, 3)
         circle_a = mesh_2d.get_circle(2)  # circumcircle around triangle
         circle_b = mesh_2d.get_circle(3)  # circumcircle around triangle
