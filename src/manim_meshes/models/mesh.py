@@ -11,7 +11,7 @@ import numpy as np
 # contain e.g. triangles and squares
 from manim_meshes.exceptions import InvalidMeshException
 from manim_meshes.helpers import is_vararray_equal, fix_references, is_twice_nested_iterable
-from manim_meshes.types import Vertex, Vertices, Face, Faces, Part, Parts
+from manim_meshes.types import Vertex, Vertices, Face, Faces, Part, Parts, VarArray
 
 
 class Mesh:
@@ -62,6 +62,12 @@ class Mesh:
         if self._test_for_dangling and parts is not None and faces is not None and self.dangling_face_check():
             warnings.warn('Mesh contains dangling faces.')
 
+    def __add__(self, other) -> 'Mesh':
+        if isinstance(other, Mesh):
+            self.add_to_mesh(other)
+            return self
+        raise NotImplementedError
+
     def __iadd__(self, other: 'Mesh') -> 'Mesh':
         if isinstance(other, Mesh):
             self.add_to_mesh(other)
@@ -100,11 +106,35 @@ class Mesh:
     def get_parts(self) -> Parts:
         return self._parts
 
-    def has_vertex(self, vertex: np.ndarray) -> bool:
-        """return whether vertex is in self._vertices"""
+    def find_vertex(self, vertex: np.ndarray, start: int = 0) -> List[int]:
+        """
+        return list of indices where self._vertices == vertex
+        possibility to start loop at different index
+        """
         if len(vertex) != self.dim:
-            return False
-        return any(np.array_equal(vertex, v) for v in self._vertices)
+            return []
+        return [i for i, v in enumerate(self._vertices[start:], start=start)
+                if np.array_equal(vertex, v)]
+
+    @staticmethod
+    def _find_rolling_alternative(array: VarArray, item: np.ndarray, start: int = 0) -> List[int]:
+        """
+        return list of indices where array == item or a clockwise rolled / shifted alternative
+        possibility to start loop at different index
+        """
+        alternatives = [np.roll(item, i) for i in range(len(item))]
+        return [idx for idx, curr_item in enumerate(array[start:], start=start)
+                if any(np.array_equal(a, curr_item) for a in alternatives)]
+
+    def find_face(self, face: np.ndarray, start: int = 0) -> List[int]:
+        """return all indices where face is found in self._faces"""
+        return self._find_rolling_alternative(array=self._faces, item=face, start=start)
+
+    def find_part(self, part: np.ndarray, start: int = 0) -> List[int]:
+        """return all indices where part is found in self._parts"""
+        # Fixme: are two parts equal even if the faces are randomly sorted, not clockwise?
+        #  [1,2,3] ?=? [1,3,2] or is it "rolling" like faces?
+        return self._find_rolling_alternative(array=self._parts, item=part, start=start)
 
     def add_vertices(self, new_vertices: Vertices) -> None:
         """add given vertices to current ones"""
@@ -376,19 +406,52 @@ class Mesh:
 
     def remove_duplicate_vertices(self) -> None:
         """remove exact duplicates in vertices"""
-        raise NotImplementedError
+        # get unique vertices, indices, and the inverse references
+        new_verts, indices, inverse = np.unique(self._vertices, axis=0, return_index=True, return_inverse=True)
+        # sort indices, to keep current sorting for faces, then set unique vertices
+        permutation = indices.argsort()
+        self._vertices = new_verts[permutation]
+        # switch index of every face that contains a value that is duplicate
+        for i_inv, i_idx in enumerate(inverse):
+            # for every index in inverse (which are original indices)
+            # replace it with the value indices[i_idx] for every face
+            for face in self._faces:
+                np.place(face, face == i_inv, indices[i_idx])
 
     def remove_duplicate_faces(self) -> None:
         """remove duplicates in faces, indices only have to be in the correct order, not at the exact places"""
-        raise NotImplementedError
+        to_delete = []
+        for i_face, face in enumerate(self._faces):
+            if i_face in to_delete:  # skip indices marked for deletion
+                continue
+            others = self.find_face(face, start=i_face + 1)
+            to_delete += others
+            for o_f_idx in others:
+                # change parts to use first index of the same face
+                for part in self._parts:
+                    np.place(part, part == o_f_idx, i_face)
+        # delete all duplicates from faces
+        for del_f_idx in sorted(list(set(to_delete)), reverse=True):
+            del self._faces[del_f_idx]
 
     def remove_duplicate_parts(self) -> None:
         """remove duplicates in parts, indices only have to be in the correct order, not at the exact places"""
-        raise NotImplementedError
+        to_delete = []
+        for i_part, part in enumerate(self._parts):
+            if i_part in to_delete:  # skip indices marked for deletion
+                continue
+            others = self.find_part(part, start=i_part + 1)
+            to_delete += others
+            # no further nested type
+        for del_p_idx in sorted(list(set(to_delete)), reverse=True):
+            # exact duplicates can be removed
+            del self._parts[del_p_idx]
 
     def remove_duplicates(self) -> None:
         """remove all duplicates in the current mesh"""
-        raise NotImplementedError
+        self.remove_duplicate_vertices()
+        self.remove_duplicate_faces()
+        self.remove_duplicate_parts()
 
     # def is_face_ccw(self, face_id: int) -> bool:
     #     """check if face is counter-clockwise"""

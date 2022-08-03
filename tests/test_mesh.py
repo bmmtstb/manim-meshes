@@ -34,15 +34,26 @@ def test_mesh_equality_plus_mesh_creation():
     assert tm7 != tm8
 
 
-def test_has_vertex():
-    m = create_pyramid(triangles_only=True)
-    assert m.has_vertex(np.array([1, 1, 0]))
-    assert m.has_vertex(np.array([0, 0, 2]))
-    assert not m.has_vertex(np.array([1, 1, 0, 0]))
-    assert not m.has_vertex(np.array([1, 0, 2]))
-    assert not m.has_vertex(np.array([1, 1]))
-    assert not m.has_vertex(np.array([1, 1, 0, 0]))
-    assert not m.has_vertex(np.array([0, 0, 2.000001]))
+def test_find_vertex():
+    m = Mesh(verts=np.array([[1, 2, 3], [1, 2, 3], [1, 0, 1], [1, 2, 3]]), faces=None)
+    assert m.find_vertex(np.array([1, 0, 1])) == [2]
+    assert m.find_vertex(np.array([1, 2, 3])) == [0, 1, 3]
+    assert m.find_vertex(np.array([1, 2, 3]), start=1) == [1, 3]
+    assert m.find_vertex(np.array([0, 0, 0])) == []
+    assert m.find_vertex(np.array([1, 0])) == []
+    assert m.find_vertex(np.array([1, 0, 1, 0])) == []
+    assert m.find_vertex(np.array([1, 0, 1.000001])) == []
+
+
+def test_find_face():
+    m = Mesh(
+        verts=np.array([[1, 2, 3], [1, 2, 3], [1, 0, 1], [1, 2, 3]]),
+        faces=np.array([[1, 2, 3], [2, 3, 1], [1, 3, 2], [1, 2, 0], [3, 1, 2], [3, 1, 2, 3]])
+    )
+    assert m.find_face(np.array([1, 2, 3])) == [0, 1, 4]
+    assert m.find_face(np.array([3, 1, 2]), start=2) == [4]
+    assert m.find_face(np.array([3, 1, 2, 3])) == [5]
+    assert m.find_face(np.array([1, 2])) == []
 
 
 def test_dangling_vertices():
@@ -774,20 +785,34 @@ def test_snap_to_grid():
 
 
 def test_remove_duplicate_vertices():
-    # TODO
-    pass
+    m = create_pyramid() + create_pyramid()
+    m.remove_duplicate_vertices()
+    assert len(m.find_vertex(np.array([1, 1, 0]))) == 1
+    assert np.array_equal(m.get_vertices(), create_pyramid().get_vertices())
+    assert len(m.get_faces()) == 2 * 6
+    assert all(np.array_equal(a, b) for a, b in
+               zip(m.get_faces(), create_pyramid().get_faces() + create_pyramid().get_faces()))
 
 
 def test_remove_duplicate_faces():
-    # TODO
-    pass
+    m = create_pyramid() + create_pyramid()
+    m.remove_duplicate_vertices()
+    assert len(m.get_parts()) == 2
+    assert len(m.get_faces()) == 2 * 6
+    m.remove_duplicate_faces()
+    assert len(m.get_faces()) == 6
+    assert all(np.array_equal(a, b) for a, b in zip(m.get_faces(), create_pyramid().get_faces()))
+    assert all(np.array_equal(a, b) for a, b in
+               zip(m.get_parts(), create_pyramid().get_parts() + create_pyramid().get_parts()))
+    assert len(m.get_parts()) == 2
 
 
 def test_remove_duplicate_parts():
-    # TODO
-    pass
-
-
-def test_remove_duplicates():
-    # TODO
-    pass
+    m = create_pyramid() + create_pyramid()
+    m.remove_duplicate_vertices()
+    assert len(m.get_parts()) == 2
+    m.remove_duplicate_faces()
+    assert len(m.get_parts()) == 2
+    m.remove_duplicate_parts()
+    assert all(np.array_equal(a, b) for a, b in zip(m.get_parts(), create_pyramid().get_parts()))
+    assert len(m.get_parts()) == 1

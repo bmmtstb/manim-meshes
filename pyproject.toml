@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "manim-meshes"
-version = "0.0.2"
+version = "0.0.4-alpha.0"
 description = "2D and 3D Meshes for manim for displaying and educational Purposes."
 readme = "README.md"
 authors = ["Brizar <martin.steinborn@stud.tu-darmstadt.de>"]
