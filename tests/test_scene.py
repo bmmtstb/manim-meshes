@@ -1,6 +1,9 @@
 """
 create a few sample test scenes to check efficiency of renderer
 """
+# pylint: skip-file
+# pylint: disable-all
+
 # third-party imports
 import manim as m
 # local imports
@@ -35,10 +38,10 @@ class SuzanneScene(m.ThreeDScene):
         self.play(
             m.Rotate(
                 manim_mesh_obj,
-                angle=2 * m.PI,
+                angle=3 * m.PI,
                 about_point=m.ORIGIN,
                 rate_func=m.linear,
-                run_time=5
+                run_time=21
             )
         )
 
