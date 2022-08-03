@@ -413,9 +413,9 @@ class Mesh:
         edges = []
         for face in self._faces:
             last_vertex = face[-1]
-            for vert_idx, _ in enumerate(face):
-                edge = tuple(sorted([last_vertex, vert_idx]))
-                last_vertex = vert_idx
+            for _, vertex_idx in enumerate(face):
+                edge = tuple(sorted([last_vertex, vertex_idx]))
+                last_vertex = vertex_idx
                 if edge not in edges:
                     edges.append(edge)
 
