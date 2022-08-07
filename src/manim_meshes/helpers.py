@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Tuple, Union
 # third-party imports
 import numpy as np
 
-from manim_meshes.types import VarArray
+from manim_meshes.types import Edges, VarArray
 
 
 def is_in_vararray(array: VarArray, item: np.ndarray, rolling: bool = True) -> bool:
@@ -67,6 +67,14 @@ def is_twice_nested_iterable(obj: Any, min_lens: Tuple[int, int] = (1, 3)) -> bo
         )
 
     return False
+
+
+def are_edges_equal(edges1: Edges, edges2: Edges) -> bool:
+    """
+    check if two lists of edges are equal, no rolling, order does not matter
+    -> currently every edge is sorted
+    """
+    return all(e1 in edges2 for e1 in edges1) and all(e2 in edges1 for e2 in edges2)
 
 
 def fix_references(original: VarArray, indices: Union[np.ndarray, List[int]]) -> List[int]:

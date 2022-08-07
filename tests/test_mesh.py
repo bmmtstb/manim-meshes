@@ -7,6 +7,7 @@ from copy import deepcopy
 import numpy as np
 import pytest
 # local imports
+from manim_meshes.helpers import are_edges_equal
 from manim_meshes.models.mesh import Mesh
 from manim_meshes.templates import create_pyramid
 from manim_meshes.exceptions import InvalidMeshException
@@ -53,7 +54,8 @@ def test_mesh_equality_plus_mesh_creation():
     assert tm8 == tm9 and tm8 == tm10 and tm8 == tm11 and tm9 == tm10 and tm9 == tm11 and tm10 == tm11
     assert tm12 not in (tm8, tm9, tm10, tm11)
     assert tm8 == tm13 and tm8 == tm14 and tm13 == tm14
-    assert tm15 != tm8 and tm15 != tm13 and tm15 != tm14
+    assert tm15 not in (tm8, tm13, tm14)
+
 
 def test_find_vertex():
     m = Mesh(verts=np.array([[1, 2, 3], [1, 2, 3], [1, 0, 1], [1, 2, 3]]), faces=None)
@@ -228,6 +230,7 @@ def test_remove_parts():
     )
     m4.remove_parts([1, 3, 2, 1, 4])
     assert m3 == m4
+    assert are_edges_equal(m3.get_edges(), m4.get_edges())
 
 
 def test_remove_faces():
@@ -243,32 +246,36 @@ def test_remove_faces():
     with pytest.raises(IndexError) as _:
         m1 = deepcopy(m)
         m1.remove_faces([-1])
-    # removing one dangling face does not change parts
+    # removing one dangling face does not change parts but changes edges
     m2 = deepcopy(m)
     m2.remove_faces([3])
     assert len(m2.get_vertices()) == 4
     assert len(m2.get_faces()) == 3
     assert len(m2.get_parts()) == 2
     assert not m2.dangling_face_check()
-    # removing one non-dangling face removes the part that uses it
+    assert are_edges_equal(m2.get_edges(), [(0, 1), (1, 2), (0, 2), (2, 3), (1, 3), (3, 4), (2, 4)])
+    # removing one non-dangling face removes the part that uses it and the respective edges
     m3 = deepcopy(m)
     m3.remove_faces([2])
     assert len(m3.get_vertices()) == 4
     assert len(m3.get_faces()) == 3
     assert len(m3.get_parts()) == 1
     assert m3.dangling_face_check()
+    assert are_edges_equal(m3.get_edges(), [(0, 1), (1, 2), (0, 2), (2, 3), (1, 3), (3, 4), (1, 4)])
     # removing all faces works and order does not matter
     m4 = deepcopy(m)
     m4.remove_faces([0, 3, 1, 2])
     assert len(m4.get_vertices()) == 4
     assert len(m4.get_faces()) == 0
     assert len(m4.get_parts()) == 0
+    assert are_edges_equal(m4.get_edges(), [])
     # removing one face may result in multiple part deletions
     m5 = deepcopy(m)
     m5.remove_faces([1])
     assert len(m5.get_vertices()) == 4
     assert len(m5.get_faces()) == 3
     assert len(m5.get_parts()) == 0
+    assert are_edges_equal(m5.get_edges(), [(0, 1), (1, 2), (0, 2), (2, 3), (1, 3), (3, 4), (2, 4), (1, 4)])
 
 
 def test_remove_vertices():
@@ -284,12 +291,13 @@ def test_remove_vertices():
     with pytest.raises(IndexError) as _:
         m1 = deepcopy(m)
         m1.remove_vertices([-1])
-    # removing unused vertex does not change mesh
+    # removing unused vertex does not change mesh but changes edges
     m2 = deepcopy(m)
     m2.remove_vertices([5])
     assert len(m2.get_vertices()) == 5
     assert len(m2.get_faces()) == 4
     assert len(m2.get_parts()) == 2
+    assert are_edges_equal(m2.get_edges(), [(0, 1), (1, 2), (0, 2), (2, 3), (1, 3), (3, 4), (1, 4)])
     # removing faces but not independent parts
     m3 = deepcopy(m)
     m3.remove_vertices([4])
@@ -297,18 +305,22 @@ def test_remove_vertices():
     assert len(m3.get_faces()) == 3
     assert len(m3.get_parts()) == 2
     assert not m3.dangling_face_check()
+    assert are_edges_equal(m3.get_edges(), [(0, 1), (1, 2), (0, 2), (2, 3), (1, 3)])
     # removing multiple vertices works and order does not matter
     m4 = deepcopy(m)
     m4.remove_vertices([0, 3, 1, 2, 5])  # not 4
     assert len(m4.get_vertices()) == 1
     assert len(m4.get_faces()) == 0
     assert len(m4.get_parts()) == 0
+    assert are_edges_equal(m4.get_edges(), [])
     # removing vertex results in removing faces and parts only if necessary
+    # index shift for edges!
     m5 = deepcopy(m)
     m5.remove_vertices([0])
     assert len(m5.get_vertices()) == 5
     assert len(m5.get_faces()) == 3
     assert len(m5.get_parts()) == 1
+    assert are_edges_equal(m5.get_edges(), [(0, 1), (1, 2), (0, 2), (2, 3), (0, 3)])
 
 
 def test_add_parts():
@@ -367,16 +379,20 @@ def test_add_faces():
     m3 = deepcopy(m)
     m3.add_faces([np.array([0, 1, 2])])
     assert len(m3.get_faces()) == 1
+    assert are_edges_equal(m3.get_edges(), [(0, 1), (1, 2), (0, 2)])
     # add single to existing - and size can be different
     m3.add_faces([np.array([1, 2, 3, 3])])
     assert len(m3.get_faces()) == 2
+    assert are_edges_equal(m3.get_edges(), [(0, 1), (1, 2), (0, 2), (2, 3), (3, 3), (1, 3)])
     # add multiple to non-existing
     m4 = deepcopy(m)
     m4.add_faces([np.array([0, 1, 2]), np.array([1, 2, 3])])
     assert len(m4.get_faces()) == 2
+    assert are_edges_equal(m4.get_edges(), [(0, 1), (1, 2), (0, 2), (1, 3), (2, 3)])
     # add multiple to existing
     m4.add_faces([np.array([1, 1, 1]), np.array([2, 2, 2, 2])])
     assert len(m4.get_faces()) == 4
+    assert are_edges_equal(m4.get_edges(), [(0, 1), (1, 2), (0, 2), (1, 3), (2, 3), (2, 2), (1, 1)])
 
 
 def test_add_vertices():
@@ -402,10 +418,12 @@ def test_add_vertices():
     m3 = deepcopy(m)
     m3.add_vertices(np.array([[0, 0, 0]]))
     assert len(m3.get_vertices()) == 2
+    assert are_edges_equal(m3.get_edges(), m.get_edges())
     # add multiple
     m4 = deepcopy(m)
     m4.add_vertices(np.array([[0, 0, 0], [1, 1, 1], [1, 2, 3]]))
     assert len(m4.get_vertices()) == 4
+    assert are_edges_equal(m4.get_edges(), m.get_edges())
 
 
 def test_update_part():
@@ -460,6 +478,7 @@ def test_update_part():
     assert not m4_3.dangling_face_check()
     assert len(m4_3.get_parts()) == 2
     assert m4_3.get_parts()[0][0] == 3
+    assert are_edges_equal(m4_3.get_edges(), m.get_edges())
 
 
 def test_update_face():
@@ -504,16 +523,19 @@ def test_update_face():
     assert not m4_1.dangling_vert_check()
     assert len(m4_1.get_faces()) == 4
     assert m4_1.get_faces()[1][0] == 5
+    assert are_edges_equal(m4_1.get_edges(), [(0, 1), (1, 2), (0, 2), (2, 3), (1, 3), (3, 4), (1, 4), (2, 5), (0, 5)])
     m4_2 = deepcopy(m)  # tuple of int
     m4_2.update_face(1, (5, 2, 0))
     assert not m4_2.dangling_vert_check()
     assert len(m4_2.get_faces()) == 4
     assert m4_2.get_faces()[1][0] == 5
+    assert are_edges_equal(m4_1.get_edges(), [(0, 1), (1, 2), (0, 2), (2, 3), (1, 3), (3, 4), (1, 4), (2, 5), (0, 5)])
     m4_3 = deepcopy(m)  # 1D - np.ndarray
     m4_3.update_face(1, np.array([5, 2, 0]))
     assert not m4_3.dangling_vert_check()
     assert len(m4_3.get_faces()) == 4
     assert m4_3.get_faces()[1][0] == 5
+    assert are_edges_equal(m4_1.get_edges(), [(0, 1), (1, 2), (0, 2), (2, 3), (1, 3), (3, 4), (1, 4), (2, 5), (0, 5)])
 
 
 def test_update_vertex():
@@ -574,6 +596,7 @@ def test__add_and_remove_faces():
     assert len(triangle_mesh.get_parts()) == 1
     # changed triangle only to quad pyramid mesh
     assert triangle_mesh == quad_mesh
+    assert are_edges_equal(triangle_mesh.get_edges(), quad_mesh.get_edges())
 
 
 def test_parts_w_o_faces():
@@ -584,11 +607,6 @@ def test_parts_w_o_faces():
             faces=None,
             parts=[[1, 2, 3, 4]],
         )
-
-
-# TODO
-# test creating mesh with [] and None for faces and parts
-# test "anything" with faces and parts as []
 
 
 def test_add_to_mesh():
@@ -647,6 +665,8 @@ def test_add_to_mesh():
     assert len(m6.get_faces()) == 8
     assert len(m6.get_parts()) == 4
     assert m6.get_faces()[-1][2] == 10
+    assert are_edges_equal(m6.get_edges(),
+                           m.get_edges() + [(6, 7), (7, 8), (6, 8), (8, 11), (7, 11), (8, 9), (7, 9), (7, 10), (9, 10)])
     m7 = deepcopy(m)
     m7_1 = Mesh(
         verts=np.array([[5, 6, 7], [8, 7, 6], [5, 5, 5]]),
@@ -658,6 +678,7 @@ def test_add_to_mesh():
     assert m7.get_faces()[-1][1] == len(m.get_vertices()) - 1
     assert m7.get_parts()[-1][0] == 0
     assert m7.get_parts()[-1][2] == len(m.get_faces()) - 1
+    assert are_edges_equal(m7.get_edges(), m.get_edges() + [(6, 6), (6, 7), (7, 8), (6, 8), (5, 6), (0, 5), (0, 6)])
 
 
 def test_scale_mesh():
@@ -813,6 +834,7 @@ def test_remove_duplicate_vertices():
     assert len(m.get_faces()) == 2 * 6
     assert all(np.array_equal(a, b) for a, b in
                zip(m.get_faces(), create_pyramid().get_faces() + create_pyramid().get_faces()))
+    assert are_edges_equal(m.get_edges(), create_pyramid().get_edges())
 
 
 def test_remove_duplicate_faces():
@@ -826,6 +848,7 @@ def test_remove_duplicate_faces():
     assert all(np.array_equal(a, b) for a, b in
                zip(m.get_parts(), create_pyramid().get_parts() + create_pyramid().get_parts()))
     assert len(m.get_parts()) == 2
+    assert are_edges_equal(m.get_edges(), create_pyramid().get_edges())
 
 
 def test_remove_duplicate_parts():
@@ -837,3 +860,4 @@ def test_remove_duplicate_parts():
     m.remove_duplicate_parts()
     assert all(np.array_equal(a, b) for a, b in zip(m.get_parts(), create_pyramid().get_parts()))
     assert len(m.get_parts()) == 1
+    assert are_edges_equal(m.get_edges(), create_pyramid().get_edges())
