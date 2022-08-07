@@ -5,7 +5,8 @@ test the test helpers and the manim_meshes helpers
 import pytest
 import numpy as np
 # local imports
-from manim_meshes.helpers import is_vararray_equal, is_twice_nested_iterable, fix_references
+from manim_meshes.helpers import find_in_vararray, is_in_vararray, is_vararray_equal, is_twice_nested_iterable, \
+    fix_references
 
 vararrays = [
     ([], [], True),  # empty
@@ -62,3 +63,38 @@ def test_fix_references(refs):
     pre_obj, post_obj, r_indices, new_indices = refs
     assert set(new_indices) == set(fix_references(pre_obj, r_indices))
     assert is_vararray_equal(pre_obj, post_obj)
+
+
+vararray = [
+    ([], np.arange(3), True, False),  # empty
+    ([np.array([0, 1, 2])], np.arange(3), False, True),  # equality
+    ([np.array([2, 0, 1])], np.arange(3), False, False),  # no rolling
+    ([np.array([2, 0, 1])], np.arange(3), True, True),  # rolling
+    ([np.array([2, 1, 0])], np.arange(3), True, False),  # shifted not rolled
+]
+
+
+@pytest.mark.parametrize("vararr", vararray)
+def test_is_in_vararray(vararr):
+    arr, item, roll, contained = vararr
+    assert contained == is_in_vararray(arr, item, rolling=roll)
+
+
+vararray = [
+    ([], np.ones(3), True, []),  # empty
+    ([np.array([0, 1, 2])], np.arange(3), False, [0]),  # equality
+    ([np.array([2, 0, 1])], np.arange(3), False, []),  # no rolling
+    ([
+         np.array([0, 1, 2]),
+         np.array([1, 2, 0]),
+         np.array([0, 0, 0]),
+         np.array([2, 0, 1])],
+     np.arange(3), True, [0, 1, 3]),  # rolling
+    ([np.array([2, 1, 0])], np.arange(3), True, []),  # shifted not rolled
+]
+
+
+@pytest.mark.parametrize("vararr", vararray)
+def test_find_in_vararray(vararr):
+    arr, item, roll, contained = vararr
+    assert contained == find_in_vararray(arr, item, rolling=roll)

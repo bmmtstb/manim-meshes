@@ -10,8 +10,8 @@ import numpy as np
 # we need to have support for a list that contains different sizes of arrays, because objects may
 # contain e.g. triangles and squares
 from manim_meshes.exceptions import InvalidMeshException
-from manim_meshes.helpers import is_vararray_equal, fix_references, is_twice_nested_iterable
-from manim_meshes.types import Vertex, Vertices, Face, Faces, Part, Parts, VarArray, Edges
+from manim_meshes.helpers import find_in_vararray, is_vararray_equal, fix_references, is_twice_nested_iterable
+from manim_meshes.types import Edge, VarArray, Vertex, Vertices, Face, Faces, Part, Parts, Edges
 
 
 class Mesh:
@@ -76,11 +76,39 @@ class Mesh:
         raise NotImplementedError
 
     def __eq__(self, other: 'Mesh') -> bool:
-        # check for Mesh instance, everything else is not defined
+        """Equality check for Mesh vs Mesh"""
+        def replace_part_ids_with_vertex_ids(parts: Parts, faces: Faces, vertices: Vertices) -> VarArray:
+            """
+            takes parts as list np.ndarray referencing faces referencing vertices
+            returns the np.ndarray of the vertex coordinates retrieved from nested face ids
+            """
+            return [
+                np.hstack(np.hstack((vertices[vert_idx]) for vert_idx in faces[face_idx])
+                          for face_idx in part) for part in parts
+            ]
+
+        def replace_face_ids_with_vertex_ids(faces: Faces, vertices: Vertices) -> VarArray:
+            """
+            takes parts as list np.arrays referencing faces
+            returns the np.array of the vertex ids retreved from faces
+            """
+            return [np.hstack((vertices[vert_idx]) for vert_idx in face) for face in faces]
+
         if isinstance(other, Mesh):
-            if is_vararray_equal(self.get_faces(), other.get_faces()) and \
-                    is_vararray_equal(self.get_parts(), other.get_parts()) and \
-                    np.array_equal(self.get_vertices(), other.get_vertices()):
+            # vertex array contain every other vertex, coordinates must be exact equal, no rolling
+            # faces reference the same coordinates
+            # parts reference the same coordinates
+            if is_vararray_equal(list(self.get_vertices()), list(other.get_vertices()), rolling=False) and \
+                    is_vararray_equal(
+                        replace_face_ids_with_vertex_ids(self.get_faces(), self.get_vertices()),
+                        replace_face_ids_with_vertex_ids(other.get_faces(), other.get_vertices()),
+                        rolling=True,
+                    ) and \
+                    is_vararray_equal(
+                        replace_part_ids_with_vertex_ids(self.get_parts(), self.get_faces(), self.get_vertices()),
+                        replace_part_ids_with_vertex_ids(other.get_parts(), other.get_faces(), other.get_vertices()),
+                        rolling=True,
+                    ):
                 return True
             return False
         raise InvalidMeshException(f'Not equal is not defined for mesh and {type(other)}')
@@ -132,25 +160,15 @@ class Mesh:
         return [i for i, v in enumerate(self._vertices[start:], start=start)
                 if np.array_equal(vertex, v)]
 
-    @staticmethod
-    def _find_rolling_alternative(array: VarArray, item: np.ndarray, start: int = 0) -> List[int]:
-        """
-        return list of indices where array == item or a clockwise rolled / shifted alternative
-        possibility to start loop at different index
-        """
-        alternatives = [np.roll(item, i) for i in range(len(item))]
-        return [idx for idx, curr_item in enumerate(array[start:], start=start)
-                if any(np.array_equal(a, curr_item) for a in alternatives)]
-
     def find_face(self, face: np.ndarray, start: int = 0) -> List[int]:
         """return all indices where face is found in self._faces"""
-        return self._find_rolling_alternative(array=self._faces, item=face, start=start)
+        return find_in_vararray(array=self._faces, item=face, start=start)
 
     def find_part(self, part: np.ndarray, start: int = 0) -> List[int]:
         """return all indices where part is found in self._parts"""
         # Fixme: are two parts equal even if the faces are randomly sorted, not clockwise?
         #  [1,2,3] ?=? [1,3,2] or is it "rolling" like faces?
-        return self._find_rolling_alternative(array=self._parts, item=part, start=start)
+        return find_in_vararray(array=self._parts, item=part, start=start)
 
     def add_vertices(self, new_vertices: Vertices) -> None:
         """add given vertices to current ones"""
@@ -170,6 +188,8 @@ class Mesh:
         self._vertices = np.delete(self._vertices, indices, axis=0)
         # remove faces and possibly parts
         fix_references(self._parts, faces_to_remove)
+        # edges may be changed # Fixme: update only partly
+        self._edges = self.extract_edges()
 
     def update_vertex(self, idx: int, new_vert: Vertex) -> None:
         """update the position of the vertex at given index"""
@@ -188,13 +208,14 @@ class Mesh:
 
     def add_faces(self, new_faces: Faces) -> None:
         """adds new faces"""
+        # type-check whole array
         if not is_twice_nested_iterable(new_faces):
             raise InvalidMeshException("new_faces should be twice nested iterable.")
-
+        # check for out of bound indices
         for new_face in new_faces:
             if any(0 > v or v >= len(self._vertices) for v in new_face):
                 raise IndexError('Vertex index not defined')
-
+        # add to self._faces depending on type
         if isinstance(new_faces, list):
             self._faces += new_faces
         elif isinstance(new_faces, (np.ndarray, tuple)):
@@ -202,6 +223,8 @@ class Mesh:
                 self._faces.append(val)
         else:
             raise TypeError(f'unknown type for new_face {type(new_faces)}')
+        # edges may be changed # Fixme: update only partly
+        self._edges = self.extract_edges()
 
     def remove_faces(self, indices: Union[np.ndarray, List[int]]) -> None:
         """removes the faces with given indices and clean-up parts"""
@@ -213,7 +236,8 @@ class Mesh:
         # remove faces at all the indices
         for index in indices:
             del self._faces[index]
-
+        # edges may be changed # Fixme: update only partly
+        self._edges = self.extract_edges()
         # warn on dangling vertices and faces
         if self._test_for_dangling and self.dangling_vert_check():
             warnings.warn('Dangling vertices due to face removal')
@@ -232,16 +256,19 @@ class Mesh:
         self._faces[idx] = np.array(new_face)
         if self._test_for_dangling and self.dangling_vert_check():
             warnings.warn('Dangling vertices due to face update')
-        # update edges (FIXME: only update new/deleted edges, not everything)
+        # edges may be changed # Fixme: update only partly
         self._edges = self.extract_edges()
 
     def add_parts(self, new_parts: Parts) -> None:
         """adds new parts"""
+        # validate array type
         if not is_twice_nested_iterable(new_parts):
             raise InvalidMeshException('new_parts is not a valid nested iterable')
+        # validate face indices
         for new_part in new_parts:
             if any(0 > f or f >= len(self._faces) for f in new_part):
                 raise IndexError(f'Face index out of range for new part: {new_part}')
+        # add new to existing based on type
         if isinstance(new_parts, list):
             self._parts += [np.array(part) for part in new_parts]
         elif isinstance(new_parts, (np.ndarray, tuple)):
@@ -304,6 +331,8 @@ class Mesh:
             raise IndexError("A part index is out of bounds.")
         self._parts += shifted_parts
 
+        # edges may be changed # Fixme: update only partly
+        self._edges = self.extract_edges()
         # warn on dangling vertices and faces
         if self._test_for_dangling and self.dangling_vert_check():
             warnings.warn('Dangling vertices due to face removal')
@@ -435,6 +464,8 @@ class Mesh:
             # replace it with the value indices[i_idx] for every face
             for face in self._faces:
                 np.place(face, face == i_inv, indices[i_idx])
+        # edges may be changed # Fixme: update only partly
+        self._edges = self.extract_edges()
 
     def remove_duplicate_faces(self) -> None:
         """remove duplicates in faces, indices only have to be in the correct order, not at the exact places"""
@@ -451,6 +482,8 @@ class Mesh:
         # delete all duplicates from faces
         for del_f_idx in sorted(list(set(to_delete)), reverse=True):
             del self._faces[del_f_idx]
+        # edges may be changed # Fixme: update only partly
+        self._edges = self.extract_edges()
 
     def remove_duplicate_parts(self) -> None:
         """remove duplicates in parts, indices only have to be in the correct order, not at the exact places"""
@@ -473,15 +506,17 @@ class Mesh:
 
     def extract_edges(self) -> Edges:
         """returns all edges of the mesh as list of sorted 2-tuples of vertex indices, e.g. [(1,2), (2,3)]"""
-        edges = []
+        # TODO: possibility to update edges only partly (e.g. by index)
+        edges: Edges = []
         for face in self._faces:
             last_vertex = face[-1]
             for _, vertex_idx in enumerate(face):
-                edge = tuple(sorted([last_vertex, vertex_idx]))
+                # Fixme: sorted edge for "if edge in edges", but removes possibility to iterate around face
+                edge: Edge = (min(last_vertex, vertex_idx), max(last_vertex, vertex_idx))
+                # edge: Edge = tuple(sorted([int(last_vertex), int(vertex_idx)]))
                 last_vertex = vertex_idx
                 if edge not in edges:
                     edges.append(edge)
-
         return edges
 
     # def is_face_ccw(self, face_id: int) -> bool:

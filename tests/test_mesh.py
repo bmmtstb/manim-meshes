@@ -22,17 +22,38 @@ def test_mesh_equality_plus_mesh_creation():
     assert tm1 != tm3
     assert tm2 != tm3
 
-    # not in is the same as != for all three
-    tm4 = Mesh(verts=np.array([[1, 2, 3]]), faces=None, parts=None)
-    tm5 = Mesh(verts=np.array([[1, 2, 3]]), faces=[], parts=[])
-    tm6 = Mesh(verts=np.array([[1, 2, 3]]), faces=[], parts=None)
-    tm7 = Mesh(verts=np.array([[1, 2, 3]]), faces=[[0, 1, 2]], parts=None)
-    tm8 = Mesh(verts=np.array([[1, 2, 3]]), faces=[[0, 1, 2]], parts=[[0, 1, 2]])
+    tm4 = Mesh(verts=np.arange(21).reshape((7, 3)), faces=None, parts=None)
+    tm5 = Mesh(verts=np.arange(21).reshape((7, 3)), faces=[], parts=[])
+    tm6 = Mesh(verts=np.arange(21).reshape((7, 3)), faces=[], parts=None)
+    tm7 = Mesh(verts=np.arange(21).reshape((7, 3)), faces=[[0, 1, 2], [1, 2, 3], [3, 4, 5]], parts=None)
+    # parts reference the same vertices, even if faces and or parts are shuffled
+    tm8 = Mesh(verts=np.arange(21).reshape((7, 3)), faces=[[0, 1, 2], [1, 2, 3], [3, 4, 5]], parts=[[0, 1, 2]])
+    tm9 = Mesh(verts=np.arange(21).reshape((7, 3)), faces=[[0, 1, 2], [1, 2, 3], [3, 4, 5]], parts=[[1, 2, 0]])
+    tm10 = Mesh(verts=np.arange(21).reshape((7, 3)), faces=[[1, 2, 3], [3, 4, 5], [0, 1, 2]], parts=[[1, 2, 0]])
+    tm11 = Mesh(verts=np.arange(21).reshape((7, 3)), faces=[[1, 2, 3], [3, 4, 5], [0, 1, 2]], parts=[[0, 1, 2]])
+    tm12 = Mesh(verts=np.arange(21).reshape((7, 3)), faces=[[1, 2, 3], [0, 1, 2], [3, 4, 5]], parts=[[0, 1, 2]])
+    # face reference the same vertices even if they are mixed up
+    tm13 = Mesh(
+        verts=np.array([[6, 7, 8], [9, 10, 11], [12, 13, 14], [15, 16, 17], [18, 19, 20], [0, 1, 2], [3, 4, 5]]),
+        faces=[[5, 6, 0], [6, 0, 1], [1, 2, 3]],
+        parts=[[0, 1, 2]])
+    tm14 = Mesh(
+        verts=np.array([[9, 10, 11], [3, 4, 5], [12, 13, 14], [15, 16, 17], [6, 7, 8], [18, 19, 20], [0, 1, 2]]),
+        faces=[[6, 1, 4], [1, 4, 0], [0, 2, 3]],
+        parts=[[2, 0, 1]])
+    tm15 = Mesh(
+        verts=np.array([[0, 1, 2], [3, 4, 5], [6, 7, 8], [9, 10, 11], [12, 13, 14], [15, 16, 17], [18, 19, 20]]),
+        faces=[[0, 1, 3], [1, 2, 3], [3, 4, 5]],  # 0,1,3 instead of 0,1,2
+        parts=[[0, 1, 2]])
+    # "not in" is the same as "!=" for all three
     assert tm4 == tm5 == tm6
     assert tm7 not in (tm4, tm5, tm6)
     assert tm8 not in (tm4, tm5, tm6)
     assert tm7 != tm8
-
+    assert tm8 == tm9 and tm8 == tm10 and tm8 == tm11 and tm9 == tm10 and tm9 == tm11 and tm10 == tm11
+    assert tm12 not in (tm8, tm9, tm10, tm11)
+    assert tm8 == tm13 and tm8 == tm14 and tm13 == tm14
+    assert tm15 != tm8 and tm15 != tm13 and tm15 != tm14
 
 def test_find_vertex():
     m = Mesh(verts=np.array([[1, 2, 3], [1, 2, 3], [1, 0, 1], [1, 2, 3]]), faces=None)
@@ -180,7 +201,7 @@ def test_different_dims_on_faces():
 def test_remove_parts():
     m = Mesh(
         verts=np.array([[0, 0, 0], [1, 0, 0], [0, 1, 0], [1, 1, 0]]),
-        faces=[[0, 1, 2], [1, 2, 3], [2, 3, 4]],
+        faces=[[0, 1, 2], [1, 2, 3], [2, 3, 0]],
         parts=[[0, 1, 2]]
     )
     # mesh stays the same except for parts
@@ -188,7 +209,7 @@ def test_remove_parts():
     m1.remove_parts([0])
     assert Mesh(
         verts=np.array([[0, 0, 0], [1, 0, 0], [0, 1, 0], [1, 1, 0]]),
-        faces=[[0, 1, 2], [1, 2, 3], [2, 3, 4]],
+        faces=[[0, 1, 2], [1, 2, 3], [2, 3, 0]],
         parts=None
     ) == m1
     # removing non existent part raises an exception
@@ -202,7 +223,7 @@ def test_remove_parts():
     m3 = deepcopy(m)
     m4 = Mesh(
         verts=np.array([[0, 0, 0], [1, 0, 0], [0, 1, 0], [1, 1, 0]]),
-        faces=[[0, 1, 2], [1, 2, 3], [2, 3, 4]],
+        faces=[[0, 1, 2], [1, 2, 3], [2, 3, 0]],
         parts=[[0, 1, 2], [1, 1, 1], [2, 2, 2], [1, 2, 1], [2, 1, 1]]
     )
     m4.remove_parts([1, 3, 2, 1, 4])

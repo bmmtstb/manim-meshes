@@ -9,10 +9,37 @@ import numpy as np
 from manim_meshes.types import VarArray
 
 
-def is_vararray_equal(l1: VarArray, l2: VarArray) -> bool:
-    """check whether l1 contains l2 and l2 contains l1 resulting in whether they are equal"""
-    return all(any(np.array_equal(f1, x) for x in l1) for f1 in l2) and \
-           all(any(np.array_equal(f2, x) for x in l2) for f2 in l1)
+def is_in_vararray(array: VarArray, item: np.ndarray, rolling: bool = True) -> bool:
+    """
+    return whether item is in array, possibility to check for rolling
+    """
+    if rolling:
+        alternatives = [np.roll(item, i) for i in range(len(item))]
+        return any(any(np.array_equal(alt, a) for a in array) for alt in alternatives)
+    # non rolling
+    return any(np.array_equal(item, a) for a in array)
+
+
+def find_in_vararray(array: VarArray, item: np.ndarray, rolling: bool = True, start: int = 0) -> List[int]:
+    """
+    return list of indices where array == item or a clockwise rolled / shifted alternative
+    possibility to start loop at different index
+    """
+    if rolling:
+        alternatives = [np.roll(item, i) for i in range(len(item))]
+        return [idx for idx, curr_item in enumerate(array[start:], start=start)
+                if any(np.array_equal(a, curr_item) for a in alternatives)]
+    # non rolling
+    return [idx for idx, curr_item in enumerate(array[start:], start=start) if np.array_equal(curr_item, item)]
+
+
+def is_vararray_equal(array1: VarArray, array2: VarArray, rolling: bool = True) -> bool:
+    """
+    check whether l1 contains l2 and l2 contains l1 resulting in whether they are equal
+    possibility to additionally check with rolling
+    """
+    return all(is_in_vararray(array=array1, item=value2, rolling=rolling) for value2 in array2) and\
+           all(is_in_vararray(array=array2, item=value1, rolling=rolling) for value1 in array1)
 
 
 def is_twice_nested_iterable(obj: Any, min_lens: Tuple[int, int] = (1, 3)) -> bool:

@@ -17,5 +17,5 @@ Faces = VarArray
 Part = Union[np.ndarray, List[int], Tuple[int, ...]]
 Parts = VarArray
 
-Edge = Tuple[int, ...]
+Edge = Tuple[int, int]
 Edges = List[Edge]
