@@ -126,6 +126,7 @@ class Mesh:
         """transforms currents mesh vertices to be 3D, works if dim is <= 3"""
         if self.dim < 3:
             self._vertices = np.pad(self._vertices, ((0, 0), (0, 3 - self.dim)))
+            self.dim = 3
         elif self.dim > 3:
             raise InvalidMeshException(f'Can not Broadcast from {self.dim}-D Mesh to 3D Mesh.')
 
