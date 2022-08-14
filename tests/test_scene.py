@@ -60,7 +60,7 @@ class PyramidScene(m.ThreeDScene):
 
 
 # run in manim-meshes
-# preview: manim -p --renderer=opengl tests\test_scene.py TriangleScene
+# preview: manim -p --renderer=opengl tests/test_scene.py TriangleScene
 # use --write_to_file instead of -p to render to file
 class TriangleScene(m.ThreeDScene):
     """simple 2D mesh scene, visualizes delaunay criterion"""
