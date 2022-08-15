@@ -11,7 +11,7 @@ repository = "https://github.com/bmmtstb/manim-meshes"
 [tool.poetry.dependencies]
 python = "3.8.*"
 decorator = "^5.0.9"
-manim = "^0.15.2"
+manim = ">=0.15.2,<0.17.0"
 manimgl = "^1.6.1"
 ManimPango = "^0.4.1"
 numpy = "*"
