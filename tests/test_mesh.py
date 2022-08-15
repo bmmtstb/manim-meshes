@@ -861,3 +861,27 @@ def test_remove_duplicate_parts():
     assert all(np.array_equal(a, b) for a, b in zip(m.get_parts(), create_pyramid().get_parts()))
     assert len(m.get_parts()) == 1
     assert are_edges_equal(m.get_edges(), create_pyramid().get_edges())
+
+
+def test_split_mesh_into_parts():
+    # case only one object
+    m_pyramid = create_pyramid()
+    assert len(m_pyramid.split_mesh_into_objects()) == 1
+    assert create_pyramid() in m_pyramid.split_mesh_into_objects()
+    # case multiple objects - single vertex object, single part object and single face object
+    m = Mesh(
+        verts=np.arange(24).reshape((8, 3)),
+        faces=[[1, 2, 3], [2, 3, 4], [1, 2, 4], [5, 6, 7]],
+        parts=[[0, 1, 2]],
+    )
+    new_faces = m.split_mesh_into_objects()
+    assert len(new_faces) == 3
+    m1 = Mesh(verts=np.arange(3).reshape((1, 3)), faces=[], parts=[])
+    m2 = Mesh(
+        verts=np.arange(start=3, stop=15).reshape((4, 3)),
+        faces=[[0, 1, 2], [1, 2, 3], [0, 1, 3]],
+        parts=[[0, 1, 2]])
+    m3 = Mesh(verts=np.arange(start=15, stop=24).reshape((3, 3)), faces=[[0, 1, 2]], parts=[])
+    assert m1 in new_faces
+    assert m2 in new_faces
+    assert m3 in new_faces

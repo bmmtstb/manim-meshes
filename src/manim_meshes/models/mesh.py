@@ -3,7 +3,7 @@ Mesh structure
 """
 # third-party imports
 import warnings
-from typing import List, Tuple, Union
+from typing import List, Set, Tuple, Union
 
 import numpy as np
 
@@ -126,6 +126,7 @@ class Mesh:
         """transforms currents mesh vertices to be 3D, works if dim is <= 3"""
         if self.dim < 3:
             self._vertices = np.pad(self._vertices, ((0, 0), (0, 3 - self.dim)))
+            self.dim = 3
         elif self.dim > 3:
             raise InvalidMeshException(f'Can not Broadcast from {self.dim}-D Mesh to 3D Mesh.')
 
@@ -338,6 +339,54 @@ class Mesh:
             warnings.warn('Dangling vertices due to face removal')
         if self._test_for_dangling and self.dangling_face_check():
             warnings.warn('Dangling faces due to removed parts by face removal')
+
+    def split_mesh_into_objects(self) -> List['Mesh']:
+        """
+        given a mesh, return a list of independent meshes that are not interconnected
+        returns meshes with updated indices and references
+        """
+        def get_references_from_ids(ids: Set[int], nested: VarArray) -> Set[int]:
+            """given a list of ids, return all the reference ids that contain at least one of these ids"""
+            return {i for i, nest in enumerate(nested) if any(_id in nest for _id in ids)}
+
+        def get_ids_from_references(ids: Set[int], referenced: VarArray) -> Set[int]:
+            """given a list of ids of nested, return all the referenced objects"""
+            if len(ids) > 0:
+                return set(np.unique(np.stack(referenced[_id] for _id in ids)))
+            return set()
+
+        new_meshes: List['Mesh'] = []
+        analyzed_verts: Set[int] = set()
+        while any(vert not in analyzed_verts for vert in range(len(self._vertices))):
+            # get first value not in analyzed or 0
+            obj_vert_ids: Set[int] = {next((i for i in range(len(self._vertices)) if i not in analyzed_verts), 0)}
+            prev_iter: Set[int] = set()
+            face_ids: Set[int] = set()
+            part_ids: Set[int] = set()
+            while prev_iter != obj_vert_ids:
+                # update prev to stop when no new points were added
+                prev_iter = obj_vert_ids.copy()
+                # find all the references to all known vertices
+                face_ids = get_references_from_ids(obj_vert_ids, self._faces)
+                part_ids = get_references_from_ids(face_ids, self._parts)
+                # generate all the faces and vertices from all the parts found including all the old ones
+                face_ids.update(get_ids_from_references(part_ids, self._parts))
+                # update all the vertices of the current object
+                obj_vert_ids.update(get_ids_from_references(face_ids, self._faces))
+            # create new mesh object and save it to new_meshes
+            # make sure to update all the references to zero indexed lists
+            new_ids: List[int] = sorted(list(int(_id) for _id in obj_vert_ids))
+            new_faces: List[int] = sorted(list(face_ids))
+            new_meshes.append(Mesh(
+                verts=np.vstack(self._vertices[_id] for _id in new_ids),
+                faces=[np.array([new_ids.index(old_vertex_id) for old_vertex_id in self._faces[f_id]])
+                       for f_id in face_ids],
+                parts=[np.array([new_faces.index(old_face_id) for old_face_id in self._parts[p_id]])
+                       for p_id in part_ids],
+            ))
+            # update analyzed vertices
+            analyzed_verts.update(obj_vert_ids)
+        return new_meshes
 
     def dangling_vert_check(self) -> bool:
         """check whether there are any dangling nodes - vertices that are not part of a face"""
