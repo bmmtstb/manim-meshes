@@ -126,7 +126,7 @@ class Mesh:
         """Get 3D vertices, for 1D, 2D, 3D meshes, to be able to draw them"""
         if self.dim < 3:
             return np.pad(self._vertices, ((0, 0), (0, 3 - self.dim)))
-        elif self.dim == 3:
+        if self.dim == 3:
             return self._vertices
         else:
             raise InvalidMeshException(f'Can not Broadcast from {self.dim}-D Mesh to 3D Mesh.')
