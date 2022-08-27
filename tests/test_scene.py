@@ -87,7 +87,7 @@ class TriangleScene(m.ThreeDScene):
             if not mesh_2d.is_point_violating_delaunay(indices[0], 0) else None)
         # use mesh_2d.move_vertex_to and mesh_2d.shift_vertex instead of e.g. self.play(points[0].animate.move_to)
         # -> otherwise the faces will not be updated
-        mesh_2d.shift_vertex(self, indices[0], 0.35 * m.DL)
+        mesh_2d.shift_vertex(self, indices[0], 0.35 * m.DL, force_mesh_dim=True)
         points[0].remove_updater(points[0].non_time_updaters[-1])  # remove last updater
         self.play(m.FadeOut(points[0]), m.Uncreate(circle))
         self.play(triangle.animate.set_fill(mesh_2d.faces_fill_color, mesh_2d.faces_fill_opacity))  # unmark triangle

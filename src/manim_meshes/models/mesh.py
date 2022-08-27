@@ -122,6 +122,15 @@ class Mesh:
     def get_vertices(self) -> Vertices:
         return self._vertices
 
+    def get_3d_vertices(self) -> Vertices:
+        """Get 3D vertices, for 1D, 2D, 3D meshes, to be able to draw them"""
+        if self.dim < 3:
+            return np.pad(self._vertices, ((0, 0), (0, 3 - self.dim)))
+        elif self.dim == 3:
+            return self._vertices
+        else:
+            raise InvalidMeshException(f'Can not Broadcast from {self.dim}-D Mesh to 3D Mesh.')
+
     def make_vertices_3d(self) -> None:
         """transforms currents mesh vertices to be 3D, works if dim is <= 3"""
         if self.dim < 3:
