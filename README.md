@@ -37,9 +37,9 @@ Multiple other examples can be found in the `tests/test_scene.py` file.
 
 
 ## Development
-Set `./src/`-folder as project sources root and `./tests/`-folder as tests sources root if necessary.
+In PyCharm set `./src/`-folder as project sources root and `./tests/`-folder as tests sources root if necessary.
 
-Activate venv: `cd ./manim_meshes/`, then `poetry shell`
+Activate the poetry venv: `cd ./manim_meshes/`, then `poetry shell`
 
 Install: `poetry install`
 If you get errors, it is possible that you have to pip install `pycairo` and or `manimpango` manually, depending on your setup. Make sure to run `poetry install` until there are no more errors!
@@ -50,3 +50,15 @@ If you implemented some features, update version using the matching poetry comma
 See the Poetry [Documentation](https://python-poetry.org/docs/cli/#version).
 
 Even though if the CI works properly, Publish on master branch is automatically, it can be done manually with: `poetry publish --build`
+
+### Debugging
+Like with basic manim, create an executable Python file with something around:
+
+```python
+from tests.test_scene import SnapToGridScene
+if __name__ == "__main__":
+    scene = SnapToGridScene()
+    scene.render()
+```
+
+Then debug the file and place breakpoints as expected. May not work with the "renderer=opengl" flag that is necessary for some scripts.
