@@ -19,7 +19,6 @@ from manim_meshes.models.manim_models.params import get_param_or_default, M2DM, 
 class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
     """
     another Mesh implementation, a little bit faster + looks better
-    -> FIXME has no vertex dots, necessary?
 
     inspired by manim class 'Surface'
     """
@@ -27,7 +26,7 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
     def __init__(self, mesh: Mesh, *args, **kwargs) -> None:
         super().__init__(*args)
         self.mesh: Mesh = mesh
-        self.vertices: m.VGroup = m.VGroup()
+        self.vertices: m.Group = m.Group()
         self.edges: m.VGroup = m.VGroup()
         self.faces: m.VGroup = m.VGroup()
 
@@ -65,7 +64,7 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
             self.vertices = m.Group()
 
         for v in self.mesh.get_3d_vertices():
-            self.vertices.add(m.Sphere(v, radius=0.05, color=self.verts_color))
+            self.vertices.add(m.Sphere(v, radius=0.04, color=self.verts_color))
 
     def _setup_edges(self):
         """set the edges as manim objects"""
@@ -117,8 +116,12 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
             opacity=0.,
         )
 
+    def get_vertex(self, vertex_idx):
+        """get the vertex with the given id"""
+        return  self.vertices.submobjects[vertex_idx]
+
     def get_face(self, face_idx):
-        """get the faces with the given id"""
+        """get the face with the given id"""
         return self.faces.submobjects[face_idx]
 
     def get_edge(self, edge_idx):
@@ -130,27 +133,30 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
         raise NotImplementedError
 
     def _update_vertex(self, vertex_idx: int, pos: np.ndarray):
-        """
-        TODO
-        """
         # update mesh
         self.mesh.update_vertex(vertex_idx, pos)
-        # update faces
-        for face_idx, face in enumerate(self.mesh.get_faces()):
-            if vertex_idx in face:
-                triangle = [self.mesh.get_3d_vertices()[i] for i in face]
-                face = self.get_face(face_idx)
-                face.set_points_as_corners(
-                    [
-                        triangle[0],
-                        triangle[1],
-                        triangle[2],
-                        triangle[0]
-                    ],
-                )
-        # update edges
-        for edge in self.mesh.get_vertex_edges(vertex_idx):
-            self._update_edge(edge)
+        if self.display_vertices:
+            # update vertex
+            vertex = self.get_vertex(vertex_idx)
+            vertex.move_to(pos)
+        if self.display_faces:
+            # update faces
+            for face_idx, face in enumerate(self.mesh.get_faces()):
+                if vertex_idx in face:
+                    triangle = [self.mesh.get_3d_vertices()[i] for i in face]
+                    face = self.get_face(face_idx)
+                    face.set_points_as_corners(
+                        [
+                            triangle[0],
+                            triangle[1],
+                            triangle[2],
+                            triangle[0]
+                        ],
+                    )
+        if self.display_edges:
+            # update edges
+            for edge in self.mesh.get_vertex_edges(vertex_idx):
+                self._update_edge(edge)
 
     def _update_edge(self, edge: Tuple[int, ...]):
         e = self.get_edge(self.mesh.get_edge_index(edge))
@@ -236,14 +242,24 @@ class Manim2DMesh(ManimMesh):
         )
 
     def _setup_vertices(self):
-        """set the vertices as 2D manim objects"""
+        """set the vertices as 3D manim objects"""
         if self.clear_vertices:
-            self.vertices.clear_points()
-            self.vertices = m.VGroup()
+            self.vertices = m.Group()
 
         for v in self.mesh.get_3d_vertices():
-            self.vertices.add(m.Dot(v, radius=0.03, color=self.verts_color))
-        self.add(self.vertices)
+            self.vertices.add(m.Dot(v, radius=0.02, color=self.verts_color))
+
+    def get_dots(self, indices):
+        """
+        returns manim Dot objects for each vertex with index in indices
+        """
+        dots = []
+        vertices = self.mesh.get_3d_vertices()
+        for idx in indices:
+            dot = m.Dot(vertices[idx], radius=0.03, color=m.RED)
+            dot.add_updater(lambda mo, mesh=self.mesh, index=idx: mo.move_to(mesh.get_3d_vertices()[index]))
+            dots.append(dot)
+        return dots
 
     def align_points_with_larger(self, larger_mobject):
         """abstract from super - please the linter"""

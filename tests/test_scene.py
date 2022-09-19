@@ -9,10 +9,13 @@ import manim as m
 # local imports
 import numpy as np
 
+from manim_meshes.delaunay.delaunay_criterion import get_point_indices_violating_delaunay, is_point_violating_delaunay
+from manim_meshes.delaunay.divide_and_conquer import split_points
 from manim_meshes.models.data_models.mesh import Mesh
 from manim_meshes.models.manim_models.basic_mesh import ManimMesh, Manim2DMesh
 from manim_meshes.models.manim_models.triangle_mesh import TriangleManim2DMesh
-from manim_meshes.templates import create_grid, create_pyramid, create_model, create_coplanar_triangles
+from manim_meshes.templates import create_grid, create_pyramid, create_model, create_coplanar_triangles, \
+    create_coplanar_points
 
 
 # #### ManimMesh #####
@@ -81,13 +84,14 @@ class TriangleScene(m.ThreeDScene):
         self.play(triangle.animate.set_fill(m.YELLOW_D, None))  # mark triangle
         circle = mesh_2d.get_circle(0)  # circumcircle around triangle
         self.play(m.Create(circle))
-        points, indices = mesh_2d.get_points_violating_delaunay(0)  # vertex indices and manim point objects
+        indices = get_point_indices_violating_delaunay(mesh_2d.mesh, 0)  # vertex indices
+        points = mesh_2d.get_dots(indices)
         assert len(points) == 1  # should be one in this example
         self.play(m.FadeIn(points[0]))
         # add updater which colors the circle and point green if it is not violating the delaunay criteria
         # w.r.t. triangle (face index 0)
         points[0].add_updater(lambda mo: (mo.set_color(m.GREEN), circle.set_color(m.GREEN)) \
-            if not mesh_2d.is_point_violating_delaunay(indices[0], 0) else None)
+            if not is_point_violating_delaunay(mesh_2d.mesh, indices[0], 0) else None)
         # use mesh_2d.move_vertex_to and mesh_2d.shift_vertex instead of e.g. self.play(points[0].animate.move_to)
         # -> otherwise the faces will not be updated
         mesh_2d.shift_vertex(self, indices[0], 0.35 * m.DL[:2])
@@ -98,7 +102,7 @@ class TriangleScene(m.ThreeDScene):
         for f in range(1, len(mesh_2d.mesh.get_faces())):
             circ = mesh_2d.get_circle(f)  # circumcircle around triangle
             self.play(m.Create(circ, run_time=0.4))
-            points, _ = mesh_2d.get_points_violating_delaunay(f)
+            points = mesh_2d.get_dots(get_point_indices_violating_delaunay(mesh_2d.mesh, f))
             if len(points) == 0:  # no violating points, mark circle green
                 self.play(circ.animate(run_time=0.4).set_color(m.GREEN))
             self.play(m.Uncreate(circ, run_time=0.4))
@@ -111,8 +115,8 @@ class TriangleScene(m.ThreeDScene):
         circle_a = mesh_2d.get_circle(2)  # circumcircle around triangle
         circle_b = mesh_2d.get_circle(3)  # circumcircle around triangle
         self.play(m.Create(circle_a), m.Create(circle_b), self.camera.animate.shift(m.DOWN))
-        points_a, _ = mesh_2d.get_points_violating_delaunay(2)
-        points_b, _ = mesh_2d.get_points_violating_delaunay(3)
+        points_a = mesh_2d.get_dots(get_point_indices_violating_delaunay(mesh_2d.mesh, 2))
+        points_b = mesh_2d.get_dots(get_point_indices_violating_delaunay(mesh_2d.mesh, 3))
         all_points = []
         all_points.extend(points_a)
         all_points.extend(points_b)
@@ -139,6 +143,27 @@ class TriangleScene(m.ThreeDScene):
         # unmark triangles
         self.play(triangle_a.animate.set_fill(mesh_2d.faces_color, None),
                   triangle_b.animate.set_fill(mesh_2d.faces_color, None))
+
+# run in manim-meshes
+# preview: manim -p --renderer=opengl tests/test_scene.py DivideAndConquerScene
+# use --write_to_file instead of -p to render to file
+class DivideAndConquerScene(m.ThreeDScene):
+    """simple 2D mesh scene, visualizes delaunay divide & conquer algorithm"""
+
+    # pylint: disable=too-many-statements
+    def construct(self):
+        text = m.Text('Divide and Conquer').scale(0.5).to_corner(m.UL)
+        text.set_color(m.WHITE)
+        text.fix_in_frame()
+        self.add(text)
+        mesh = create_coplanar_points()
+        mesh_2d = TriangleManim2DMesh(mesh=mesh, display_vertices=True)
+        self.add(mesh_2d)
+        self.wait(1)
+        verts_a, verts_b, anims = split_points(mesh_2d.vertices.submobjects, m.BLUE, m.RED)
+        self.play(*anims)
+        self.wait(2)
+
 
 
 class SnapToGridScene(m.ThreeDScene):

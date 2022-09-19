@@ -28,7 +28,7 @@ M3DM: DefaultParameters = {
     "edges_width":                                (float, 0.1),
     "faces_color":                                (Color, Color(m.BLUE_D)),
     "faces_opacity":                              (float, 0.4),
-    "verts_color":                                (Color, Color(m.GREEN_A)),
+    "verts_color":                                (Color, Color(m.GREEN)),
     "pre_function_handle_to_anchor_scale_factor": (float, 0.00001),
 }
 
