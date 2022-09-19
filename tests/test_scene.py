@@ -11,6 +11,7 @@ import numpy as np
 
 from manim_meshes.models.data_models.mesh import Mesh
 from manim_meshes.models.manim_models.basic_mesh import ManimMesh, Manim2DMesh
+from manim_meshes.models.manim_models.triangle_mesh import TriangleManim2DMesh
 from manim_meshes.templates import create_grid, create_pyramid, create_model, create_coplanar_triangles
 
 
@@ -74,7 +75,7 @@ class TriangleScene(m.ThreeDScene):
         text.fix_in_frame()
         self.add(text)
         mesh = create_coplanar_triangles()
-        mesh_2d = Manim2DMesh(mesh=mesh)
+        mesh_2d = TriangleManim2DMesh(mesh=mesh)
         self.add(mesh_2d)
         triangle = mesh_2d.get_face(0)
         self.play(triangle.animate.set_fill(m.YELLOW_D, None))  # mark triangle
