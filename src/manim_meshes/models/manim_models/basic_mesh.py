@@ -68,7 +68,7 @@ from manim_meshes.models.manim_models.params import get_param_or_default, M2DM, 
 #         raise NotImplementedError
 
 # pylint: disable=too-many-instance-attributes
-class ManimMesh(m.VGroup, metaclass=ConvertToOpenGL):
+class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
     """
     another Mesh implementation, a little bit faster + looks better
     -> FIXME has no vertex dots, necessary?
@@ -76,10 +76,9 @@ class ManimMesh(m.VGroup, metaclass=ConvertToOpenGL):
     inspired by manim class 'Surface'
     """
 
-    def __init__(self, scene: m.Scene, mesh: Mesh, *args, **kwargs) -> None:
+    def __init__(self, mesh: Mesh, *args, **kwargs) -> None:
         super().__init__(*args)
         self.mesh: Mesh = mesh
-        self.scene: m.Scene = scene
         self.vertices: m.VGroup = m.VGroup()
         self.edges: m.VGroup = m.VGroup()
         self.faces: m.VGroup = m.VGroup()
@@ -115,10 +114,10 @@ class ManimMesh(m.VGroup, metaclass=ConvertToOpenGL):
     def _setup_vertices(self):
         """set the vertices as 3D manim objects"""
         if self.clear_vertices:
-            self.vertices = m.VGroup()
+            self.vertices = m.Group()
 
         for v in self.mesh.get_3d_vertices():
-            self.vertices.add(m.Sphere(v, radius=0.03, fill_color=self.verts_color, fill_opacity=1.,  stroke_width=0.))
+            self.vertices.add(m.Sphere(v, radius=0.05, color=self.verts_color))
 
     def _setup_edges(self):
         """set the edges as manim objects"""
@@ -135,7 +134,7 @@ class ManimMesh(m.VGroup, metaclass=ConvertToOpenGL):
         # for all edges at once
         self.edges.set_fill(
             color=self.edges_color,
-            opacity=1
+            opacity=1.
         )
         self.edges.set_stroke(
             color=self.edges_color,
@@ -211,24 +210,24 @@ class ManimMesh(m.VGroup, metaclass=ConvertToOpenGL):
         vert_2 = self.mesh.get_3d_vertices()[edge[1]]
         e.set_points_as_corners([vert_1, vert_2])
 
-    def shift_vertex(self, vertex_idx: int, shift: np.ndarray, **kwargs):
+    def shift_vertex(self, scene: m.Scene, vertex_idx: int, shift: np.ndarray, **kwargs):
         """shift vertex and update faces"""
         # expect everything has the same dimensions as mesh.dim
         start = self.mesh.get_vertices()[vertex_idx].copy()
         tracker = m.ValueTracker(0)
         tracker.add_updater(lambda mo: self._update_vertex(vertex_idx, start + tracker.get_value() * shift, **kwargs))
-        self.scene.add(tracker)
-        self.scene.play(tracker.animate(**kwargs).set_value(1))
-        self.scene.remove(tracker)
+        scene.add(tracker)
+        scene.play(tracker.animate(**kwargs).set_value(1))
+        scene.remove(tracker)
 
-    def move_vertices_to(self, new_positions: np.ndarray, **kwargs):
+    def move_vertices_to(self, scene: m.Scene, new_positions: np.ndarray, **kwargs):
         """visually move all vertices to new positions and update faces"""
         if len(new_positions) != self.mesh.nof_vertices:
             raise InvalidShapeException("new_positions", len(new_positions), self.mesh.nof_vertices)
         for i, new_pos in enumerate(new_positions):
-            self.move_vertex_to(vertex_idx=i, pos=new_pos, **kwargs)
+            self.move_vertex_to(scene, vertex_idx=i, pos=new_pos, **kwargs)
 
-    def move_vertex_to(self, vertex_idx: int, pos: np.ndarray, **kwargs):
+    def move_vertex_to(self,scene: m.Scene, vertex_idx: int, pos: np.ndarray, **kwargs):
         """visually move vertex to pos and update faces"""
         if vertex_idx < 0 or self.mesh.nof_vertices < vertex_idx:
             raise InvalidVertexIndex(vertex_idx, self.mesh.nof_vertices)
@@ -238,7 +237,7 @@ class ManimMesh(m.VGroup, metaclass=ConvertToOpenGL):
         current_pos = self.mesh.get_vertices()[vertex_idx].copy()
         shift = pos - current_pos
         # use shift method to slowly move point to desired place
-        self.shift_vertex(vertex_idx, shift, **kwargs)
+        self.shift_vertex(scene, vertex_idx, shift, **kwargs)
 
     def move_to_grid(self, scene: m.Scene, grid_sizes: Tuple[float, ...], threshold: Tuple[float, ...], nof_steps: int):
         """slowly snap to a given grid, uses stepwise mesh.snap_to_grid()"""
@@ -247,7 +246,7 @@ class ManimMesh(m.VGroup, metaclass=ConvertToOpenGL):
             old_mesh: Mesh = copy.copy(self.mesh)
             old_mesh.snap_to_grid(grid_sizes, threshold, step)
             # use new calculated positions but have still the old mesh
-            self.move_vertices_to(self.scene, old_mesh.get_vertices())
+            self.move_vertices_to(scene, old_mesh.get_vertices())
             scene.wait(0.5)
 
 
@@ -261,7 +260,7 @@ class Manim2DMesh(ManimMesh):
      mesh functionalities.
     """
 
-    def __init__(self, scene: m.Scene, mesh: Mesh, *args, **kwargs) -> None:
+    def __init__(self, mesh: Mesh, *args, **kwargs) -> None:
         if mesh.dim == 3:
             if np.sum(np.abs(mesh.get_vertices()[:, 2] != 0)):
                 raise InvalidMeshException("Mesh has z values != 0 and therefore is not 2D.")
@@ -271,7 +270,6 @@ class Manim2DMesh(ManimMesh):
         # init ManimMesh
         super().__init__(
             mesh=mesh,
-            scene=scene,
             display_vertices=get_param_or_default("display_vertices", kwargs, M2DM),
             display_edges=get_param_or_default("display_edges", kwargs, M2DM),
             display_faces=get_param_or_default("display_faces", kwargs, M2DM),
@@ -310,7 +308,7 @@ class Manim2DMesh(ManimMesh):
         circ.shift(center)
         return circ
 
-    def edge_flip(self, face_idx_1: int, face_idx_2: int, **kwargs):
+    def edge_flip(self,scene: m.Scene, face_idx_1: int, face_idx_2: int, **kwargs):
         """
         Flips the edge shared by the given triangles. Raises an error if the faces are not triangles
         or do not share exactly one edge.
@@ -348,7 +346,7 @@ class Manim2DMesh(ManimMesh):
         new_edge = old_edge.copy()
         new_edge.set_points_as_corners([self.mesh.get_3d_vertices()[v_1], self.mesh.get_3d_vertices()[v_2]])
         anims.append(old_edge.animate(**kwargs).become(new_edge))
-        self.scene.play(*anims)
+        scene.play(*anims)
 
     def get_points_violating_delaunay(self, face_id: int):
         """given a triangle by id, get all points violating delaunay criterion"""

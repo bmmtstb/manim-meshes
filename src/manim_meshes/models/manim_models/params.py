@@ -24,11 +24,11 @@ M3DM: DefaultParameters = {
     "clear_vertices":                             (bool, True),
     "clear_edges":                                (bool, True),
     "clear_faces":                                (bool, True),
-    "edges_color":                                (Color, Color(m.LIGHT_GREY)),
-    "edges_width":                                (float, 0.3),
-    "faces_color":                                (Color, Color(m.BLUE_E)),
+    "edges_color":                                (Color, Color(m.BLUE)),
+    "edges_width":                                (float, 0.1),
+    "faces_color":                                (Color, Color(m.BLUE_D)),
     "faces_opacity":                              (float, 0.4),
-    "verts_color":                                (Color, Color(m.GREEN)),
+    "verts_color":                                (Color, Color(m.GREEN_A)),
     "pre_function_handle_to_anchor_scale_factor": (float, 0.00001),
 }
 
