@@ -2,14 +2,15 @@
 manim models for mesh objects
 """
 # python imports
+import copy
 from typing import Tuple
 # third-party imports
 import manim as m
 from manim.mobject.opengl.opengl_compatibility import ConvertToOpenGL
 import numpy as np
 # local imports
-
-from manim_meshes.exceptions import InvalidMeshException
+from manim_meshes.exceptions import InvalidMeshDimensionsException, InvalidMeshException, InvalidShapeException, \
+    InvalidVertexIndex
 from manim_meshes.helpers import remove_keys_from_dict
 from manim_meshes.models.mesh import Mesh
 from manim_meshes.models.params import get_param_or_default, M2DM, M3DM
@@ -79,11 +80,17 @@ class ManimMesh(m.VGroup, metaclass=ConvertToOpenGL):
         super().__init__(*args)
         self.mesh: Mesh = mesh
         self.scene: m.Scene = scene
+        self.vertices: m.VGroup = m.VGroup()
+        self.edges: m.VGroup = m.VGroup()
+        self.faces: m.VGroup = m.VGroup()
 
         # set all the parameters
         self.display_vertices = get_param_or_default("display_vertices", kwargs, M3DM)
         self.display_edges = get_param_or_default("display_edges", kwargs, M3DM)
         self.display_faces = get_param_or_default("display_faces", kwargs, M3DM)
+        self.clear_vertices = get_param_or_default("clear_vertices", kwargs, M3DM)
+        self.clear_edges = get_param_or_default("clear_edges", kwargs, M3DM)
+        self.clear_faces = get_param_or_default("clear_faces", kwargs, M3DM)
         self.edges_fill_color = get_param_or_default("edges_fill_color", kwargs, M3DM)
         self.edges_fill_opacity = get_param_or_default("edges_fill_opacity", kwargs, M3DM)
         self.edges_stroke_color = get_param_or_default("edges_stroke_color", kwargs, M3DM)
@@ -107,49 +114,53 @@ class ManimMesh(m.VGroup, metaclass=ConvertToOpenGL):
 
     def _setup(self):
         """set all the necessary mesh parameters"""
-        # faces, edges, vertices
-        self.add(m.VGroup(), m.VGroup(), m.VGroup())
-
         if self.display_faces:
             self._setup_faces()
         if self.display_edges:
             self._setup_edges()
         if self.display_vertices:
             self._setup_vertices()
+        self.add(self.faces, self.edges, self.vertices)
 
     def _setup_vertices(self):
         """set the vertices as 3D manim objects"""
-        # Fixme how do we remove them for e.g. moving ?
+        if self.clear_vertices:
+            self.vertices = m.VGroup()
+
         for v in self.mesh.get_3d_vertices():
-            self.scene.add(m.Sphere(v, radius=0.03, color=m.GREEN_A))
+            self.vertices.add(m.Sphere(v, radius=0.03, color=m.GREEN_A))
 
     def _setup_edges(self):
         """set the edges as manim objects"""
-        edges = self.submobjects[1]
+        if self.clear_edges:
+            self.edges.clear_points()
+
         vertices = self.mesh.get_3d_vertices()
         for edge_verts in self.mesh.get_edges():
             vert_1 = vertices[edge_verts[0]]
             vert_2 = vertices[edge_verts[1]]
             edge = m.ThreeDVMobject()
             edge.set_points_as_corners([vert_1, vert_2])
-            edges.add(edge)
-        edges.set_fill(
+            self.edges.add(edge)
+        # for all edges at once
+        self.edges.set_fill(
             color=self.edges_fill_color,
             opacity=self.edges_fill_opacity
         )
-        edges.set_stroke(
+        self.edges.set_stroke(
             color=self.edges_stroke_color,
             width=self.edges_stroke_width,
             opacity=self.edges_stroke_opacity,
         )
-        self.add(edges)
 
     def _setup_faces(self):
         """
         set the current mesh up as manim objects
         should work for any sized face, not just triangles
         """
-        faces = self.submobjects[0]
+        if self.clear_faces:
+            self.faces.clear_points()
+
         verts_3d = self.mesh.get_3d_vertices()
         for face_indices in self.mesh.get_faces():
             face_points = [verts_3d[i] for i in face_indices]
@@ -158,35 +169,95 @@ class ManimMesh(m.VGroup, metaclass=ConvertToOpenGL):
             new_face.set_points_as_corners(
                 face_points
             )
-            faces.add(new_face)
-        faces.set_fill(
+            self.faces.add(new_face)
+        self.faces.set_fill(
             color=self.faces_fill_color,
             opacity=self.faces_fill_opacity
         )
-        faces.set_stroke(
+        self.faces.set_stroke(
             color=self.faces_stroke_color,
             width=self.faces_stroke_width,
             opacity=self.faces_stroke_opacity,
         )
-        self.add(faces)
 
     def get_face(self, face_idx):
         """get the faces with the given id"""
-        return self.submobjects[0].submobjects[face_idx]
+        return self.faces.submobjects[face_idx]
 
     def get_edge(self, edge_idx):
         """get the edge with the given id"""
-        return self.submobjects[1].submobjects[edge_idx]
+        return self.edges.submobjects[edge_idx]
 
     def align_points_with_larger(self, larger_mobject):
         """abstract from super - please the linter"""
         raise NotImplementedError
 
+    def _update_vertex(self, vertex_idx: int, pos: np.ndarray):
+        """
+        TODO
+        """
+        # update mesh
+        self.mesh.update_vertex(vertex_idx, pos)
+        # update faces
+        for face_idx, face in enumerate(self.mesh.get_faces()):
+            if vertex_idx in face:
+                triangle = [self.mesh.get_3d_vertices()[i] for i in face]
+                face = self.get_face(face_idx)
+                face.set_points_as_corners(
+                    [
+                        triangle[0],
+                        triangle[1],
+                        triangle[2],
+                        triangle[0]
+                    ],
+                )
+        # update edges
+        for edge in self.mesh.get_vertex_edges(vertex_idx):
+            self._update_edge(edge)
+
+    def _update_edge(self, edge: Tuple[int, ...]):
+        e = self.get_edge(self.mesh.get_edge_index(edge))
+        vert_1 = self.mesh.get_3d_vertices()[edge[0]]
+        vert_2 = self.mesh.get_3d_vertices()[edge[1]]
+        e.set_points_as_corners([vert_1, vert_2])
+
+    def shift_vertex(self, scene: m.Scene, vertex_idx: int, shift: np.ndarray, **kwargs):
+        """shift vertex and update faces"""
+        # expect everything has the same dimensions as mesh.dim
+        start = self.mesh.get_vertices()[vertex_idx].copy()
+        tracker = m.ValueTracker(0)
+        tracker.add_updater(lambda mo: self._update_vertex(vertex_idx, start + tracker.get_value() * shift, **kwargs))
+        scene.add(tracker)
+        scene.play(tracker.animate(**kwargs).set_value(1))
+        scene.remove(tracker)
+
+    def move_vertices_to(self, scene: m.Scene, new_positions: np.ndarray, **kwargs):
+        """visually move all vertices to new positions and update faces"""
+        if len(new_positions) != self.mesh.nof_vertices:
+            raise InvalidShapeException("new_positions", len(new_positions), self.mesh.nof_vertices)
+        for i, new_pos in enumerate(new_positions):
+            self.move_vertex_to(scene=scene, vertex_idx=i, pos=new_pos, **kwargs)
+
+    def move_vertex_to(self, scene: m.Scene, vertex_idx: int, pos: np.ndarray, **kwargs):
+        """visually move vertex to pos and update faces"""
+        if vertex_idx < 0 or self.mesh.nof_vertices < vertex_idx:
+            raise InvalidVertexIndex(vertex_idx, self.mesh.nof_vertices)
+        # expect pos and curr_pos / mesh.dim to have the same dimensions
+        if self.mesh.dim != len(pos):
+            raise InvalidMeshDimensionsException(len(pos), self.mesh.dim, "pos")
+        current_pos = self.mesh.get_vertices()[vertex_idx].copy()
+        shift = pos - current_pos
+        # use shift method to slowly move point to desired place
+        self.shift_vertex(scene, vertex_idx, shift, **kwargs)
+
     def move_to_grid(self, scene: m.Scene, grid_sizes: Tuple[float, ...], threshold: Tuple[float, ...], nof_steps: int):
         """slowly snap to a given grid, uses stepwise mesh.snap_to_grid()"""
         for step in range(nof_steps, 0, -1):
-            self.mesh.snap_to_grid(grid_sizes, threshold, step)
-            self._setup_vertices()
+            # to be able to show the movement, the update needs to be calculated on a dummy mesh first
+            old_mesh: Mesh = copy.copy(self.mesh)
+            old_mesh.snap_to_grid(grid_sizes, threshold, step)
+            # use new calculated positions but have still the old mesh
+            self.move_vertices_to(self.scene, old_mesh.get_vertices())
             scene.wait(0.5)
 
 
@@ -214,6 +285,9 @@ class Manim2DMesh(ManimMesh):
             display_vertices=get_param_or_default("display_vertices", kwargs, M2DM),
             display_edges=get_param_or_default("display_edges", kwargs, M2DM),
             display_faces=get_param_or_default("display_faces", kwargs, M2DM),
+            clear_vertices=get_param_or_default("clear_vertices", kwargs, M2DM),
+            clear_edges=get_param_or_default("clear_edges", kwargs, M2DM),
+            clear_faces=get_param_or_default("clear_faces", kwargs, M2DM),
             faces_fill_color=get_param_or_default("faces_fill_color", kwargs, M2DM),
             faces_fill_opacity=get_param_or_default("faces_fill_opacity", kwargs, M2DM),
             faces_stroke_color=get_param_or_default("faces_stroke_color", kwargs, M2DM),
@@ -231,10 +305,13 @@ class Manim2DMesh(ManimMesh):
 
     def _setup_vertices(self):
         """set the vertices as 2D manim objects"""
-        points = m.VGroup()
+        if self.clear_vertices:
+            self.vertices.clear_points()
+            self.vertices = m.VGroup()
+
         for v in self.mesh.get_3d_vertices():
-            points.add(m.Dot(v, radius=0.03, color=m.RED))
-        self.scene.add(points)
+            self.vertices.add(m.Dot(v, radius=0.03, color=m.RED))
+        self.add(self.vertices)
 
     def get_circle(self, face_idx: int, **kwargs):
         """create a circum-circle around face with given idx"""
@@ -314,62 +391,6 @@ class Manim2DMesh(ManimMesh):
         center, radius = self._get_triangle_circum_circle_params(*[self.mesh.get_3d_vertices()[i] for i in face])
         distance = np.linalg.norm(center - point)
         return distance < radius
-
-    def shift_vertex(self, scene: m.Scene, vertex_idx: int, shift: np.ndarray, **kwargs):
-        """shift vertex and update faces"""
-        start = self.mesh.get_3d_vertices()[vertex_idx].copy()
-        tracker = m.ValueTracker(0)
-        tracker.add_updater(lambda mo: self._update_vertex(vertex_idx, start + tracker.get_value() * shift, **kwargs))
-        scene.add(tracker)
-        scene.play(tracker.animate(**kwargs).set_value(1))
-        scene.remove(tracker)
-
-    def move_vertex_to(self, scene: m.Scene, vertex_idx: int, pos: np.ndarray, **kwargs):
-        """visually move vertex to pos and update faces"""
-        if self.mesh.dim != len(pos):
-            raise ValueError(f'Sizes of Mesh {self.mesh.dim} and pos {len(pos)} do not match.')
-        actual_3d_pos = self.mesh.get_3d_vertices()[vertex_idx].copy()
-        if len(pos) < 3:
-            shift = np.pad(pos, ((0, 0), (0, 3 - len(pos)))) - actual_3d_pos
-        elif len(pos) == 3:
-            shift = pos - actual_3d_pos
-        else:
-            raise ValueError(f'size of new pos is too big {len(pos)} >= 3 .')
-        # use shift method to slowly move point to desired place
-        self.shift_vertex(scene, vertex_idx, shift, **kwargs)
-
-    def _update_vertex(self, vertex_idx: int, pos: np.ndarray, force_mesh_dim: bool = False):
-        """
-        TODO
-        :param force_mesh_dim: use mesh.dim as current dimensions for mesh.update_vertex(), possibly has to be passed
-        down using **kwargs. Enables usage of e.g. m.DOWN for shifting
-        """
-        if force_mesh_dim:
-            self.mesh.update_vertex(vertex_idx, pos[:self.mesh.dim])
-        else:
-            self.mesh.update_vertex(vertex_idx, pos)
-        # mesh is updated now
-        for face_idx, face in enumerate(self.mesh.get_faces()):
-            if vertex_idx in face:
-                triangle = [self.mesh.get_3d_vertices()[i] for i in face]
-                face = self.get_face(face_idx)
-                face.set_points_as_corners(
-                    [
-                        triangle[0],
-                        triangle[1],
-                        triangle[2],
-                        triangle[0]
-                    ],
-                )
-        # update edges
-        for edge in self.mesh.get_vertex_edges(vertex_idx):
-            self._update_edge(edge)
-
-    def _update_edge(self, edge: Tuple[int, ...]):
-        e = self.get_edge(self.mesh.get_edge_index(edge))
-        vert_1 = self.mesh.get_3d_vertices()[edge[0]]
-        vert_2 = self.mesh.get_3d_vertices()[edge[1]]
-        e.set_points_as_corners([vert_1, vert_2])
 
     @staticmethod
     def _get_triangle_circum_circle_params(

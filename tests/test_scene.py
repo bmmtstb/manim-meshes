@@ -23,7 +23,11 @@ class ConeScene(m.ThreeDScene):
         mesh = create_model(name="tail_topper")
         mesh.scale_mesh(scaling=0.3)
         mesh.translate_mesh(np.array([0, -8, 0]))
-        manim_mesh_obj = ManimMesh(scene=self, mesh=mesh)
+        manim_mesh_obj = ManimMesh(
+            scene=self,
+            mesh=mesh,
+            display_vertices=True,
+        )
         self.add(manim_mesh_obj)
 
 
@@ -87,7 +91,7 @@ class TriangleScene(m.ThreeDScene):
             if not mesh_2d.is_point_violating_delaunay(indices[0], 0) else None)
         # use mesh_2d.move_vertex_to and mesh_2d.shift_vertex instead of e.g. self.play(points[0].animate.move_to)
         # -> otherwise the faces will not be updated
-        mesh_2d.shift_vertex(self, indices[0], 0.35 * m.DL, force_mesh_dim=True)
+        mesh_2d.shift_vertex(self, indices[0], 0.35 * m.DL[:2])
         points[0].remove_updater(points[0].non_time_updaters[-1])  # remove last updater
         self.play(m.FadeOut(points[0]), m.Uncreate(circle))
         self.play(triangle.animate.set_fill(mesh_2d.faces_fill_color, mesh_2d.faces_fill_opacity))  # unmark triangle
@@ -162,6 +166,7 @@ class SnapToGridScene(m.ThreeDScene):
                 faces=None,
             ),
             display_vertices=True,
+            clear_vertices=True,
         )
         self.add(vertex_mesh)
         self.wait(0.5)

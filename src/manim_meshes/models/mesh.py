@@ -119,6 +119,11 @@ class Mesh:
             return not self.__eq__(other)
         raise InvalidMeshException(f'Not equal is not defined for mesh and {type(other)}')
 
+    @property
+    def nof_vertices(self):
+        """easy way to get number of vertices without loading them"""
+        return len(self._vertices)
+
     def get_vertices(self) -> Vertices:
         return self._vertices
 
@@ -128,8 +133,7 @@ class Mesh:
             return np.pad(self._vertices, ((0, 0), (0, 3 - self.dim)))
         if self.dim == 3:
             return self._vertices
-        else:
-            raise InvalidMeshException(f'Can not Broadcast from {self.dim}-D Mesh to 3D Mesh.')
+        raise InvalidMeshException(f'Can not Broadcast from {self.dim}-D Mesh to 3D Mesh.')
 
     def make_vertices_3d(self) -> None:
         """transforms currents mesh vertices to be 3D, works if dim is <= 3"""
