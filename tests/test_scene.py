@@ -9,8 +9,8 @@ import manim as m
 # local imports
 import numpy as np
 
-from manim_meshes.models.mesh import Mesh
-from manim_meshes.models.models import ManimMesh, Manim2DMesh
+from manim_meshes.models.data_models.mesh import Mesh
+from manim_meshes.models.manim_models.basic_mesh import ManimMesh, Manim2DMesh
 from manim_meshes.templates import create_grid, create_pyramid, create_model, create_coplanar_triangles
 
 
@@ -79,7 +79,7 @@ class TriangleScene(m.ThreeDScene):
         mesh_2d = Manim2DMesh(scene=self, mesh=mesh)
         self.add(mesh_2d)
         triangle = mesh_2d.get_face(0)
-        self.play(triangle.animate.set_fill(m.YELLOW_D, 1))  # mark triangle
+        self.play(triangle.animate.set_fill(m.YELLOW_D, None))  # mark triangle
         circle = mesh_2d.get_circle(0)  # circumcircle around triangle
         self.play(m.Create(circle))
         points, indices = mesh_2d.get_points_violating_delaunay(0)  # vertex indices and manim point objects
@@ -91,10 +91,10 @@ class TriangleScene(m.ThreeDScene):
             if not mesh_2d.is_point_violating_delaunay(indices[0], 0) else None)
         # use mesh_2d.move_vertex_to and mesh_2d.shift_vertex instead of e.g. self.play(points[0].animate.move_to)
         # -> otherwise the faces will not be updated
-        mesh_2d.shift_vertex(self, indices[0], 0.35 * m.DL[:2])
+        mesh_2d.shift_vertex(indices[0], 0.35 * m.DL[:2])
         points[0].remove_updater(points[0].non_time_updaters[-1])  # remove last updater
         self.play(m.FadeOut(points[0]), m.Uncreate(circle))
-        self.play(triangle.animate.set_fill(mesh_2d.faces_fill_color, mesh_2d.faces_fill_opacity))  # unmark triangle
+        self.play(triangle.animate.set_fill(mesh_2d.faces_color, None))  # unmark triangle
         # check delaunay for each triangle (except first ~> already checked above)
         for f in range(1, len(mesh_2d.mesh.get_faces())):
             circ = mesh_2d.get_circle(f)  # circumcircle around triangle
@@ -107,8 +107,8 @@ class TriangleScene(m.ThreeDScene):
         self.wait(0.5)
         triangle_a = mesh_2d.get_face(2)
         triangle_b = mesh_2d.get_face(3)
-        self.play(triangle_a.animate.set_fill(m.YELLOW_D, 1), triangle_b.animate.set_fill(m.YELLOW_D, 1))
-        mesh_2d.edge_flip(self, 2, 3)
+        self.play(triangle_a.animate.set_fill(m.YELLOW_D, None), triangle_b.animate.set_fill(m.YELLOW_D, None))
+        mesh_2d.edge_flip(2, 3)
         circle_a = mesh_2d.get_circle(2)  # circumcircle around triangle
         circle_b = mesh_2d.get_circle(3)  # circumcircle around triangle
         self.play(m.Create(circle_a), m.Create(circle_b), self.camera.animate.shift(m.DOWN))
@@ -129,7 +129,7 @@ class TriangleScene(m.ThreeDScene):
         anims_remove.append(m.Uncreate(circle_b))
         self.play(*anims_remove)
         # flip
-        mesh_2d.edge_flip(self, 2, 3)
+        mesh_2d.edge_flip(2, 3)
         # get new circles
         circle_a = mesh_2d.get_circle(2)  # circumcircle around triangle
         circle_b = mesh_2d.get_circle(3)  # circumcircle around triangle
@@ -138,8 +138,8 @@ class TriangleScene(m.ThreeDScene):
         self.play(circle_a.animate.set_color(m.GREEN), circle_b.animate.set_color(m.GREEN))
         self.play(m.Uncreate(circle_a), m.Uncreate(circle_b))
         # unmark triangles
-        self.play(triangle_a.animate.set_fill(mesh_2d.faces_fill_color, mesh_2d.faces_fill_opacity),
-                  triangle_b.animate.set_fill(mesh_2d.faces_fill_color, mesh_2d.faces_fill_opacity))
+        self.play(triangle_a.animate.set_fill(mesh_2d.faces_color, None),
+                  triangle_b.animate.set_fill(mesh_2d.faces_color, None))
 
 
 class SnapToGridScene(m.ThreeDScene):

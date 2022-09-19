@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 # local imports
 from manim_meshes.helpers import are_edges_equal
-from manim_meshes.models.mesh import Mesh
+from manim_meshes.models.data_models.mesh import Mesh
 from manim_meshes.templates import create_pyramid
 from manim_meshes.exceptions import InvalidMeshException
 

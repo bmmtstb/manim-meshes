@@ -9,7 +9,7 @@ import numpy as np
 import manim as m
 import moderngl
 from manim.mobject.opengl.opengl_mobject import OpenGLMobject
-from manim_meshes.models.mesh import Mesh
+from manim_meshes.models.data_models.mesh import Mesh
 from manim_meshes.templates import create_model
 
 

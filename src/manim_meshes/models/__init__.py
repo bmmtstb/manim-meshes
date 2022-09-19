@@ -1,3 +1,3 @@
 """
-all the manim-mesh classes
+all the model classes
 """

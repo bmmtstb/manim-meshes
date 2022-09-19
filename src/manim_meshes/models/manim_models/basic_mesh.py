@@ -12,8 +12,8 @@ import numpy as np
 from manim_meshes.exceptions import InvalidMeshDimensionsException, InvalidMeshException, InvalidShapeException, \
     InvalidVertexIndex
 from manim_meshes.helpers import remove_keys_from_dict
-from manim_meshes.models.mesh import Mesh
-from manim_meshes.models.params import get_param_or_default, M2DM, M3DM
+from manim_meshes.models.data_models.mesh import Mesh
+from manim_meshes.models.manim_models.params import get_param_or_default, M2DM, M3DM
 
 
 # class TrimeshObject(m.Polyhedron):
@@ -91,21 +91,11 @@ class ManimMesh(m.VGroup, metaclass=ConvertToOpenGL):
         self.clear_vertices = get_param_or_default("clear_vertices", kwargs, M3DM)
         self.clear_edges = get_param_or_default("clear_edges", kwargs, M3DM)
         self.clear_faces = get_param_or_default("clear_faces", kwargs, M3DM)
-        self.edges_fill_color = get_param_or_default("edges_fill_color", kwargs, M3DM)
-        self.edges_fill_opacity = get_param_or_default("edges_fill_opacity", kwargs, M3DM)
-        self.edges_stroke_color = get_param_or_default("edges_stroke_color", kwargs, M3DM)
-        self.edges_stroke_opacity = get_param_or_default("edges_stroke_opacity", kwargs, M3DM)
-        self.edges_stroke_width = get_param_or_default("edges_stroke_width", kwargs, M3DM)
-        self.faces_fill_color = get_param_or_default("faces_fill_color", kwargs, M3DM)
-        self.faces_fill_opacity = get_param_or_default("faces_fill_opacity", kwargs, M3DM)
-        self.faces_stroke_color = get_param_or_default("faces_stroke_color", kwargs, M3DM)
-        self.faces_stroke_opacity = get_param_or_default("faces_stroke_opacity", kwargs, M3DM)
-        self.faces_stroke_width = get_param_or_default("faces_stroke_width", kwargs, M3DM)
-        self.verts_fill_color = get_param_or_default("verts_fill_color", kwargs, M3DM)
-        self.verts_fill_opacity = get_param_or_default("verts_fill_opacity", kwargs, M3DM)
-        self.verts_stroke_color = get_param_or_default("verts_stroke_color", kwargs, M3DM)
-        self.verts_stroke_opacity = get_param_or_default("verts_stroke_opacity", kwargs, M3DM)
-        self.verts_stroke_width = get_param_or_default("verts_stroke_width", kwargs, M3DM)
+        self.edges_color = get_param_or_default("edges_color", kwargs, M3DM)
+        self.edges_width = get_param_or_default("edges_width", kwargs, M3DM)
+        self.faces_color = get_param_or_default("faces_color", kwargs, M3DM)
+        self.faces_opacity = get_param_or_default("faces_opacity", kwargs, M3DM)
+        self.verts_color = get_param_or_default("verts_color", kwargs, M3DM)
 
         self.pre_function_handle_to_anchor_scale_factor = (
             get_param_or_default("pre_function_handle_to_anchor_scale_factor", kwargs, M3DM)
@@ -128,7 +118,7 @@ class ManimMesh(m.VGroup, metaclass=ConvertToOpenGL):
             self.vertices = m.VGroup()
 
         for v in self.mesh.get_3d_vertices():
-            self.vertices.add(m.Sphere(v, radius=0.03, color=m.GREEN_A))
+            self.vertices.add(m.Sphere(v, radius=0.03, fill_color=self.verts_color, fill_opacity=1.,  stroke_width=0.))
 
     def _setup_edges(self):
         """set the edges as manim objects"""
@@ -144,13 +134,13 @@ class ManimMesh(m.VGroup, metaclass=ConvertToOpenGL):
             self.edges.add(edge)
         # for all edges at once
         self.edges.set_fill(
-            color=self.edges_fill_color,
-            opacity=self.edges_fill_opacity
+            color=self.edges_color,
+            opacity=1
         )
         self.edges.set_stroke(
-            color=self.edges_stroke_color,
-            width=self.edges_stroke_width,
-            opacity=self.edges_stroke_opacity,
+            color=self.edges_color,
+            width=self.edges_width,
+            opacity=1.,
         )
 
     def _setup_faces(self):
@@ -171,13 +161,13 @@ class ManimMesh(m.VGroup, metaclass=ConvertToOpenGL):
             )
             self.faces.add(new_face)
         self.faces.set_fill(
-            color=self.faces_fill_color,
-            opacity=self.faces_fill_opacity
+            color=self.faces_color,
+            opacity=self.faces_opacity
         )
         self.faces.set_stroke(
-            color=self.faces_stroke_color,
-            width=self.faces_stroke_width,
-            opacity=self.faces_stroke_opacity,
+            color=self.faces_color,
+            width=0.,
+            opacity=0.,
         )
 
     def get_face(self, face_idx):
@@ -221,24 +211,24 @@ class ManimMesh(m.VGroup, metaclass=ConvertToOpenGL):
         vert_2 = self.mesh.get_3d_vertices()[edge[1]]
         e.set_points_as_corners([vert_1, vert_2])
 
-    def shift_vertex(self, scene: m.Scene, vertex_idx: int, shift: np.ndarray, **kwargs):
+    def shift_vertex(self, vertex_idx: int, shift: np.ndarray, **kwargs):
         """shift vertex and update faces"""
         # expect everything has the same dimensions as mesh.dim
         start = self.mesh.get_vertices()[vertex_idx].copy()
         tracker = m.ValueTracker(0)
         tracker.add_updater(lambda mo: self._update_vertex(vertex_idx, start + tracker.get_value() * shift, **kwargs))
-        scene.add(tracker)
-        scene.play(tracker.animate(**kwargs).set_value(1))
-        scene.remove(tracker)
+        self.scene.add(tracker)
+        self.scene.play(tracker.animate(**kwargs).set_value(1))
+        self.scene.remove(tracker)
 
-    def move_vertices_to(self, scene: m.Scene, new_positions: np.ndarray, **kwargs):
+    def move_vertices_to(self, new_positions: np.ndarray, **kwargs):
         """visually move all vertices to new positions and update faces"""
         if len(new_positions) != self.mesh.nof_vertices:
             raise InvalidShapeException("new_positions", len(new_positions), self.mesh.nof_vertices)
         for i, new_pos in enumerate(new_positions):
-            self.move_vertex_to(scene=scene, vertex_idx=i, pos=new_pos, **kwargs)
+            self.move_vertex_to(vertex_idx=i, pos=new_pos, **kwargs)
 
-    def move_vertex_to(self, scene: m.Scene, vertex_idx: int, pos: np.ndarray, **kwargs):
+    def move_vertex_to(self, vertex_idx: int, pos: np.ndarray, **kwargs):
         """visually move vertex to pos and update faces"""
         if vertex_idx < 0 or self.mesh.nof_vertices < vertex_idx:
             raise InvalidVertexIndex(vertex_idx, self.mesh.nof_vertices)
@@ -248,7 +238,7 @@ class ManimMesh(m.VGroup, metaclass=ConvertToOpenGL):
         current_pos = self.mesh.get_vertices()[vertex_idx].copy()
         shift = pos - current_pos
         # use shift method to slowly move point to desired place
-        self.shift_vertex(scene, vertex_idx, shift, **kwargs)
+        self.shift_vertex(vertex_idx, shift, **kwargs)
 
     def move_to_grid(self, scene: m.Scene, grid_sizes: Tuple[float, ...], threshold: Tuple[float, ...], nof_steps: int):
         """slowly snap to a given grid, uses stepwise mesh.snap_to_grid()"""
@@ -288,15 +278,11 @@ class Manim2DMesh(ManimMesh):
             clear_vertices=get_param_or_default("clear_vertices", kwargs, M2DM),
             clear_edges=get_param_or_default("clear_edges", kwargs, M2DM),
             clear_faces=get_param_or_default("clear_faces", kwargs, M2DM),
-            faces_fill_color=get_param_or_default("faces_fill_color", kwargs, M2DM),
-            faces_fill_opacity=get_param_or_default("faces_fill_opacity", kwargs, M2DM),
-            faces_stroke_color=get_param_or_default("faces_stroke_color", kwargs, M2DM),
-            faces_stroke_width=get_param_or_default("faces_stroke_width", kwargs, M2DM),
-            edges_fill_color=get_param_or_default("edges_fill_color", kwargs, M2DM),
-            edges_fill_opacity=get_param_or_default("edges_fill_opacity", kwargs, M2DM),
-            edges_stroke_color=get_param_or_default("edges_stroke_color", kwargs, M2DM),
-            edges_stroke_width=get_param_or_default("edges_stroke_width", kwargs, M2DM),
-            edges_stroke_opacity=get_param_or_default("edges_stroke_opacity", kwargs, M2DM),
+            faces_color=get_param_or_default("faces_color", kwargs, M2DM),
+            faces_opacity=get_param_or_default("faces_opacity", kwargs, M2DM),
+            edges_color=get_param_or_default("edges_color", kwargs, M2DM),
+            edges_width=get_param_or_default("edges_width", kwargs, M2DM),
+            verts_color=get_param_or_default("verts_color", kwargs, M2DM),
             pre_function_handle_to_anchor_scale_factor=get_param_or_default(
                 "pre_function_handle_to_anchor_scale_factor", kwargs, M2DM),
             *args,
@@ -310,7 +296,7 @@ class Manim2DMesh(ManimMesh):
             self.vertices = m.VGroup()
 
         for v in self.mesh.get_3d_vertices():
-            self.vertices.add(m.Dot(v, radius=0.03, color=m.RED))
+            self.vertices.add(m.Dot(v, radius=0.03, color=self.verts_color))
         self.add(self.vertices)
 
     def get_circle(self, face_idx: int, **kwargs):
@@ -324,7 +310,7 @@ class Manim2DMesh(ManimMesh):
         circ.shift(center)
         return circ
 
-    def edge_flip(self, scene: m.Scene, face_idx_1: int, face_idx_2: int, **kwargs):
+    def edge_flip(self, face_idx_1: int, face_idx_2: int, **kwargs):
         """
         Flips the edge shared by the given triangles. Raises an error if the faces are not triangles
         or do not share exactly one edge.
@@ -362,7 +348,7 @@ class Manim2DMesh(ManimMesh):
         new_edge = old_edge.copy()
         new_edge.set_points_as_corners([self.mesh.get_3d_vertices()[v_1], self.mesh.get_3d_vertices()[v_2]])
         anims.append(old_edge.animate(**kwargs).become(new_edge))
-        scene.play(*anims)
+        self.scene.play(*anims)
 
     def get_points_violating_delaunay(self, face_id: int):
         """given a triangle by id, get all points violating delaunay criterion"""
@@ -376,7 +362,7 @@ class Manim2DMesh(ManimMesh):
                 distance = np.linalg.norm(center - point)
                 if distance < radius:  # inside circle
                     dot = m.Dot(point, radius=0.03, color=m.RED)
-                    dot.add_updater(lambda mo, pointer=self.mesh.get_3d_vertices()[idx]: mo.move_to(pointer))
+                    dot.add_updater(lambda mo, mesh=self.mesh, index=idx: mo.move_to(mesh.get_3d_vertices()[index]))
                     points.append(dot)
                     indices.append(idx)
         return points, indices

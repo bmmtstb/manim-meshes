@@ -10,7 +10,7 @@ import trimesh
 # local imports
 
 
-from manim_meshes.models.mesh import Mesh
+from manim_meshes.models.data_models.mesh import Mesh
 
 
 def create_triangle() -> Mesh:
