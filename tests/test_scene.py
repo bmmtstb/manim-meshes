@@ -144,6 +144,7 @@ class TriangleScene(m.ThreeDScene):
         self.play(triangle_a.animate.set_fill(mesh_2d.faces_color, None),
                   triangle_b.animate.set_fill(mesh_2d.faces_color, None))
 
+
 # run in manim-meshes
 # preview: manim -p --renderer=opengl tests/test_scene.py DivideAndConquerScene
 # use --write_to_file instead of -p to render to file

@@ -1,5 +1,8 @@
 """
 manim models for mesh objects
+contains a 3D and a 2D version
+
+additionally there is the mesh for only triangles in triangle_mesh.py
 """
 # python imports
 import copy
@@ -15,12 +18,26 @@ from manim_meshes.helpers import remove_keys_from_dict
 from manim_meshes.models.data_models.mesh import Mesh
 from manim_meshes.models.manim_models.params import get_param_or_default, M2DM, M3DM
 
+
 # pylint: disable=too-many-instance-attributes
 class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
     """
-    another Mesh implementation, a little bit faster + looks better
+    another Mesh implementation, a bit faster + looks better
 
     inspired by manim class 'Surface'
+    possible kwargs:
+        display_vertices: whether to display the vertices
+        display_edges: whether to display the edges
+        display_faces: whether to display the faces
+        clear_vertices: whether to clear the vertices after WHAT?
+        clear_edges: whether to clear the edges after WHAT?
+        clear_faces: whether to clear the faces after WHAT?
+        edges_color: color of the edges
+        edges_width: width of the lines of the edges
+        faces_color: color of the faces
+        faces_opacity: opacity of the faces
+        verts_color: color of the vertices
+        pre_function_handle_to_anchor_scale_factor: ?
     """
 
     def __init__(self, mesh: Mesh, *args, **kwargs) -> None:
@@ -31,21 +48,9 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
         self.faces: m.VGroup = m.VGroup()
 
         # set all the parameters
-        self.display_vertices = get_param_or_default("display_vertices", kwargs, M3DM)
-        self.display_edges = get_param_or_default("display_edges", kwargs, M3DM)
-        self.display_faces = get_param_or_default("display_faces", kwargs, M3DM)
-        self.clear_vertices = get_param_or_default("clear_vertices", kwargs, M3DM)
-        self.clear_edges = get_param_or_default("clear_edges", kwargs, M3DM)
-        self.clear_faces = get_param_or_default("clear_faces", kwargs, M3DM)
-        self.edges_color = get_param_or_default("edges_color", kwargs, M3DM)
-        self.edges_width = get_param_or_default("edges_width", kwargs, M3DM)
-        self.faces_color = get_param_or_default("faces_color", kwargs, M3DM)
-        self.faces_opacity = get_param_or_default("faces_opacity", kwargs, M3DM)
-        self.verts_color = get_param_or_default("verts_color", kwargs, M3DM)
+        for param_name in M3DM.keys():
+            self.__setattr__(param_name, get_param_or_default(param_name, kwargs, M3DM))
 
-        self.pre_function_handle_to_anchor_scale_factor = (
-            get_param_or_default("pre_function_handle_to_anchor_scale_factor", kwargs, M3DM)
-        )
         self._setup()
 
     def _setup(self):
@@ -56,6 +61,7 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
             self._setup_edges()
         if self.display_vertices:
             self._setup_vertices()
+        # add all the objects to the scene renderer
         self.add(self.faces, self.edges, self.vertices)
 
     def _setup_vertices(self):
@@ -138,7 +144,7 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
         if self.display_vertices:
             # update vertex
             vertex = self.get_vertex(vertex_idx)
-            vertex.move_to(pos)
+            vertex.move_to(np.pad(pos, (0, 3 - len(pos))))
         if self.display_faces:
             # update faces
             for face_idx, face in enumerate(self.mesh.get_faces()):
@@ -175,13 +181,13 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
         scene.remove(tracker)
 
     def move_vertices_to(self, scene: m.Scene, new_positions: np.ndarray, **kwargs):
-        """visually move all vertices to new positions and update faces"""
+        """visually move all vertices to new positions and update faces. In the end update self.mesh as well"""
         if len(new_positions) != self.mesh.nof_vertices:
             raise InvalidShapeException("new_positions", len(new_positions), self.mesh.nof_vertices)
         for i, new_pos in enumerate(new_positions):
             self.move_vertex_to(scene, vertex_idx=i, pos=new_pos, **kwargs)
 
-    def move_vertex_to(self,scene: m.Scene, vertex_idx: int, pos: np.ndarray, **kwargs):
+    def move_vertex_to(self, scene: m.Scene, vertex_idx: int, pos: np.ndarray, **kwargs):
         """visually move vertex to pos and update faces"""
         if vertex_idx < 0 or self.mesh.nof_vertices < vertex_idx:
             raise InvalidVertexIndex(vertex_idx, self.mesh.nof_vertices)
@@ -197,21 +203,21 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
         """slowly snap to a given grid, uses stepwise mesh.snap_to_grid()"""
         for step in range(nof_steps, 0, -1):
             # to be able to show the movement, the update needs to be calculated on a dummy mesh first
-            old_mesh: Mesh = copy.copy(self.mesh)
-            old_mesh.snap_to_grid(grid_sizes, threshold, step)
+            new_verts = self.mesh.snap_to_grid(grid_sizes, threshold, step, update_verts=False)
             # use new calculated positions but have still the old mesh
-            self.move_vertices_to(scene, old_mesh.get_vertices())
+            self.move_vertices_to(scene, new_verts)
             scene.wait(0.5)
 
 
 class Manim2DMesh(ManimMesh):
     """
     "2D" mesh implementation
-    printing Vertices in Manim is currently not supported for 2D vertices. Therefore, while printing 3D-vertices
-    have to be used. But the Manim2DMesh class should support 2D vertices or 3D vertices with z-value == 0 on init
+    printing Vertices in Manim is currently not supported for 2D vertices. Therefore, while printing the appropriate
+    3D-vertices are used. Everything else should accept plain 2D values. Therefore, this Manim2DMesh class should
+    support 2D vertices or 3D vertices with z-value == 0 on initialization
 
     This mesh is mainly for Educational purposes and has a few functions we needed for drawing basic
-     mesh functionalities.
+    mesh functionalities. It is performant up to a point and should not be used for larger meshes.
     """
 
     def __init__(self, mesh: Mesh, *args, **kwargs) -> None:

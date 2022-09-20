@@ -807,11 +807,11 @@ def test_snap_to_grid():
         deepcopy(m).snap_to_grid((1, 1, 1), (0, 0, 0))
     # threshold = 0 does not change grid
     m1 = deepcopy(m)
-    m1.snap_to_grid((1, 1, 1), (0.1, 0, 0))
+    m1.snap_to_grid((1, 1, 1), (0.1, 0, 0), update_verts=True)
     assert m1 == m
     # regular snap works up and down
     m2 = deepcopy(m)
-    m2.snap_to_grid((5, 10, 15), (1, 3, 5))
+    m2.snap_to_grid((5, 10, 15), (1, 3, 5), update_verts=True)
     assert np.array_equal(
         m2.get_vertices(),
         np.array([[0, 0, 0], [3, 4, 0], [5, 10, 8], [10, 10, 15], [12, 10, 15], [15, 16, 15], [18, 20, 15]])
@@ -819,7 +819,7 @@ def test_snap_to_grid():
     # snap to negative numbers works
     m3 = deepcopy(m)
     m3.translate_mesh(np.array([-10, -11, -10]))
-    m3.snap_to_grid((5, 6, 7), (1, 2, 3))
+    m3.snap_to_grid((5, 6, 7), (1, 2, 3), update_verts=True)
     assert np.array_equal(
         m3.get_vertices(),
         np.array([[-10, -12, -7], [-7, -6, -7], [-5, -6, 0], [0, 0, 0], [2, 0, 7], [5, 6, 7], [8, 6, 7]])

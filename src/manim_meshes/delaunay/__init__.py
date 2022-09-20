@@ -1,3 +1,0 @@
-"""
-delaunay functionalities
-"""

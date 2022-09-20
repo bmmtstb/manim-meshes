@@ -468,7 +468,10 @@ class Mesh:
         else:
             raise NotImplementedError("No implementation for n-Dimensional vector rotation")
 
-    def snap_to_grid(self, grid_sizes: Tuple[float, ...], threshold: Tuple[float, ...], steps: int = 1) -> None:
+    def snap_to_grid(
+            self, grid_sizes: Tuple[float, ...], threshold: Tuple[float, ...], steps: int = 1,
+            update_verts: bool = False
+    ) -> np.ndarray:
         """
         given vertices of a mesh, move vertices to exact locations if they are close-by.
         e.g. if there is some value 0.999 or 1.001, it would be shifted towards 1.000 if the grid size is 1,
@@ -482,6 +485,9 @@ class Mesh:
         :type threshold: tuple with the same size as self.dim
         :param steps: the number of steps to take before hitting the grid (for animation)
         :type steps: positive integer
+        :param update_verts: whether to update self._vertices after snap to grid is run
+        :type update_verts: boolean
+        :returns: np array of the new vertex positions
         """
         if len(grid_sizes) != self.dim:
             raise ValueError(f'Grid sizes dim is incorrect, was {len(grid_sizes)} expected {self.dim}.')
@@ -495,6 +501,7 @@ class Mesh:
             raise ValueError("one value in threshold has to be != 0")
         if steps <= 0:
             raise ValueError(f'steps has to be a positive integer, but was {steps}')
+        vertices = np.zeros_like(self._vertices)
         # look at every dimension separately
         for d in range(self.dim):
             curr_vals = self._vertices[:, d]
@@ -511,7 +518,10 @@ class Mesh:
             differences = np.where(differences > threshold[d], 0, differences)
             # add differences to vertices to snap every modified value
             # possibility to move stepwise for later animation
-            self._vertices[:, d] += (differences / steps)
+            vertices[:, d] = self._vertices[:, d] + (differences / steps)
+        if update_verts:
+            self._vertices = vertices
+        return vertices
 
     def remove_duplicate_vertices(self) -> None:
         """remove exact duplicates in vertices"""
