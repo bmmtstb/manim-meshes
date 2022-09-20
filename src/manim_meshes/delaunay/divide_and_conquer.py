@@ -12,6 +12,8 @@ from manim_meshes.models.manim_models.triangle_mesh import TriangleManim2DMesh
 def split_points(dots, color_a, color_b):
     """ Splits set of all manim Dots in dots into two equally sized sets with different colors.
         Returns resulting sets and coloring animations"""
+
+    # TODO sort by x-coordinate
     half_index = len(dots)//2
     vertices_a = dots[:half_index]
     vertices_b = dots[half_index:]
