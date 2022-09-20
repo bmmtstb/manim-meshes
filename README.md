@@ -22,8 +22,11 @@ Keep in mind this is a WIP...
 
 ``from manim_meshes import *``
 
-The basic `ManimMesh` from `models` can currently only be used for smaller meshes (<1k Nodes), because it is dependent on the manim internal shaders which are not really implemented optimally. This type of mesh can be easily used for 2D and smaller 3D explanatory videos, not for high resolution rendering.
-The more advanced `FastManimMesh` from `faster_models` uses a custom shader which needs to be inserted into the base manim implementation at this time! But therefore it can render enormous meshes.
+The basic `ManimMesh` and `Manim2DMesh` from `manim_models/basic_mesh` can currently only be used for smaller meshes (<1k Nodes), because it is dependent on the manim internal shaders which are not really implemented optimally. This type of mesh can be easily used for 2D and smaller 3D explanatory videos, not for high resolution rendering.
+The more advanced `FastManimMesh` from `opengl_mesh` uses a custom shader which needs to be inserted into the base manim implementation at this time! But therefore it can render enormous meshes fast.
+The `TriangleManim2DMesh` from `triangle_mesh` implements further functions that are only reasonable for triangle meshes. (e.g. Delaunay)
+
+All these Mesh-Renders are based on out own `Mesh`-Class, in `data_models`, which should implement a multitude of functions
 
 [//]: #  (TODO create basic use-case with code)
 

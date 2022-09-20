@@ -47,7 +47,7 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
         self.faces: m.VGroup = m.VGroup()
 
         # set all the parameters
-        for param_name in M3DM.keys():
+        for param_name in M3DM:
             self.__setattr__(param_name, get_param_or_default(param_name, kwargs, M3DM))
 
         self._setup()
