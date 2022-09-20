@@ -160,6 +160,13 @@ class Mesh:
                 vertex_edges.append(edge)
         return vertex_edges
 
+    def get_vertices_from_part_id(self, part_id: int) -> List[int]:
+        """get the ID of all vertices that are in the part with the given id"""
+        vert_ids = set()
+        for face_id in self._parts[part_id]:
+            vert_ids.update(set(int(vert_id) for vert_id in self._faces[face_id]))
+        return list(vert_ids)
+
     def convert_vertices_to_3d(self) -> None:
         """transforms currents mesh vertices to be 3D, works if dim is < 3"""
         if self.dim < 3:

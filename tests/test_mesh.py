@@ -79,6 +79,16 @@ def test_find_face():
     assert m.find_face(np.array([1, 2])) == []
 
 
+def test_get_vertices_from_part_id():
+    m = Mesh(
+        verts=np.array([[1, 2, 3], [1, 2, 3], [1, 0, 1], [1, 2, 3], [1, 2, 3]]),
+        faces=np.array([[1, 2, 3], [2, 3, 1], [1, 3, 4], [3, 4, 5]]),
+        parts=[[0, 1, 2]]
+    )
+    vertex_ids = m.get_vertices_from_part_id(0)
+    assert set(vertex_ids) == {1, 2, 3, 4}
+
+
 def test_dangling_vertices():
     # node 4 is not used -> has dangling vertices
     m = Mesh(
