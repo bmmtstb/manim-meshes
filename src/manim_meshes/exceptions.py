@@ -16,24 +16,6 @@ class InvalidMeshDimensionsException(Exception):
             super().__init__(f'Dimensions of {name} is expected to be {expected} but was {actual}.')
 
 
-class InvalidVertexIndex(Exception):
-    """Vertex index is out of range"""
-    def __init__(self, index: int, length: int):
-        super().__init__(f'Index {index} is out of bounds for vertices of length {length}.')
-
-
-class InvalidFaceIndex(Exception):
-    """Face index is out of range"""
-    def __init__(self, index: int, length: int):
-        super().__init__(f'Index {index} is out of bounds for faces of length {length}.')
-
-
-class InvalidPartIndex(Exception):
-    """Part index is out of range"""
-    def __init__(self, index: int, length: int):
-        super().__init__(f'Index {index} is out of bounds for parts of length {length}.')
-
-
 class InvalidShapeException(Exception):
     """A new parameter has invalid shape"""
     def __init__(self, name: str, actual: int, expected: int):

@@ -12,12 +12,10 @@ import manim as m
 from manim.mobject.opengl.opengl_compatibility import ConvertToOpenGL
 import numpy as np
 # local imports
-from manim_meshes.exceptions import InvalidMeshDimensionsException, InvalidMeshException, InvalidShapeException, \
-    InvalidVertexIndex
+from manim_meshes.exceptions import InvalidMeshDimensionsException, InvalidMeshException, InvalidShapeException
 from manim_meshes.helpers import remove_keys_from_dict
 from manim_meshes.models.data_models.mesh import Mesh
 from manim_meshes.models.manim_models.params import get_param_or_default, M2DM, M3DM
-from manim_meshes.types import VarArray
 
 
 # pylint: disable=too-many-instance-attributes

@@ -9,7 +9,7 @@ import numpy as np
 
 # we need to have support for a list that contains different sizes of arrays, because objects may
 # contain e.g. triangles and squares
-from manim_meshes.exceptions import InvalidFaceIndex, InvalidMeshException, InvalidVertexIndex
+from manim_meshes.exceptions import InvalidMeshException
 from manim_meshes.helpers import find_in_vararray, is_vararray_equal, fix_references, is_twice_nested_iterable
 from manim_meshes.types import Edge, VarArray, Vertex, Vertices, Face, Faces, Part, Parts, Edges
 

@@ -2,11 +2,8 @@
 functions to create delaunay meshes by divide and conquer
 """
 # python imports
-
 # third-party imports
-import numpy as np
 # local imports
-from manim_meshes.models.manim_models.triangle_mesh import TriangleManim2DMesh
 
 
 def split_points(dots, color_a, color_b):
