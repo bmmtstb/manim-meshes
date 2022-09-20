@@ -32,7 +32,7 @@ def get_triangle_circum_circle_params(
 def get_point_indices_violating_delaunay(mesh: Mesh, face_id: int):
     """given a triangle by id, get all indices of points violating delaunay criterion"""
     indices = []
-    face = mesh.get_faces()[face_id]
+    face = mesh.get_face_by_index(face_id)
     center, radius = get_triangle_circum_circle_params(*[mesh.get_3d_vertices()[i] for i in face])
 
     # TODO: [improve to be faster] don't loop all vertices, only loop ones that are "close"
@@ -50,7 +50,7 @@ def is_point_violating_delaunay(mesh: Mesh, vertex_idx: int, face_idx):
         w.r.t. the provided face (face_idx).
     """
     point = mesh.get_3d_vertices()[vertex_idx]
-    face = mesh.get_faces()[face_idx]
+    face = mesh.get_face_by_index(face_idx)
     center, radius = get_triangle_circum_circle_params(*[mesh.get_3d_vertices()[i] for i in face])
     distance = np.linalg.norm(center - point)
     return distance < radius

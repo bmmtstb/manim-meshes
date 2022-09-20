@@ -35,7 +35,7 @@ class TriangleManim2DMesh(Manim2DMesh):
 
     def get_circle(self, face_idx: int, **kwargs):
         """create a circum-circle around face with given idx"""
-        face = self.mesh.get_faces()[face_idx]
+        face = self.mesh.get_face_by_index(face_idx)
         vertices = [self.mesh.get_3d_vertices()[i] for i in face]
         center, radius = get_triangle_circum_circle_params(*vertices)
         if 'stroke_width' not in kwargs:
@@ -49,8 +49,8 @@ class TriangleManim2DMesh(Manim2DMesh):
         Flips the edge shared by the given triangles. Raises an error if the faces are not triangles
         or do not share exactly one edge.
         """
-        face_arr_1 = self.mesh.get_faces()[face_idx_1]
-        face_arr_2 = self.mesh.get_faces()[face_idx_2]
+        face_arr_1 = self.mesh.get_face_by_index(face_idx_1)
+        face_arr_2 = self.mesh.get_face_by_index(face_idx_2)
         if len(face_arr_1) != 3 or len(face_arr_2) != 3:
             raise ValueError("Faces must be triangles!")
         mask_1, mask_2 = np.isin(face_arr_1, face_arr_2), np.isin(face_arr_2, face_arr_1)
@@ -66,7 +66,7 @@ class TriangleManim2DMesh(Manim2DMesh):
         if 'run_time' not in kwargs:
             kwargs['run_time'] = 1
         for face_idx in [face_idx_1, face_idx_2]:
-            face = self.mesh.get_faces()[face_idx]
+            face = self.mesh.get_face_by_index(face_idx)
             triangle = [self.mesh.get_3d_vertices()[i] for i in face]
             face = self.get_face(face_idx)
             new_face = face.copy()

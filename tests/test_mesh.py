@@ -522,19 +522,19 @@ def test_update_face():
     m4_1.update_face(1, [5, 2, 0])
     assert not m4_1.dangling_vert_check()
     assert len(m4_1.get_faces()) == 4
-    assert m4_1.get_faces()[1][0] == 5
+    assert m4_1.get_face_by_index(1)[0] == 5
     assert are_edges_equal(m4_1.get_edges(), [(0, 1), (1, 2), (0, 2), (2, 3), (1, 3), (3, 4), (1, 4), (2, 5), (0, 5)])
     m4_2 = deepcopy(m)  # tuple of int
     m4_2.update_face(1, (5, 2, 0))
     assert not m4_2.dangling_vert_check()
     assert len(m4_2.get_faces()) == 4
-    assert m4_2.get_faces()[1][0] == 5
+    assert m4_2.get_face_by_index(1)[0] == 5
     assert are_edges_equal(m4_1.get_edges(), [(0, 1), (1, 2), (0, 2), (2, 3), (1, 3), (3, 4), (1, 4), (2, 5), (0, 5)])
     m4_3 = deepcopy(m)  # 1D - np.ndarray
     m4_3.update_face(1, np.array([5, 2, 0]))
     assert not m4_3.dangling_vert_check()
     assert len(m4_3.get_faces()) == 4
-    assert m4_3.get_faces()[1][0] == 5
+    assert m4_3.get_face_by_index(1)[0] == 5
     assert are_edges_equal(m4_1.get_edges(), [(0, 1), (1, 2), (0, 2), (2, 3), (1, 3), (3, 4), (1, 4), (2, 5), (0, 5)])
 
 
@@ -589,7 +589,7 @@ def test__add_and_remove_faces():
     # add faces
     triangle_mesh.add_faces([np.array([0, 1, 2, 3])])
     assert len(triangle_mesh.get_faces()) == 5
-    assert len(triangle_mesh.get_faces()[-1]) == 4
+    assert len(triangle_mesh.get_face_by_index(len(triangle_mesh.get_faces()) - 1)) == 4
     assert len(triangle_mesh.get_parts()) == 0
     # re-connect faces as parts
     triangle_mesh.add_parts([np.array([0, 1, 2, 3, 4])])
@@ -664,7 +664,7 @@ def test_add_to_mesh():
     assert len(m6.get_vertices()) == 12
     assert len(m6.get_faces()) == 8
     assert len(m6.get_parts()) == 4
-    assert m6.get_faces()[-1][2] == 10
+    assert m6.get_face_by_index(len(m6.get_faces()) - 1)[2] == 10
     assert are_edges_equal(m6.get_edges(),
                            m.get_edges() + [(6, 7), (7, 8), (6, 8), (8, 11), (7, 11), (8, 9), (7, 9), (7, 10), (9, 10)])
     m7 = deepcopy(m)
@@ -674,8 +674,8 @@ def test_add_to_mesh():
         parts=[[-4, -3, -1]]
     )
     m7.add_to_mesh(m7_1)
-    assert m7.get_faces()[-1][2] == 0
-    assert m7.get_faces()[-1][1] == len(m.get_vertices()) - 1
+    assert m7.get_face_by_index(len(m7.get_faces())-1)[2] == 0
+    assert m7.get_face_by_index(len(m7.get_faces())-1)[1] == len(m.get_vertices()) - 1
     assert m7.get_parts()[-1][0] == 0
     assert m7.get_parts()[-1][2] == len(m.get_faces()) - 1
     assert are_edges_equal(m7.get_edges(), m.get_edges() + [(6, 6), (6, 7), (7, 8), (6, 8), (5, 6), (0, 5), (0, 6)])

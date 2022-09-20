@@ -9,7 +9,7 @@ import numpy as np
 
 # we need to have support for a list that contains different sizes of arrays, because objects may
 # contain e.g. triangles and squares
-from manim_meshes.exceptions import InvalidMeshException
+from manim_meshes.exceptions import InvalidFaceIndex, InvalidMeshException, InvalidVertexIndex
 from manim_meshes.helpers import find_in_vararray, is_vararray_equal, fix_references, is_twice_nested_iterable
 from manim_meshes.types import Edge, VarArray, Vertex, Vertices, Face, Faces, Part, Parts, Edges
 
@@ -125,7 +125,14 @@ class Mesh:
         return len(self._vertices)
 
     def get_vertices(self) -> Vertices:
+        """get all the vertices"""
         return self._vertices
+
+    def get_vertex_by_id(self, vert_id: int) -> Vertex:
+        """getter for vertex by id that does not need to get all vertices first"""
+        if vert_id < 0 or len(self._vertices) <= vert_id:
+            raise InvalidVertexIndex(index=vert_id, length=len(self._vertices))
+        return self._vertices[vert_id]
 
     def get_3d_vertices(self) -> Vertices:
         """Get 3D vertices, for 1D, 2D, 3D meshes, to be able to draw them"""
@@ -135,16 +142,14 @@ class Mesh:
             return self._vertices
         raise InvalidMeshException(f'Can not Broadcast from {self.dim}-D Mesh to 3D Mesh.')
 
-    def make_vertices_3d(self) -> None:
-        """transforms currents mesh vertices to be 3D, works if dim is <= 3"""
-        if self.dim < 3:
-            self._vertices = np.pad(self._vertices, ((0, 0), (0, 3 - self.dim)))
-            self.dim = 3
-        elif self.dim > 3:
-            raise InvalidMeshException(f'Can not Broadcast from {self.dim}-D Mesh to 3D Mesh.')
-
     def get_faces(self) -> Faces:
         return self._faces
+
+    def get_face_by_index(self, face_id: int) -> Face:
+        """getter for face by id that does not need to get all faces first"""
+        if face_id < 0 or len(self._faces) <= face_id:
+            raise InvalidFaceIndex(index=face_id, length=len(self._faces))
+        return self._faces[face_id]
 
     def get_parts(self) -> Parts:
         return self._parts
@@ -163,6 +168,14 @@ class Mesh:
             if vertex_idx in edge:
                 vertex_edges.append(edge)
         return vertex_edges
+
+    def make_vertices_3d(self) -> None:
+        """transforms currents mesh vertices to be 3D, works if dim is <= 3"""
+        if self.dim < 3:
+            self._vertices = np.pad(self._vertices, ((0, 0), (0, 3 - self.dim)))
+            self.dim = 3
+        elif self.dim > 3:
+            raise InvalidMeshException(f'Can not Broadcast from {self.dim}-D Mesh to 3D Mesh.')
 
     def find_vertex(self, vertex: np.ndarray, start: int = 0) -> List[int]:
         """

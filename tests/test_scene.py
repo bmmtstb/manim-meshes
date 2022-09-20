@@ -166,7 +166,6 @@ class DivideAndConquerScene(m.ThreeDScene):
         self.wait(2)
 
 
-
 class SnapToGridScene(m.ThreeDScene):
     """
     A basic example of a 2D grid with some points that are close to but not on the grid.

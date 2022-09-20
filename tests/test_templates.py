@@ -12,7 +12,7 @@ def test_basic_triangle():
     mesh = create_triangle()
     assert len(mesh.get_vertices()) == 3  # there are 3 verts in total
     assert len(mesh.get_faces()) == 1  # there is one face
-    assert mesh.get_faces()[0].shape[0] == 3  # face has 3 verts
+    assert mesh.get_face_by_index(0).shape[0] == 3  # face has 3 verts
 
 
 def test_basic_pyramid():
