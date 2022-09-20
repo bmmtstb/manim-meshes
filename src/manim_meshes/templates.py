@@ -10,7 +10,7 @@ import trimesh
 # local imports
 
 
-from manim_meshes.models.mesh import Mesh
+from manim_meshes.models.data_models.mesh import Mesh
 
 
 def create_triangle() -> Mesh:
@@ -150,6 +150,23 @@ def create_coplanar_triangles() -> Mesh:
         faces=faces,
     )
 
+def create_coplanar_points() -> Mesh:
+    """
+    create a basic 2D mesh without faces
+    """
+    vertices = [
+        [-1, 1],
+        [1, 2],
+        [1, 0],
+        [0, 0],
+        [-1, -1],
+        [1, -1],
+        [-1, 2],
+    ]
+    return Mesh(
+        verts=vertices,
+        faces=[]
+    )
 
 def create_grid(areas: List[Tuple[float, float, int]]) -> Mesh:
     """

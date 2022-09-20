@@ -98,15 +98,15 @@ class Mesh:
             # vertex array contain every other vertex, coordinates must be exact equal, no rolling
             # faces reference the same coordinates
             # parts reference the same coordinates
-            if is_vararray_equal(list(self.get_vertices()), list(other.get_vertices()), rolling=False) and \
+            if is_vararray_equal(list(self.vertices), list(other.vertices), rolling=False) and \
                     is_vararray_equal(
-                        replace_face_ids_with_vertex_ids(self.get_faces(), self.get_vertices()),
-                        replace_face_ids_with_vertex_ids(other.get_faces(), other.get_vertices()),
+                        replace_face_ids_with_vertex_ids(self.faces, self.vertices),
+                        replace_face_ids_with_vertex_ids(other.faces, other.vertices),
                         rolling=True,
                     ) and \
                     is_vararray_equal(
-                        replace_part_ids_with_vertex_ids(self.get_parts(), self.get_faces(), self.get_vertices()),
-                        replace_part_ids_with_vertex_ids(other.get_parts(), other.get_faces(), other.get_vertices()),
+                        replace_part_ids_with_vertex_ids(self.parts, self.faces, self.vertices),
+                        replace_part_ids_with_vertex_ids(other.parts, other.faces, other.vertices),
                         rolling=True,
                     ):
                 return True
@@ -119,37 +119,61 @@ class Mesh:
             return not self.__eq__(other)
         raise InvalidMeshException(f'Not equal is not defined for mesh and {type(other)}')
 
-    def get_vertices(self) -> Vertices:
+    @property
+    def vertices(self) -> Vertices:
+        """get all the vertices"""
         return self._vertices
 
-    def make_vertices_3d(self) -> None:
-        """transforms currents mesh vertices to be 3D, works if dim is <= 3"""
+    def get_3d_vertices(self) -> Vertices:
+        """Get 3D vertices, for 1D, 2D, 3D meshes, to be able to draw them"""
         if self.dim < 3:
-            self._vertices = np.pad(self._vertices, ((0, 0), (0, 3 - self.dim)))
-            self.dim = 3
-        elif self.dim > 3:
-            raise InvalidMeshException(f'Can not Broadcast from {self.dim}-D Mesh to 3D Mesh.')
+            return np.pad(self._vertices, ((0, 0), (0, 3 - self.dim)))
+        if self.dim == 3:
+            return self._vertices
+        raise InvalidMeshException(f'Can not Broadcast from {self.dim}-D Mesh to 3D Mesh.')
 
-    def get_faces(self) -> Faces:
+    @property
+    def faces(self) -> Faces:
+        """get private property _faces"""
         return self._faces
 
-    def get_parts(self) -> Parts:
+    @property
+    def parts(self) -> Parts:
+        """get private property _parts"""
         return self._parts
 
-    def get_edges(self) -> Edges:
+    @property
+    def edges(self) -> Edges:
+        """get private property _edges"""
         return self._edges
 
-    def get_edge_index(self, edge):
+    def get_edge_index(self, edge) -> int:
         """return index of given edge"""
+        # fixme, additionally look for rolling (inverse edge) ?
         return self._edges.index(edge)
 
-    def get_vertex_edges(self, vertex_idx):
+    def get_vertex_edges(self, vertex_idx) -> Edges:
         """return all edges containing vertex_idx"""
         vertex_edges = []
         for edge in self._edges:
             if vertex_idx in edge:
                 vertex_edges.append(edge)
         return vertex_edges
+
+    def get_vertices_from_part_id(self, part_id: int) -> List[int]:
+        """get the ID of all vertices that are in the part with the given id"""
+        vert_ids = set()
+        for face_id in self._parts[part_id]:
+            vert_ids.update(set(int(vert_id) for vert_id in self._faces[face_id]))
+        return list(vert_ids)
+
+    def convert_vertices_to_3d(self) -> None:
+        """transforms currents mesh vertices to be 3D, works if dim is < 3"""
+        if self.dim < 3:
+            self._vertices = np.pad(self._vertices, ((0, 0), (0, 3 - self.dim)))
+            self.dim = 3
+        elif self.dim > 3:
+            raise InvalidMeshException(f'Can not Broadcast from {self.dim}-D Mesh to 3D Mesh.')
 
     def find_vertex(self, vertex: np.ndarray, start: int = 0) -> List[int]:
         """
@@ -312,22 +336,22 @@ class Mesh:
         """
         # Mesh has to be a correct mesh therefore many checks can be omitted
         # check if vertices have the same dimension
-        if self._vertices.shape[1] != other.get_vertices().shape[1]:
+        if self._vertices.shape[1] != other.vertices.shape[1]:
             raise InvalidMeshException("Can not concatenate meshes with vertices of different dimensionality.")
 
         # save shift factor
-        pre_nof_vertices = len(self.get_vertices())
-        pre_nof_faces = len(self.get_faces())
+        pre_nof_vertices = len(self.vertices)
+        pre_nof_faces = len(self.faces)
 
         # add vertices
-        self.add_vertices(other.get_vertices())
+        self.add_vertices(other.vertices)
         # shift faces indices by the amount of vertices of the current mesh, check them and finally append them
-        shifted_faces = [face + pre_nof_vertices for face in other.get_faces()]
+        shifted_faces = [face + pre_nof_vertices for face in other.faces]
         if any(min(sf) < 0 or max(sf) >= len(self._vertices) for sf in shifted_faces):
             raise IndexError("A face index is out of bounds.")
         self._faces += shifted_faces
         # shift parts indices by the amount of faces of the current mesh and append them
-        shifted_parts = [part + pre_nof_faces for part in other.get_parts()]
+        shifted_parts = [part + pre_nof_faces for part in other.parts]
         if any(min(sp) < 0 or max(sp) >= len(self._faces) for sp in shifted_parts):
             raise IndexError("A part index is out of bounds.")
         self._parts += shifted_parts
@@ -455,7 +479,10 @@ class Mesh:
         else:
             raise NotImplementedError("No implementation for n-Dimensional vector rotation")
 
-    def snap_to_grid(self, grid_sizes: Tuple[float, ...], threshold: Tuple[float, ...], steps: int = 1) -> None:
+    def snap_to_grid(
+            self, grid_sizes: Tuple[float, ...], threshold: Tuple[float, ...], steps: int = 1,
+            update_verts: bool = False
+    ) -> np.ndarray:
         """
         given vertices of a mesh, move vertices to exact locations if they are close-by.
         e.g. if there is some value 0.999 or 1.001, it would be shifted towards 1.000 if the grid size is 1,
@@ -469,6 +496,9 @@ class Mesh:
         :type threshold: tuple with the same size as self.dim
         :param steps: the number of steps to take before hitting the grid (for animation)
         :type steps: positive integer
+        :param update_verts: whether to update self._vertices after snap to grid is run
+        :type update_verts: boolean
+        :returns: np array of the new vertex positions
         """
         if len(grid_sizes) != self.dim:
             raise ValueError(f'Grid sizes dim is incorrect, was {len(grid_sizes)} expected {self.dim}.')
@@ -482,6 +512,7 @@ class Mesh:
             raise ValueError("one value in threshold has to be != 0")
         if steps <= 0:
             raise ValueError(f'steps has to be a positive integer, but was {steps}')
+        vertices = np.zeros_like(self._vertices)
         # look at every dimension separately
         for d in range(self.dim):
             curr_vals = self._vertices[:, d]
@@ -498,7 +529,10 @@ class Mesh:
             differences = np.where(differences > threshold[d], 0, differences)
             # add differences to vertices to snap every modified value
             # possibility to move stepwise for later animation
-            self._vertices[:, d] += (differences / steps)
+            vertices[:, d] = self._vertices[:, d] + (differences / steps)
+        if update_verts:
+            self._vertices = vertices
+        return vertices
 
     def remove_duplicate_vertices(self) -> None:
         """remove exact duplicates in vertices"""
@@ -567,13 +601,3 @@ class Mesh:
                 if edge not in edges:
                     edges.append(edge)
         return edges
-
-    # def is_face_ccw(self, face_id: int) -> bool:
-    #     """check if face is counter-clockwise"""
-    #     # FIXME is this even possible to check without going through the whole mesh?
-    #     raise NotImplementedError
-    #
-    # def is_mesh_ccw(self) -> bool:
-    #     """check full mesh """
-    #     # FIXME see: is_face_ccw
-    #     return all(self.is_face_ccw(f_id) for f_id in range(len(self._faces)))
