@@ -49,10 +49,10 @@ class FastManimMesh(OpenGLMobject):
             depth_test=depth_test,
             **kwargs,
         )
-        self.triangle_indices = np.hstack(mesh.get_faces())
+        self.triangle_indices = np.hstack(mesh.faces)
 
     def init_points(self):
-        self.set_points(self.mesh.get_vertices())
+        self.set_points(self.mesh.vertices)
 
     def get_triangle_indices(self):
         return self.triangle_indices
@@ -100,8 +100,8 @@ class VManimMesh(m.ThreeDVMobject):
         self._setup_faces()
 
     def _setup_faces(self):
-        for face_indices in self.mesh.get_faces():
-            triangle = [self.mesh.get_vertices()[i] for i in face_indices]
+        for face_indices in self.mesh.faces:
+            triangle = [self.mesh.vertices[i] for i in face_indices]
             self.start_new_path(triangle[0])
             self.add_points_as_corners(
                 np.array([

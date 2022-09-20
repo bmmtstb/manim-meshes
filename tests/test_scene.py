@@ -99,7 +99,7 @@ class TriangleScene(m.ThreeDScene):
         self.play(m.FadeOut(points[0]), m.Uncreate(circle))
         self.play(triangle.animate.set_fill(mesh_2d.faces_color, None))  # unmark triangle
         # check delaunay for each triangle (except first ~> already checked above)
-        for f in range(1, len(mesh_2d.mesh.get_faces())):
+        for f in range(1, len(mesh_2d.mesh.faces)):
             circ = mesh_2d.get_circle(f)  # circumcircle around triangle
             self.play(m.Create(circ, run_time=0.4))
             points = mesh_2d.get_dots(get_point_indices_violating_delaunay(mesh_2d.mesh, f))
@@ -196,5 +196,4 @@ class SnapToGridScene(m.ThreeDScene):
             scene=self,
             grid_sizes=(1, 1),
             threshold=(0.3, 0.3),
-            nof_steps=10,
         )

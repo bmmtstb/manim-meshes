@@ -79,7 +79,7 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
             self.edges.clear_points()
 
         vertices = self.mesh.get_3d_vertices()
-        for edge_verts in self.mesh.get_edges():
+        for edge_verts in self.mesh.edges:
             vert_1 = vertices[edge_verts[0]]
             vert_2 = vertices[edge_verts[1]]
             edge = m.ThreeDVMobject()
@@ -105,7 +105,7 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
             self.faces.clear_points()
 
         verts_3d = self.mesh.get_3d_vertices()
-        for face_indices in self.mesh.get_faces():
+        for face_indices in self.mesh.faces:
             face_points = [verts_3d[i] for i in face_indices]
             face_points.append(verts_3d[face_indices[0]])
             new_face = m.ThreeDVMobject()
@@ -148,7 +148,7 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
             vertex.move_to(np.pad(pos, (0, 3 - len(pos))))
         if self.display_faces:
             # update faces
-            for face_idx, face in enumerate(self.mesh.get_faces()):
+            for face_idx, face in enumerate(self.mesh.faces):
                 if vertex_idx in face:
                     triangle = [self.mesh.get_3d_vertices()[i] for i in face]
                     face = self.get_face(face_idx)
@@ -176,21 +176,21 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
         shift vertex by id and update faces
         expect shift to have the same dimensions as mesh.dim
         """
-        start = self.mesh.get_vertex_by_id(vertex_idx).copy()
+        start = self.mesh.vertices[vertex_idx].copy()
         tracker = m.ValueTracker(0)
         tracker.add_updater(lambda mo: self._update_vertex(vertex_idx, start + tracker.get_value() * shift, **kwargs))
         scene.add(tracker)
         scene.play(tracker.animate(**kwargs).set_value(1))
         scene.remove(tracker)
 
-    def shift_vertices(self, scene: m.Scene, shift: VarArray, **kwargs):
+    def shift_vertices(self, scene: m.Scene, shift: np.ndarray, **kwargs):
         """
         shift multiple vertices from self.mesh.vertices by shift using the manim tracker and updater
         make sure to update all points simultaneously, not one after the other
         """
-        start = copy.deepcopy(self.mesh.get_vertices())
+        start = copy.deepcopy(self.mesh.vertices)
         tracker = m.ValueTracker(0)
-        for vertex_idx in range(self.mesh.nof_vertices):
+        for vertex_idx in range(len(self.mesh.vertices)):
             tracker.add_updater(
                 # make sure at the moment when lambda is called, it still has the correct bound loop variable
                 lambda mo, bound_v_id=vertex_idx: self._update_vertex(
@@ -204,9 +204,9 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
 
     def move_vertices_to(self, scene: m.Scene, new_positions: np.ndarray, **kwargs):
         """visually move all vertices to new positions and update faces. In the end update self.mesh as well"""
-        if len(new_positions) != self.mesh.nof_vertices:
-            raise InvalidShapeException("new_positions", len(new_positions), self.mesh.nof_vertices)
-        shift = [new_positions[i] - self.mesh.get_vertices()[i] for i in range(len(new_positions))]
+        if len(new_positions) != len(self.mesh.vertices):
+            raise InvalidShapeException("new_positions", len(new_positions), len(self.mesh.vertices))
+        shift: np.ndarray = new_positions - self.mesh.vertices
         self.shift_vertices(scene, shift=shift, **kwargs)
 
     def move_vertex_to(self, scene: m.Scene, vertex_idx: int, pos: np.ndarray, **kwargs):
@@ -214,14 +214,16 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
         # expect pos and curr_pos / mesh.dim to have the same dimensions
         if self.mesh.dim != len(pos):
             raise InvalidMeshDimensionsException(len(pos), self.mesh.dim, "pos")
-        shift = pos - self.mesh.get_vertex_by_id(vertex_idx)
+        shift = pos - self.mesh.vertices[vertex_idx]
         # use shift method to slowly move point to desired place
         self.shift_vertex(scene, vertex_idx, shift, **kwargs)
 
-    def move_to_grid(self, scene: m.Scene, grid_sizes: Tuple[float, ...], threshold: Tuple[float, ...], nof_steps: int):
+    def move_to_grid(self, scene: m.Scene, grid_sizes: Tuple[float, ...], threshold: Tuple[float, ...],
+                     nof_steps: int = 1
+        ) -> None:
         """slowly snap to a given grid, uses stepwise mesh.snap_to_grid()"""
         # to be able to show the movement, the update needs to be calculated on a dummy mesh first
-        new_verts = self.mesh.snap_to_grid(grid_sizes, threshold, update_verts=False)
+        new_verts = self.mesh.snap_to_grid(grid_sizes, threshold, steps=nof_steps, update_verts=False)
         # use new calculated positions but have still the old mesh
         self.move_vertices_to(scene, new_verts)
 
@@ -239,7 +241,7 @@ class Manim2DMesh(ManimMesh):
 
     def __init__(self, mesh: Mesh, *args, **kwargs) -> None:
         if mesh.dim == 3:
-            if np.sum(np.abs(mesh.get_vertices()[:, 2] != 0)):
+            if np.sum(np.abs(mesh.vertices[:, 2] != 0)):
                 raise InvalidMeshException("Mesh has z values != 0 and therefore is not 2D.")
         elif mesh.dim > 3:
             raise InvalidMeshException(

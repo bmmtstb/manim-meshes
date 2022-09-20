@@ -38,3 +38,7 @@ class InvalidShapeException(Exception):
     """A new parameter has invalid shape"""
     def __init__(self, name: str, actual: int, expected: int):
         super().__init__(f'Size of {name} is expected to be {expected} but was {actual}.')
+
+
+class FaultyVarArrayException(Exception):
+    """The given object is no VarArray"""
