@@ -150,6 +150,7 @@ def create_coplanar_triangles() -> Mesh:
         faces=faces,
     )
 
+
 def create_coplanar_points() -> Mesh:
     """
     create a basic 2D mesh without faces
@@ -168,6 +169,7 @@ def create_coplanar_points() -> Mesh:
         faces=[]
     )
 
+
 def create_grid(areas: List[Tuple[float, float, int]]) -> Mesh:
     """
     given min, max and mount per direction create a mesh as a grid
@@ -185,11 +187,11 @@ def create_grid(areas: List[Tuple[float, float, int]]) -> Mesh:
     elif dim == 2:
         u, v = areas[0][2], areas[1][2]
         faces = [np.array([
-                    i + j * u,  # bottom left
-                    i + j * u + 1,  # bottom right
-                    i + (j + 1) * u + 1,  # top right
-                    i + (j + 1) * u  # top left
-                ]) for j in range(v - 1) for i in range(u - 1)]
+            i + j * u,  # bottom left
+            i + j * u + 1,  # bottom right
+            i + (j + 1) * u + 1,  # top right
+            i + (j + 1) * u  # top left
+        ]) for j in range(v - 1) for i in range(u - 1)]
         parts = None
     elif dim == 3:
         # FIXME implement 3D
