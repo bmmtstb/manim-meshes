@@ -184,7 +184,7 @@ class SnapToGridScene(m.ThreeDScene):
         # generate "random" points
         vertex_mesh = Manim2DMesh(
             mesh=Mesh(
-                verts=np.array([[1, 1], [0.2, 0.1], [0.5, 0.7], [-1, 1.1], [-2.5, -2.3], [-1.1, 0.2], [2.1, 1.7]]),
+                vertices=np.array([[1, 1], [0.2, 0.1], [0.5, 0.7], [-1, 1.1], [-2.5, -2.3], [-1.1, 0.2], [2.1, 1.7]]),
                 faces=None,
             ),
             display_vertices=True,

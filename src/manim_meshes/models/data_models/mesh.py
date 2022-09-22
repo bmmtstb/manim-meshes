@@ -1,15 +1,14 @@
 """
 Mesh structure
 """
+# python imports
 # third-party imports
-import warnings
 from typing import List, Set, Tuple, Union
-
 import numpy as np
-
-# we need to have support for a list that contains different sizes of arrays, because objects may
-# contain e.g. triangles and squares
-from manim_meshes.exceptions import InvalidMeshException
+# local imports
+from manim_meshes.decorators import dangling_face_decorator, dangling_vert_decorator
+from manim_meshes.exceptions import InvalidMeshDimensionsException, InvalidMeshException, InvalidRequestException, \
+    InvalidTypeException, MeshIndexException
 from manim_meshes.helpers import find_in_vararray, is_vararray_equal, fix_references, is_twice_nested_iterable
 from manim_meshes.types import Edge, VarArray, Vertex, Vertices, Face, Faces, Part, Parts, Edges
 
@@ -19,19 +18,25 @@ class Mesh:
     Basic mesh structure based on vertices and faces. For 3D objects parts is additionally used.
     """
 
-    def __init__(self, verts, faces, parts=None, dangling: bool = False):
+    @dangling_vert_decorator()
+    @dangling_face_decorator()
+    def __init__(self, vertices, faces, parts=None, dangling: bool = False):
         """
         Initialize mesh to have correct structure for all variables
-        :param verts: array-like list vertices, all with the same dimensions
-        :type verts: Array-like [N x d]
+
+        Faces and Parts are VarArray, because we need to have support for a list that contains different sizes of
+        arrays, because objects may contain e.g. triangles and squares.
+
+        :param vertices: array-like list vertices, all with the same dimensions
+        :type vertices: Array-like [N x d]
         :param faces: a list of vertex ids that form a face as lists
         :type faces: 2D Array-like or None, can e.g. be list of different sized np.ndarray
         :param parts: list of face ids that form a 3D object as list
         :type parts: 2D Array-like or None, can e.g. be list of different sized np.ndarray
-        :param dangling: whether to check regularly for dangling nodes and faces
+        :param dangling: whether to check and warn regularly for dangling nodes and faces
         :type dangling: bool
         """
-        # check verts, faces and parts for correct types
+        # check vertices, faces and parts for correct types
         if faces is not None and not is_twice_nested_iterable(faces):
             raise InvalidMeshException("Faces have to be twice nested enumerates.")
         if parts is not None and faces is None:
@@ -41,11 +46,11 @@ class Mesh:
 
         # indirectly check vertices
         try:
-            conv_vertices = np.array(verts, dtype=float)
+            conv_vertices = np.array(vertices, dtype=float)
             # if array or inner array could not be broadcast, one of the exceptions should be raised
             if len(conv_vertices.shape) != 2:
-                raise InvalidMeshException("Could not broadcast to array. Dimensional mismatch for vertices. "
-                                           "All vertices should have the same number of dimensions.")
+                raise InvalidMeshException("Could not broadcast vertices to np.array of shape 2. Dimensional mismatch "
+                                           "for vertices. All vertices should have the same number of dimensions.")
         except (np.VisibleDeprecationWarning, TypeError, ValueError) as e:
             raise InvalidMeshException("Dimensional mismatch for vertices. All vertices should have the same number of "
                                        "dimensions.") from e
@@ -54,14 +59,8 @@ class Mesh:
         self._faces: Faces = [np.array(f, dtype=int) for f in faces] if faces is not None else []
         self._parts: Parts = [np.array(p, dtype=int) for p in parts] if parts is not None else []
         self._edges = self.extract_edges()
-        self._test_for_dangling = dangling
+        self.test_for_dangling = dangling
         self.dim = conv_vertices.shape[1]
-
-        # warn user for creating dangling meshes
-        if self._test_for_dangling and faces is not None and self.dangling_vert_check():
-            warnings.warn('Mesh contains dangling vertices.')
-        if self._test_for_dangling and parts is not None and faces is not None and self.dangling_face_check():
-            warnings.warn('Mesh contains dangling faces.')
 
     def __add__(self, other) -> 'Mesh':
         if isinstance(other, Mesh):
@@ -111,26 +110,18 @@ class Mesh:
                     ):
                 return True
             return False
-        raise InvalidMeshException(f'Not equal is not defined for mesh and {type(other)}')
+        raise NotImplementedError(f'Not equal is not defined for mesh and {type(other)}')
 
     def __ne__(self, other: 'Mesh') -> bool:
         """Overrides the default implementation (kind of unnecessary in Python 3)"""
         if isinstance(other, Mesh):
             return not self.__eq__(other)
-        raise InvalidMeshException(f'Not equal is not defined for mesh and {type(other)}')
+        raise NotImplementedError(f'Not equal is not defined for mesh and {type(other)}')
 
     @property
     def vertices(self) -> Vertices:
-        """get all the vertices"""
+        """get private property _vertices"""
         return self._vertices
-
-    def get_3d_vertices(self) -> Vertices:
-        """Get 3D vertices, for 1D, 2D, 3D meshes, to be able to draw them"""
-        if self.dim < 3:
-            return np.pad(self._vertices, ((0, 0), (0, 3 - self.dim)))
-        if self.dim == 3:
-            return self._vertices
-        raise InvalidMeshException(f'Can not Broadcast from {self.dim}-D Mesh to 3D Mesh.')
 
     @property
     def faces(self) -> Faces:
@@ -147,12 +138,20 @@ class Mesh:
         """get private property _edges"""
         return self._edges
 
-    def get_edge_index(self, edge) -> int:
+    def get_3d_vertices(self) -> Vertices:
+        """Get 3D vertices, for 1D, 2D, 3D meshes, to be able to draw them"""
+        if self.dim < 3:
+            return np.pad(self._vertices, ((0, 0), (0, 3 - self.dim)))
+        if self.dim == 3:
+            return self._vertices
+        raise InvalidRequestException(f'Can not Broadcast from {self.dim}-D Mesh to 3D Mesh.')
+
+    def get_edge_index(self, edge: Edge) -> int:
         """return index of given edge"""
         # fixme, additionally look for rolling (inverse edge) ?
         return self._edges.index(edge)
 
-    def get_vertex_edges(self, vertex_idx) -> Edges:
+    def get_vertex_edges(self, vertex_idx: int) -> Edges:
         """return all edges containing vertex_idx"""
         vertex_edges = []
         for edge in self._edges:
@@ -173,12 +172,12 @@ class Mesh:
             self._vertices = np.pad(self._vertices, ((0, 0), (0, 3 - self.dim)))
             self.dim = 3
         elif self.dim > 3:
-            raise InvalidMeshException(f'Can not Broadcast from {self.dim}-D Mesh to 3D Mesh.')
+            raise InvalidRequestException(f'Can not Broadcast from {self.dim}-D Mesh to 3D Mesh.')
 
     def find_vertex(self, vertex: np.ndarray, start: int = 0) -> List[int]:
         """
         return list of indices where self._vertices == vertex
-        possibility to start loop at different index
+        possibility to start loop at different index, will always end at end of list
         """
         if len(vertex) != self.dim:
             return []
@@ -195,18 +194,20 @@ class Mesh:
         #  [1,2,3] ?=? [1,3,2] or is it "rolling" like faces?
         return find_in_vararray(array=self._parts, item=part, start=start)
 
+    @dangling_vert_decorator()
     def add_vertices(self, new_vertices: Vertices) -> None:
         """add given vertices to current ones"""
         if not isinstance(new_vertices, np.ndarray):
             raise InvalidMeshException(f'new_vertices has invalid type {new_vertices}')
         if len(new_vertices.shape) != 2 or new_vertices.shape[1] != self.dim:
-            raise InvalidMeshException("new Vertices do not have the same dimensions as current ones.")
+            raise InvalidMeshDimensionsException(
+                actual=new_vertices.shape, expected=("N", self.dim), name="new_vertices")
         self._vertices = np.vstack((self._vertices, new_vertices))
 
     def remove_vertices(self, indices: Union[np.ndarray, List[int]]) -> None:
-        """remove multiple vertices"""
+        """remove multiple vertices - does not support negative indexing"""
         if any(len(self._vertices) <= idx or idx < 0 for idx in indices):
-            raise IndexError('Vertex index out of range')
+            raise MeshIndexException('Vertex index out of range')
         # use indices to update self._faces
         faces_to_remove = fix_references(self._faces, indices)
         # remove vertices at all the indices
@@ -217,11 +218,11 @@ class Mesh:
         self._edges = self.extract_edges()
 
     def update_vertex(self, idx: int, new_vert: Vertex) -> None:
-        """update the position of the vertex at given index"""
+        """update the position of the vertex at given index - does not support negative indexing"""
         if len(self._vertices) <= idx or idx < 0:
-            raise IndexError(f'Vertex index {idx} out of range for vertices of length {len(self._vertices)}')
+            raise MeshIndexException(f'Vertex index {idx} out of range for vertices of length {len(self._vertices)}')
         if isinstance(new_vert, np.ndarray) and len(new_vert.shape) != 1:
-            raise TypeError(f'Vertex {new_vert} has incorrect shape, expected 1D-like array.')
+            raise InvalidTypeException(f'Vertex {new_vert} has incorrect shape, expected 1D-like array.')
         if self._vertices.shape[1] != len(new_vert):
             raise InvalidMeshException(f'Current indices have dimension {self._vertices.shape[1]}, while '
                                        f'new vertex has dimension {len(new_vert)} .')
@@ -231,6 +232,7 @@ class Mesh:
             raise InvalidMeshException("Could not update Vertex. Dimensional mismatch for vertices."
                                        "All vertices should have the same number of dimensions.") from e
 
+    @dangling_face_decorator()
     def add_faces(self, new_faces: Faces) -> None:
         """adds new faces"""
         # type-check whole array
@@ -238,8 +240,8 @@ class Mesh:
             raise InvalidMeshException("new_faces should be twice nested iterable.")
         # check for out of bound indices
         for new_face in new_faces:
-            if any(0 > v or v >= len(self._vertices) for v in new_face):
-                raise IndexError('Vertex index not defined')
+            if any(v < 0 or v >= len(self._vertices) for v in new_face):
+                raise MeshIndexException('Vertex index not defined')
         # add to self._faces depending on type
         if isinstance(new_faces, list):
             self._faces += new_faces
@@ -247,14 +249,16 @@ class Mesh:
             for val in new_faces:
                 self._faces.append(val)
         else:
-            raise TypeError(f'unknown type for new_face {type(new_faces)}')
+            raise InvalidTypeException(f'unknown type for new_face {type(new_faces)}')
         # edges may be changed # Fixme: update only partly
         self._edges = self.extract_edges()
 
+    @dangling_vert_decorator()
+    @dangling_face_decorator()
     def remove_faces(self, indices: Union[np.ndarray, List[int]]) -> None:
-        """removes the faces with given indices and clean-up parts"""
+        """removes the faces with given indices and clean-up parts - does not support negative indexing"""
         if any(len(self._faces) <= idx or idx < 0 for idx in indices):
-            raise IndexError('Face index out of range')
+            raise MeshIndexException('Face index out of range')
 
         # use indices to update self._parts
         fix_references(self._parts, indices)
@@ -263,27 +267,22 @@ class Mesh:
             del self._faces[index]
         # edges may be changed # Fixme: update only partly
         self._edges = self.extract_edges()
-        # warn on dangling vertices and faces
-        if self._test_for_dangling and self.dangling_vert_check():
-            warnings.warn('Dangling vertices due to face removal')
-        if self._test_for_dangling and self.dangling_face_check():
-            warnings.warn('Dangling faces due to removed parts by face removal')
 
+    @dangling_vert_decorator()
     def update_face(self, idx: int, new_face: Face) -> None:
-        """update face with index idx to take new vertices"""
+        """update face with index idx to take new vertices - does not support negative indexing"""
         if len(self._faces) <= idx or idx < 0:
-            raise IndexError(f'Face index {idx} out of range.')
+            raise MeshIndexException(f'Face index {idx} out of range.')
         if isinstance(new_face, np.ndarray) and len(new_face.shape) != 1:
-            raise TypeError(f'Face {new_face} has incorrect shape, expected 1D-like array.')
+            raise InvalidTypeException(f'Face {new_face} has incorrect shape, expected 1D-like array.')
         if any(0 > v_idx or v_idx >= len(self._vertices) for v_idx in new_face):
-            raise IndexError('Vertex index out of range.')
+            raise MeshIndexException('Vertex index out of range.')
         # update face
         self._faces[idx] = np.array(new_face)
-        if self._test_for_dangling and self.dangling_vert_check():
-            warnings.warn('Dangling vertices due to face update')
         # edges may be changed # Fixme: update only partly
         self._edges = self.extract_edges()
 
+    @dangling_face_decorator()
     def add_parts(self, new_parts: Parts) -> None:
         """adds new parts"""
         # validate array type
@@ -292,7 +291,7 @@ class Mesh:
         # validate face indices
         for new_part in new_parts:
             if any(0 > f or f >= len(self._faces) for f in new_part):
-                raise IndexError(f'Face index out of range for new part: {new_part}')
+                raise MeshIndexException(f'Face index out of range for new part: {new_part}')
         # add new to existing based on type
         if isinstance(new_parts, list):
             self._parts += [np.array(part) for part in new_parts]
@@ -300,34 +299,33 @@ class Mesh:
             for val in new_parts:
                 self._parts.append(np.array(val))
         else:
-            raise TypeError(f'unknown type for new_part {type(new_parts)}')
+            raise InvalidTypeException(f'unknown type for new_part {type(new_parts)}')
 
+    @dangling_face_decorator()
     def remove_parts(self, indices: Union[np.ndarray, List[int]]) -> None:
-        """removes the parts with given indices"""
+        """removes the parts with given indices - does not support negative indexing"""
         if any(len(self._parts) <= idx or idx < 0 for idx in indices):
-            raise IndexError('Part index out of range')
+            raise MeshIndexException('Part index out of range')
         # remove indices back to front
         indices[:] = list(set(indices))
         indices.sort(reverse=True)
         for idx in indices:
             del self._parts[idx]
-        # post remove
-        if self._test_for_dangling and self.dangling_face_check():
-            warnings.warn('Dangling faces due to part removal')
 
+    @dangling_face_decorator()
     def update_part(self, idx: int, new_part: Part) -> None:
-        """update part with index idx to take new faces"""
+        """update part with index idx to take new faces - does not support negative indexing"""
         if len(self._parts) <= idx or idx < 0:
-            raise IndexError(f'Part index {idx} out of range.')
+            raise MeshIndexException(f'Part index {idx} out of range.')
         if isinstance(new_part, np.ndarray) and len(new_part.shape) != 1:
-            raise TypeError(f'Part {new_part} has incorrect shape, expected 1D-like array.')
+            raise InvalidTypeException(f'Part {new_part} has incorrect shape, expected 1D-like array.')
         if any(0 > f_idx or f_idx >= len(self._faces) for f_idx in new_part):
-            raise IndexError('Face index out of range.')
+            raise MeshIndexException('Face index out of range.')
         # update part
         self._parts[idx] = np.array(new_part)
-        if self._test_for_dangling and self.dangling_face_check():
-            warnings.warn('Dangling faces due to part update')
 
+    @dangling_vert_decorator()
+    @dangling_face_decorator()
     def add_to_mesh(self, other: 'Mesh') -> None:
         """
         add another mesh to current mesh
@@ -348,21 +346,16 @@ class Mesh:
         # shift faces indices by the amount of vertices of the current mesh, check them and finally append them
         shifted_faces = [face + pre_nof_vertices for face in other.faces]
         if any(min(sf) < 0 or max(sf) >= len(self._vertices) for sf in shifted_faces):
-            raise IndexError("A face index is out of bounds.")
+            raise MeshIndexException("A face index is out of bounds.")
         self._faces += shifted_faces
         # shift parts indices by the amount of faces of the current mesh and append them
         shifted_parts = [part + pre_nof_faces for part in other.parts]
         if any(min(sp) < 0 or max(sp) >= len(self._faces) for sp in shifted_parts):
-            raise IndexError("A part index is out of bounds.")
+            raise MeshIndexException("A part index is out of bounds.")
         self._parts += shifted_parts
 
         # edges may be changed # Fixme: update only partly
         self._edges = self.extract_edges()
-        # warn on dangling vertices and faces
-        if self._test_for_dangling and self.dangling_vert_check():
-            warnings.warn('Dangling vertices due to face removal')
-        if self._test_for_dangling and self.dangling_face_check():
-            warnings.warn('Dangling faces due to removed parts by face removal')
 
     def split_mesh_into_objects(self) -> List['Mesh']:
         """
@@ -402,7 +395,7 @@ class Mesh:
             new_ids: List[int] = sorted(list(int(_id) for _id in obj_vert_ids))
             new_faces: List[int] = sorted(list(face_ids))
             new_meshes.append(Mesh(
-                verts=np.vstack(self._vertices[_id] for _id in new_ids),
+                vertices=np.vstack(self._vertices[_id] for _id in new_ids),
                 faces=[np.array([new_ids.index(old_vertex_id) for old_vertex_id in self._faces[f_id]])
                        for f_id in face_ids],
                 parts=[np.array([new_faces.index(old_face_id) for old_face_id in self._parts[p_id]])
@@ -435,19 +428,19 @@ class Mesh:
     def translate_mesh(self, translation: np.ndarray) -> None:
         """translates all vertices by a given vector"""
         if not isinstance(translation, np.ndarray):
-            raise TypeError(f'Translation should be a np.ndarray, but was a {type(translation)} instead')
+            raise InvalidTypeException(f'Translation should be a np.ndarray, but was a {type(translation)} instead')
         if len(translation.shape) != 1 or translation.shape[0] != self.dim:
-            raise ValueError(f'Translation has wrong dimensions expected {self.dim} was {translation.shape}')
+            raise InvalidMeshDimensionsException(name="Translation", expected=self.dim, actual=translation.shape)
         self._vertices += np.array(translation)
 
     def translate_vertex(self, v_id: int, translation: np.ndarray) -> None:
         """translate a single vertex by a given vector"""
         if 0 > v_id or v_id >= len(self._vertices):
-            raise IndexError(f'Index {v_id} out of bounds for vertices of shape {self._vertices.shape}')
+            raise MeshIndexException(f'Index {v_id} out of bounds for vertices of shape {self._vertices.shape}')
         if not isinstance(translation, np.ndarray):
-            raise TypeError(f'Translation should be a np.ndarray, but was a {type(translation)} instead')
+            raise InvalidTypeException(f'Translation should be a np.ndarray, but was a {type(translation)} instead')
         if len(translation.shape) != 1 or translation.shape[0] != self.dim:
-            raise ValueError(f'Translation has wrong dimensions expected {self.dim} was {translation.shape}')
+            raise InvalidMeshDimensionsException(name="Translation", expected=self.dim, actual=translation.shape)
         self._vertices[v_id] += translation
 
     def apply_rotation(self, angle, axis=None) -> None:
@@ -474,7 +467,7 @@ class Mesh:
             elif axis == 2:
                 rotation_matrix[:-1, :-1] = rot_2d
             else:
-                raise ValueError('In 3D parameter \'axis\' must be 0, 1 or 2')
+                raise InvalidRequestException('In 3D parameter \'axis\' must be 0, 1 or 2')
             self._vertices = self._vertices @ rotation_matrix.T  # transposed because we got row vectors not col vecs
         else:
             raise NotImplementedError("No implementation for n-Dimensional vector rotation")
@@ -501,17 +494,17 @@ class Mesh:
         :returns: np array of the new vertex positions
         """
         if len(grid_sizes) != self.dim:
-            raise ValueError(f'Grid sizes dim is incorrect, was {len(grid_sizes)} expected {self.dim}.')
+            raise InvalidMeshDimensionsException(name="Grid sizes", actual=len(grid_sizes), expected=self.dim)
         if len(threshold) != self.dim:
-            raise ValueError(f'Threshold dim is incorrect, was {len(threshold)} expected {self.dim}.')
+            raise InvalidMeshDimensionsException(name="Threshold", actual=len(threshold), expected=self.dim)
         if any(v <= 0 for v in grid_sizes):
-            raise ValueError("invalid value for grid_sizes. Has to be greater than zero.")
+            raise InvalidRequestException("invalid value for grid_sizes. Has to be greater than zero.")
         if any(2 * threshold[i] >= grid_sizes[i] for i in range(self.dim)):
-            raise ValueError("threshold can not be bigger than half of grid_size for same dimension.")
+            raise InvalidRequestException("threshold can not be bigger than half of grid_size for same dimension.")
         if all(t == 0 for t in threshold):
-            raise ValueError("one value in threshold has to be != 0")
+            raise InvalidRequestException("one value in threshold has to be != 0")
         if steps <= 0:
-            raise ValueError(f'steps has to be a positive integer, but was {steps}')
+            raise InvalidRequestException(f'steps has to be a positive integer, but was {steps}')
         vertices = np.zeros_like(self._vertices)
         # look at every dimension separately
         for d in range(self.dim):

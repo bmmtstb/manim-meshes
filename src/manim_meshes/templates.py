@@ -26,7 +26,7 @@ def create_triangle() -> Mesh:
         [0, 1, 2],
     ]
     return Mesh(
-        verts=vertices,
+        vertices=vertices,
         faces=faces,
     )
 
@@ -66,7 +66,7 @@ def create_pyramid(triangles_only: bool = True) -> Mesh:
             [0, 1, 2, 3, 4],
         ]
     return Mesh(
-        verts=vertices,
+        vertices=vertices,
         faces=faces,
         parts=parts,
     )
@@ -118,7 +118,7 @@ def create_cube(triangles_only: bool = True) -> Mesh:
         ]
 
     return Mesh(
-        verts=vertices,
+        vertices=vertices,
         faces=faces,
         parts=parts,
     )
@@ -146,7 +146,7 @@ def create_coplanar_triangles() -> Mesh:
         [6, 1, 0]
     ]
     return Mesh(
-        verts=vertices,
+        vertices=vertices,
         faces=faces,
     )
 
@@ -165,7 +165,7 @@ def create_coplanar_points() -> Mesh:
         [-1, 2],
     ]
     return Mesh(
-        verts=vertices,
+        vertices=vertices,
         faces=[]
     )
 
@@ -202,7 +202,7 @@ def create_grid(areas: List[Tuple[float, float, int]]) -> Mesh:
     else:
         raise ValueError("Only 1D, 2D and 3D meshes implemented.")
     return Mesh(
-        verts=vertices,
+        vertices=vertices,
         faces=faces,
         parts=parts,
     )
