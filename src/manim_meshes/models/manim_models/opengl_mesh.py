@@ -9,7 +9,10 @@ import numpy as np
 import manim as m
 import moderngl
 from manim.mobject.opengl.opengl_mobject import OpenGLMobject
+
+from manim_meshes.helpers import remove_keys_from_dict
 from manim_meshes.models.data_models.mesh import Mesh
+from manim_meshes.params import get_param_or_default, OGLM
 from manim_meshes.templates import create_model
 
 
@@ -29,25 +32,16 @@ class FastManimMesh(OpenGLMobject):
     def __init__(
             self,
             mesh,
-            color=m.GREY,
-            opacity=1.0,
-            gloss=0.3,
-            shadow=0.4,
-            render_primitive=moderngl.TRIANGLES,
-            depth_test=True,
             shader_folder=None,
             **kwargs,
     ):
         self.mesh = mesh
         super().__init__(
-            color=color,
-            opacity=opacity,
-            gloss=gloss,
-            shadow=shadow,
             shader_folder=shader_folder if shader_folder is not None else "mesh",
-            render_primitive=render_primitive,
-            depth_test=depth_test,
-            **kwargs,
+            # default params
+            **{key: get_param_or_default(key, kwargs, OGLM) for key in OGLM},
+            # regular kwargs
+            **remove_keys_from_dict(kwargs, list(OGLM.keys())),
         )
         self.triangle_indices = np.hstack(mesh.faces)
 

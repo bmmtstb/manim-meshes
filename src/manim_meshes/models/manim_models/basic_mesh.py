@@ -15,7 +15,7 @@ import numpy as np
 from manim_meshes.exceptions import InvalidMeshDimensionsException, InvalidMeshException, InvalidShapeException
 from manim_meshes.helpers import remove_keys_from_dict
 from manim_meshes.models.data_models.mesh import Mesh
-from manim_meshes.models.manim_models.params import get_param_or_default, M2DM, M3DM
+from manim_meshes.params import get_param_or_default, BM2DM, BM3DM
 
 
 # pylint: disable=too-many-instance-attributes
@@ -47,8 +47,8 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
         self.faces: m.VGroup = m.VGroup()
 
         # set all the parameters
-        for param_name in M3DM:
-            self.__setattr__(param_name, get_param_or_default(param_name, kwargs, M3DM))
+        for param_name in BM3DM:
+            self.__setattr__(param_name, get_param_or_default(param_name, kwargs, BM3DM))
 
         self._setup()
 
@@ -247,21 +247,21 @@ class Manim2DMesh(ManimMesh):
         # init ManimMesh
         super().__init__(
             mesh=mesh,
-            display_vertices=get_param_or_default("display_vertices", kwargs, M2DM),
-            display_edges=get_param_or_default("display_edges", kwargs, M2DM),
-            display_faces=get_param_or_default("display_faces", kwargs, M2DM),
-            clear_vertices=get_param_or_default("clear_vertices", kwargs, M2DM),
-            clear_edges=get_param_or_default("clear_edges", kwargs, M2DM),
-            clear_faces=get_param_or_default("clear_faces", kwargs, M2DM),
-            faces_color=get_param_or_default("faces_color", kwargs, M2DM),
-            faces_opacity=get_param_or_default("faces_opacity", kwargs, M2DM),
-            edges_color=get_param_or_default("edges_color", kwargs, M2DM),
-            edges_width=get_param_or_default("edges_width", kwargs, M2DM),
-            verts_color=get_param_or_default("verts_color", kwargs, M2DM),
+            display_vertices=get_param_or_default("display_vertices", kwargs, BM2DM),
+            display_edges=get_param_or_default("display_edges", kwargs, BM2DM),
+            display_faces=get_param_or_default("display_faces", kwargs, BM2DM),
+            clear_vertices=get_param_or_default("clear_vertices", kwargs, BM2DM),
+            clear_edges=get_param_or_default("clear_edges", kwargs, BM2DM),
+            clear_faces=get_param_or_default("clear_faces", kwargs, BM2DM),
+            faces_color=get_param_or_default("faces_color", kwargs, BM2DM),
+            faces_opacity=get_param_or_default("faces_opacity", kwargs, BM2DM),
+            edges_color=get_param_or_default("edges_color", kwargs, BM2DM),
+            edges_width=get_param_or_default("edges_width", kwargs, BM2DM),
+            verts_color=get_param_or_default("verts_color", kwargs, BM2DM),
             pre_function_handle_to_anchor_scale_factor=get_param_or_default(
-                "pre_function_handle_to_anchor_scale_factor", kwargs, M2DM),
+                "pre_function_handle_to_anchor_scale_factor", kwargs, BM2DM),
             *args,
-            **remove_keys_from_dict(kwargs, list(M2DM.keys())),
+            **remove_keys_from_dict(kwargs, list(BM2DM.keys())),
         )
 
     def _setup_vertices(self):

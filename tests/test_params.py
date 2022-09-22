@@ -8,7 +8,7 @@ from colour import Color
 import manim as m
 
 # local imports
-from manim_meshes.models.manim_models.params import BadParameterException, DefaultParameters, get_param_or_default
+from manim_meshes.params import BadParameterException, DefaultParameters, get_param_or_default
 
 TEST_PARAMS: DefaultParameters = {
     "bool":   (bool, False),

@@ -15,12 +15,7 @@ from manim_meshes.models.manim_models.basic_mesh import Manim2DMesh
 
 class TriangleManim2DMesh(Manim2DMesh):
     """
-    "2D" mesh implementation
-    printing Vertices in Manim is currently not supported for 2D vertices. Therefore, while printing 3D-vertices
-    have to be used. But the Manim2DMesh class should support 2D vertices or 3D vertices with z-value == 0 on init
-
-    This mesh is mainly for Educational purposes and has a few functions we needed for drawing basic
-     mesh functionalities.
+    2D Mesh implementation that has additional methods especially for triangles
     """
 
     def __init__(self, mesh: Mesh, *args, **kwargs) -> None:

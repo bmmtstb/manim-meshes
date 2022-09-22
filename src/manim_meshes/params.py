@@ -1,23 +1,19 @@
 """
-Parameters get out of hand for the meshes, store defaults and casting in separate functions
+Parameters can get out of hand for the meshes, store defaults and casting in separate functions
 """
 # python imports
-from typing import Any, Dict, Tuple
+from typing import Any
 from colour import Color
 # third-party imports
 import manim as m
-
-Parameters = Dict[str, Any]
-DefaultParameters = Dict[str, Tuple[type, Any]]
-
-
-class BadParameterException(Exception):
-    """Default Class for Parameter Exceptions"""
-
+import moderngl
+# local imports
+from manim_meshes.exceptions import BadParameterException
+from manim_meshes.types import DefaultParameters, Parameters
 
 # map from param name to type and default value
-# manim_3d_mesh_default_params
-M3DM: DefaultParameters = {
+# basic_manim_3d_mesh_default_params
+BM3DM: DefaultParameters = {
     "display_vertices":                           (bool, False),
     "display_edges":                              (bool, True),
     "display_faces":                              (bool, True),
@@ -32,8 +28,8 @@ M3DM: DefaultParameters = {
     "pre_function_handle_to_anchor_scale_factor": (float, 0.00001),
 }
 
-# manim_2d_mesh_default_params
-M2DM: DefaultParameters = {
+# basic_manim_2d_mesh_default_params
+BM2DM: DefaultParameters = {
     "display_vertices":                           (bool, False),
     "display_edges":                              (bool, True),
     "display_faces":                              (bool, True),
@@ -46,6 +42,16 @@ M2DM: DefaultParameters = {
     "faces_opacity":                              (float, 1.),
     "verts_color":                                (Color, Color(m.GREEN)),
     "pre_function_handle_to_anchor_scale_factor": (float, 0.00001),
+}
+
+# opengl_mesh_default_params
+OGLM: DefaultParameters = {
+    "color": m.GREY,
+    "depth_test": True,
+    "gloss": 0.3,
+    "opacity": 1.0,
+    "render_primitive": moderngl.TRIANGLES,
+    "shadow": 0.4,
 }
 
 

@@ -22,5 +22,9 @@ class InvalidShapeException(Exception):
         super().__init__(f'Size of {name} is expected to be {expected} but was {actual}.')
 
 
+class BadParameterException(Exception):
+    """Default Class for Parameter Exceptions"""
+
+
 class FaultyVarArrayException(Exception):
     """The given object is no VarArray"""

@@ -2,7 +2,7 @@
 custom type hints
 """
 # python imports
-from typing import List, Union, Tuple
+from typing import List, Union, Tuple, Dict, Any
 # third-party imports
 import numpy as np
 
@@ -19,3 +19,6 @@ Parts = VarArray
 
 Edge = Tuple[int, int]
 Edges = List[Edge]
+
+Parameters = Dict[str, Any]
+DefaultParameters = Dict[str, Tuple[type, Any]]

@@ -16,6 +16,7 @@ manimgl = "^1.6.1"
 ManimPango = "^0.4.1"
 numpy = "*"
 trimesh = "^3.12.5"
+moderngl = "*"
 
 [tool.poetry.dev-dependencies]
 meshio = "^5.3.4"
