@@ -6,7 +6,7 @@ import warnings
 
 def dangling_vert_decorator():
     """
-    decorator for mesh to check for dangling nodes at the end of the decorated function
+    decorator for mesh to check for dangling vertices at the end of the decorated function
     check whether there are any dangling nodes - vertices that are not part of a face
     """
     def decorator_func(func):

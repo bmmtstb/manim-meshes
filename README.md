@@ -26,7 +26,7 @@ The basic `ManimMesh` and `Manim2DMesh` from `manim_models/basic_mesh` can curre
 The more advanced `FastManimMesh` from `opengl_mesh` uses a custom shader which needs to be inserted into the base manim implementation at this time! But therefore it can render enormous meshes fast.
 The `TriangleManim2DMesh` from `triangle_mesh` implements further functions that are only reasonable for triangle meshes. (e.g. Delaunay)
 
-All these Mesh-Renders are based on out own `Mesh`-Class, in `data_models`, which should implement a multitude of functions
+All these Mesh-Renders are based on the `Mesh`-Class, in `data_models`, which should implement a multitude of basic Mesh-functions. If you have the feeling something is missing, feel free to add it.
 
 [//]: #  (TODO create basic use-case with code)
 
@@ -35,7 +35,7 @@ All these Mesh-Renders are based on out own `Mesh`-Class, in `data_models`, whic
 
 [//]: # (TODO create working example + video)
 
-In venv Run one of the minimal test examples: `manim tests/test_scene.py ConeScene`.
+With active poetry venv Run one of the minimal test examples: `manim tests/test_scene.py ConeScene`.
 Multiple other examples can be found in the `tests/test_scene.py` file.
 
 
@@ -45,14 +45,14 @@ In PyCharm set `./src/`-folder as project sources root and `./tests/`-folder as 
 Activate the poetry venv: `cd ./manim_meshes/`, then `poetry shell`
 
 Install: `poetry install`
-If you get errors, it is possible that you have to pip install `pycairo` and or `manimpango` manually, depending on your setup. Make sure to run `poetry install` until there are no more errors!
+If you get errors, it is possible that you have to pip install `pycairo` and or `manimpango` manually (globally?), depending on your setup. Make sure to run `poetry install` until there are no more errors!
 
 Update packages and your own .lock file: `poetry update`
 
 If you implemented some features, update version using the matching poetry command: `poetry version prerelease|patch|minor|major`
 See the Poetry [Documentation](https://python-poetry.org/docs/cli/#version).
 
-Even though if the CI works properly, Publish on master branch is automatically, it can be done manually with: `poetry publish --build`
+Even though if the CI works properly, Publishing to pypi on master branch is automatically, it can be done manually with: `poetry publish --build`
 
 ### Debugging
 Like with basic manim, create an executable Python file with something around:
