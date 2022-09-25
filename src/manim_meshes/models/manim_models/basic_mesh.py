@@ -69,7 +69,7 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
             self.vertices = m.Group()
 
         for v in self.mesh.get_3d_vertices():
-            self.vertices.add(m.Sphere(v, radius=0.04, color=self.verts_color))
+            self.vertices.add(m.Sphere(v, radius=self.verts_size, color=self.verts_color))
 
     def _setup_edges(self):
         """set the edges as manim objects"""
@@ -86,12 +86,12 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
         # for all edges at once
         self.edges.set_fill(
             color=self.edges_color,
-            opacity=1.
+            opacity=1.0,
         )
         self.edges.set_stroke(
             color=self.edges_color,
             width=self.edges_width,
-            opacity=1.,
+            opacity=1.0,
         )
 
     def _setup_faces(self):
@@ -173,18 +173,25 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
         """
         shift vertex by id and update faces
         expect shift to have the same dimensions as mesh.dim
+
+        shift_vertex_runtime: runtime in seconds for current call
         """
         start = self.mesh.vertices[vertex_idx].copy()
         tracker = m.ValueTracker(0)
         tracker.add_updater(lambda mo: self._update_vertex(vertex_idx, start + tracker.get_value() * shift, **kwargs))
         scene.add(tracker)
-        scene.play(tracker.animate(**kwargs).set_value(1))
+        scene.play(
+            tracker.animate(**kwargs).set_value(1),
+            run_time=kwargs["shift_vertex_runtime"] if "shift_vertex_runtime" in kwargs else 1.0
+        )
         scene.remove(tracker)
 
     def shift_vertices(self, scene: m.Scene, shift: np.ndarray, **kwargs):
         """
         shift multiple vertices from self.mesh.vertices by shift using the manim tracker and updater
         make sure to update all points simultaneously, not one after the other
+
+        shift_vertices_runtime: runtime in seconds for current call
         """
         start = copy.deepcopy(self.mesh.vertices)
         tracker = m.ValueTracker(0)
@@ -194,10 +201,13 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
                 lambda mo, bound_v_id=vertex_idx: self._update_vertex(
                     vertex_idx=bound_v_id,
                     pos=start[bound_v_id] + tracker.get_value() * shift[bound_v_id],
-                    **kwargs
+                    **remove_keys_from_dict(kwargs, ["shift_vertices_runtime"])
                 ))
         scene.add(tracker)
-        scene.play(tracker.animate(**kwargs).set_value(1))
+        scene.play(
+            tracker.animate(**remove_keys_from_dict(kwargs, ["shift_vertices_runtime"])).set_value(1),
+            run_time=kwargs["shift_vertices_runtime"] if "shift_vertices_runtime" in kwargs else 1.0
+        )
         scene.remove(tracker)
 
     def move_vertices_to(self, scene: m.Scene, new_positions: np.ndarray, **kwargs):
@@ -216,14 +226,15 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
         # use shift method to slowly move point to desired place
         self.shift_vertex(scene, vertex_idx, shift, **kwargs)
 
-    def move_to_grid(self, scene: m.Scene, grid_sizes: Tuple[float, ...], threshold: Tuple[float, ...],
-                     nof_steps: int = 1
+    def move_to_grid(
+            self, scene: m.Scene, grid_sizes: Tuple[float, ...], threshold: Tuple[float, ...],
+            nof_steps: int = 1, **kwargs
         ) -> None:
         """slowly snap to a given grid, uses stepwise mesh.snap_to_grid()"""
         # to be able to show the movement, the update needs to be calculated on a dummy mesh first
         new_verts = self.mesh.snap_to_grid(grid_sizes, threshold, steps=nof_steps, update_verts=False)
         # use new calculated positions but have still the old mesh
-        self.move_vertices_to(scene, new_verts)
+        self.move_vertices_to(scene, new_verts, **kwargs)
 
 
 class Manim2DMesh(ManimMesh):
@@ -247,20 +258,8 @@ class Manim2DMesh(ManimMesh):
         # init ManimMesh
         super().__init__(
             mesh=mesh,
-            display_vertices=get_param_or_default("display_vertices", kwargs, BM2DM),
-            display_edges=get_param_or_default("display_edges", kwargs, BM2DM),
-            display_faces=get_param_or_default("display_faces", kwargs, BM2DM),
-            clear_vertices=get_param_or_default("clear_vertices", kwargs, BM2DM),
-            clear_edges=get_param_or_default("clear_edges", kwargs, BM2DM),
-            clear_faces=get_param_or_default("clear_faces", kwargs, BM2DM),
-            faces_color=get_param_or_default("faces_color", kwargs, BM2DM),
-            faces_opacity=get_param_or_default("faces_opacity", kwargs, BM2DM),
-            edges_color=get_param_or_default("edges_color", kwargs, BM2DM),
-            edges_width=get_param_or_default("edges_width", kwargs, BM2DM),
-            verts_color=get_param_or_default("verts_color", kwargs, BM2DM),
-            pre_function_handle_to_anchor_scale_factor=get_param_or_default(
-                "pre_function_handle_to_anchor_scale_factor", kwargs, BM2DM),
             *args,
+            **{key: get_param_or_default(key, kwargs, BM2DM) for key in BM2DM},
             **remove_keys_from_dict(kwargs, list(BM2DM.keys())),
         )
 
@@ -270,7 +269,7 @@ class Manim2DMesh(ManimMesh):
             self.vertices = m.Group()
 
         for v in self.mesh.get_3d_vertices():
-            self.vertices.add(m.Dot(v, radius=0.02, color=self.verts_color))
+            self.vertices.add(m.Dot(v, radius=self.verts_size, color=self.verts_color))
 
     def get_dots(self, indices):
         """

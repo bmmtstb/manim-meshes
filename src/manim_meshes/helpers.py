@@ -110,7 +110,7 @@ def fix_references(original: VarArray, indices: Union[np.ndarray, List[int]]) ->
 
 
 def remove_keys_from_dict(d: dict, keys: List[str]) -> Dict[str, Any]:
-    """given a dictionary remove all keys if they are present"""
+    """given a dictionary remove all keys if they are present, does *not* throw KeyError"""
     for key in keys:
         try:
             del d[key]

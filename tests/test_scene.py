@@ -166,6 +166,7 @@ class DivideAndConquerScene(m.ThreeDScene):
         self.wait(2)
 
 
+# manim --renderer=opengl --write_to_movie tests/test_scene.py SnapToGridScene
 class SnapToGridScene(m.ThreeDScene):
     """
     A basic example of a 2D grid with some points that are close to but not on the grid.
@@ -173,22 +174,50 @@ class SnapToGridScene(m.ThreeDScene):
     """
 
     def construct(self):
+        # camera settings
         self.set_camera_orientation(0, 0)
+        self.camera.frame_shape = (2, 2)
+        self.camera.add_background_rectangle(color=m.BLUE_D, opacity=1.0)
+        # header text
+        text = m.Text('Snap To Grid').scale(0.5).to_corner(m.UL)
+        text.set_color(m.WHITE)
+        text.fix_in_frame()
+        # create two meshes for grid and snapping distance
         grid_mesh = Manim2DMesh(
-            mesh=create_grid([(-3, 3, 7), (-3, 3, 7)]),
+            mesh=create_grid([(-2, 2, 5), (-2, 2, 5)]),
             display_vertices=False,
-            faces_stroke_width=0.3,
-            faces_stroke_color=m.BLUE_D,
+            display_edges=True,
+            display_faces=True,
+            faces_opacity=0.0,
+            edges_color=m.BLACK,
+            edges_width=0.1,
         )
+        grid_mesh.fix_in_frame()
+        snapping_area_mesh = Manim2DMesh(
+            mesh=create_grid([(-2, 2, 5), (-2, 2, 5)]),
+            display_vertices=False,
+            display_edges=True,
+            display_faces=True,
+            faces_opacity=0.0,
+            edges_color=m.BLUE_A,
+            edges_width=30.0,  # Fixme: currently not coherent with snapping area?
+        )
+        # add thinner one later
+        self.add(snapping_area_mesh)
         self.add(grid_mesh)
         # generate "random" points
         vertex_mesh = Manim2DMesh(
             mesh=Mesh(
-                vertices=np.array([[1, 1], [0.2, 0.1], [0.5, 0.7], [-1, 1.1], [-2.5, -2.3], [-1.1, 0.2], [2.1, 1.7]]),
+                vertices=np.array([
+                    [1, 1], [0.2, 0.1], [0.5, 0.7], [-1, 1.1], [-1.5, -1.4], [-1.1, 0.2], [1.6, 1.7],
+                    [1.1, 1.5], [-0.15, -0.75], [-0.15, 0.75], [-0.15, -1.15], [0.15, -1.15], [1.5, -1.5]
+                ]),
                 faces=None,
             ),
             display_vertices=True,
             clear_vertices=True,
+            verts_color=m.RED,
+            verts_size=0.04,
         )
         self.add(vertex_mesh)
         self.wait(0.5)
@@ -196,4 +225,7 @@ class SnapToGridScene(m.ThreeDScene):
             scene=self,
             grid_sizes=(1, 1),
             threshold=(0.3, 0.3),
+            shift_vertices_runtime=3.0,
         )
+        self.play(m.FadeOut(snapping_area_mesh))
+        self.wait(0.5)

@@ -22,6 +22,8 @@ Keep in mind this is a WIP...
 
 ``from manim_meshes import *``
 
+While executing a commandline manim script, make sure to set the `--renderer=opengl` flag, the Cairo renderer will mostly not work.
+
 The basic `ManimMesh` and `Manim2DMesh` from `manim_models/basic_mesh` can currently only be used for smaller meshes (<1k Nodes), because it is dependent on the manim internal shaders which are not really implemented optimally. This type of mesh can be easily used for 2D and smaller 3D explanatory videos, not for high resolution rendering.
 The more advanced `FastManimMesh` from `opengl_mesh` uses a custom shader which needs to be inserted into the base manim implementation at this time! But therefore it can render enormous meshes fast.
 The `TriangleManim2DMesh` from `triangle_mesh` implements further functions that are only reasonable for triangle meshes. (e.g. Delaunay)

@@ -25,6 +25,7 @@ BM3DM: DefaultParameters = {
     "faces_color":                                (Color, Color(m.BLUE_D)),
     "faces_opacity":                              (float, 0.4),
     "verts_color":                                (Color, Color(m.GREEN)),
+    "verts_size":                                 (float, 0.04),
     "pre_function_handle_to_anchor_scale_factor": (float, 0.00001),
 }
 
@@ -41,6 +42,7 @@ BM2DM: DefaultParameters = {
     "faces_color":                                (Color, Color(m.BLUE_E)),
     "faces_opacity":                              (float, 1.),
     "verts_color":                                (Color, Color(m.GREEN)),
+    "verts_size":                                 (float, 0.02),
     "pre_function_handle_to_anchor_scale_factor": (float, 0.00001),
 }
 
