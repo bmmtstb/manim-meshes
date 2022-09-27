@@ -60,7 +60,6 @@ class Mesh:
         self._parts: Parts = [np.array(p, dtype=int) for p in parts] if parts is not None else []
         self._edges = self.extract_edges()
         self.test_for_dangling = dangling
-        self.dim = conv_vertices.shape[1]
 
     def __add__(self, other) -> 'Mesh':
         if isinstance(other, Mesh):
@@ -117,6 +116,11 @@ class Mesh:
         if isinstance(other, Mesh):
             return not self.__eq__(other)
         raise NotImplementedError(f'Not equal is not defined for mesh and {type(other)}')
+
+    @property
+    def dim(self) -> int:
+        """get the shape / dimension of every vertex"""
+        return self._vertices.shape[1]
 
     @property
     def vertices(self) -> Vertices:
@@ -360,7 +364,7 @@ class Mesh:
     def split_mesh_into_objects(self) -> List['Mesh']:
         """
         given a mesh, return a list of independent meshes that are not interconnected
-        returns meshes with updated indices and references
+        returns meshes with updated indices and references, does not change current mesh
         """
         def get_references_from_ids(ids: Set[int], nested: VarArray) -> Set[int]:
             """given a list of ids, return all the reference ids that contain at least one of these ids"""
@@ -395,7 +399,7 @@ class Mesh:
             new_ids: List[int] = sorted(list(int(_id) for _id in obj_vert_ids))
             new_faces: List[int] = sorted(list(face_ids))
             new_meshes.append(Mesh(
-                vertices=np.vstack(self._vertices[_id] for _id in new_ids),
+                vertices=np.vstack([self._vertices[_id] for _id in new_ids]),
                 faces=[np.array([new_ids.index(old_vertex_id) for old_vertex_id in self._faces[f_id]])
                        for f_id in face_ids],
                 parts=[np.array([new_faces.index(old_face_id) for old_face_id in self._parts[p_id]])

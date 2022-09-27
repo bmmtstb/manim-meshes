@@ -16,6 +16,7 @@ from manim_meshes.exceptions import InvalidMeshDimensionsException, InvalidMeshE
 from manim_meshes.helpers import remove_keys_from_dict
 from manim_meshes.models.data_models.mesh import Mesh
 from manim_meshes.params import get_param_or_default, BM2DM, BM3DM
+from manim_meshes.types import Vertices
 
 
 # pylint: disable=too-many-instance-attributes
@@ -24,7 +25,7 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
     another Mesh implementation, a bit faster + looks better
 
     inspired by manim class 'Surface'
-    possible kwargs:
+    possible kwargs: [see BM3DM]
         display_vertices: whether to display the vertices
         display_edges: whether to display the edges
         display_faces: whether to display the faces
@@ -40,6 +41,11 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
     """
 
     def __init__(self, mesh: Mesh, *args, **kwargs) -> None:
+        """
+        initialize super Group and set all the params
+        vertices, edges and faces are groups, so we can easily access them later on
+        finally setup everything that needs to be rendered
+        """
         super().__init__(*args)
         self.mesh: Mesh = mesh
         self.vertices: m.Group = m.Group()
@@ -50,28 +56,29 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
         for param_name in BM3DM:
             self.__setattr__(param_name, get_param_or_default(param_name, kwargs, BM3DM))
 
-        self._setup()
+        self.setup()
 
-    def _setup(self):
+    def setup(self):
         """set all the necessary mesh parameters"""
         if self.display_faces:
-            self._setup_faces()
+            self.setup_faces()
         if self.display_edges:
-            self._setup_edges()
+            self.setup_edges()
         if self.display_vertices:
-            self._setup_vertices()
+            self.setup_vertices()
         # add all the objects to the scene renderer
         self.add(self.faces, self.edges, self.vertices)
 
-    def _setup_vertices(self):
+    def setup_vertices(self) -> m.Group:
         """set the vertices as 3D manim objects"""
         if self.clear_vertices:
             self.vertices = m.Group()
 
         for v in self.mesh.get_3d_vertices():
             self.vertices.add(m.Sphere(v, radius=self.verts_size, color=self.verts_color))
+        return self.vertices
 
-    def _setup_edges(self):
+    def setup_edges(self) -> m.VGroup:
         """set the edges as manim objects"""
         if self.clear_edges:
             self.edges.clear_points()
@@ -93,8 +100,9 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
             width=self.edges_width,
             opacity=1.0,
         )
+        return self.edges
 
-    def _setup_faces(self):
+    def setup_faces(self) -> m.VGroup:
         """
         set the current mesh up as manim objects
         should work for any sized face, not just triangles
@@ -120,24 +128,34 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
             width=0.,
             opacity=0.,
         )
+        return self.faces
 
-    def get_vertex(self, vertex_idx):
+    def get_vertex(self, vertex_idx) -> m.mobject:
         """get the vertex with the given id"""
-        return  self.vertices.submobjects[vertex_idx]
+        return self.vertices.submobjects[vertex_idx]
 
-    def get_face(self, face_idx):
+    def get_face(self, face_idx) -> m.mobject:
         """get the face with the given id"""
         return self.faces.submobjects[face_idx]
 
-    def get_edge(self, edge_idx):
+    def get_edge(self, edge_idx) -> m.mobject:
         """get the edge with the given id"""
         return self.edges.submobjects[edge_idx]
+
+    def add_vertices(self, new_vertices: Vertices, scene: m.Scene) -> None:
+        """fade in some additional vertices"""
+        self.mesh.add_vertices(new_vertices)
+        # fade out current ones, fade in all after add
+        scene.play(m.FadeOut(self.vertices), m.FadeIn(self.setup_vertices()))
 
     def align_points_with_larger(self, larger_mobject):
         """abstract from super - please the linter"""
         raise NotImplementedError
 
     def _update_vertex(self, vertex_idx: int, pos: np.ndarray):
+        """
+        TODO
+        """
         # update mesh
         self.mesh.update_vertex(vertex_idx, pos)
         if self.display_vertices:
@@ -163,7 +181,10 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
             for edge in self.mesh.get_vertex_edges(vertex_idx):
                 self._update_edge(edge)
 
-    def _update_edge(self, edge: Tuple[int, ...]):
+    def _update_edge(self, edge: Tuple[int, int]):
+        """
+        TODO
+        """
         e = self.get_edge(self.mesh.get_edge_index(edge))
         vert_1 = self.mesh.get_3d_vertices()[edge[0]]
         vert_2 = self.mesh.get_3d_vertices()[edge[1]]
@@ -263,13 +284,14 @@ class Manim2DMesh(ManimMesh):
             **remove_keys_from_dict(kwargs, list(BM2DM.keys())),
         )
 
-    def _setup_vertices(self):
+    def setup_vertices(self) -> m.Group:
         """set the vertices as 3D manim objects"""
         if self.clear_vertices:
             self.vertices = m.Group()
 
         for v in self.mesh.get_3d_vertices():
             self.vertices.add(m.Dot(v, radius=self.verts_size, color=self.verts_color))
+        return self.vertices
 
     def get_dots(self, indices):
         """
