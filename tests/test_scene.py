@@ -268,7 +268,7 @@ class SnapToGridScene(m.ThreeDScene):
             "Moving points, whats the purpose?\n\n"
             "- connect close-by vertices created due to e.g. errors while measuring\n"
             "- this results in less holes and in practice creates more useful\n"
-            "  points and faces resulting in a more regular mesh.",
+            "  points and faces resulting in a more regular mesh",
             should_center=True, font_size=24
         ).to_corner(m.ORIGIN)
         edges_text.set_color(m.WHITE)
