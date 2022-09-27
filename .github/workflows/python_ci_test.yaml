@@ -39,7 +39,6 @@ jobs:
 #        echo "./src/" >> $GITHUB_PATH
     - name: Lint with pylint
       run: |
-        source .venv/bin/activate
         pylint $(git ls-files '*.py' -x 'test_*.py')
     - name: Test with pytest
       run: |
