@@ -22,27 +22,16 @@ jobs:
       uses: snok/install-poetry@v1
       with:
         virtualenvs-create: true
-        virtualenvs-path: ~/venv
         virtualenvs-in-project: true
         installer-parallel: true
-    - name: Load cached poetry venv
-      id: cached-poetry-dependencies
-      uses: actions/cache@v2
-      with:
-        path: .venv
-        key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
     - name: Install dependencies using poetry
       if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
       run: poetry install --no-interaction --no-root
-    - name: Set PythonPath
-      run: | 
-        echo "PYTHONPATH=./src/" >> $GITHUB_ENV
-#        echo "./src/" >> $GITHUB_PATH
     - name: Test with pytest
       run: |
-        source ~/venv/bin/activate
+        source .venv/bin/activate
         pytest tests/
     - name: Lint with pylint
       run: |
-        source ~/venv/bin/activate
+        source .venv/bin/activate
         pylint $(git ls-files '*.py' -x 'test_*.py')
