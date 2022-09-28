@@ -1,6 +1,8 @@
 """
 create a few sample test scenes to check efficiency of renderer
 """
+from copy import deepcopy
+
 # pylint: skip-file
 # pylint: disable-all
 
@@ -26,7 +28,7 @@ class ConeScene(m.ThreeDScene):
         self.set_camera_orientation(phi=70 * m.DEGREES)
         mesh = create_model(name="tail_topper")
         mesh.scale_mesh(scaling=0.2)
-        mesh.translate_mesh(np.array([0,-5,0]))
+        mesh.translate_mesh(np.array([0, -5, 0]))
         manim_mesh_obj = ManimMesh(
             mesh=mesh
         )
@@ -173,58 +175,131 @@ class SnapToGridScene(m.ThreeDScene):
     """
 
     def construct(self):
-        # camera settings
-        self.set_camera_orientation(0, 0)
-        self.camera.frame_shape = (2, 2)
-        self.camera.add_background_rectangle(color=m.BLUE_D, opacity=1.0)
+        self.camera.scale(0.3)  # camera settings so three points are better visible
         # header text
-        text = m.Text('Snap To Grid').scale(0.5).to_corner(m.UL)
-        text.set_color(m.WHITE)
-        text.fix_in_frame()
-        # create two meshes for grid and snapping distance
+        header = m.Text('Snap To Grid').scale(0.5).to_corner(0.6 * m.LEFT + 0.4 * m.UL)
+        header.set_color(m.WHITE)
+        header.fix_in_frame()
+        self.add(header)
+        # descriptive text
+        description = m.Text(
+            "- Regular 1x1 grid \n- high threshold of 0.3 \n- move the vertices to the grid"
+        ).scale(0.3).to_corner(m.UL)
+        description.set_color(m.WHITE)
+        description.fix_in_frame()
+        self.add(description)
+        # create mesh for grid
         grid_mesh = Manim2DMesh(
             mesh=create_grid([(-2, 2, 5), (-2, 2, 5)]),
-            display_vertices=False,
-            display_edges=True,
-            display_faces=True,
+            display_vertices=False, display_edges=True, display_faces=False,
             faces_opacity=0.0,
-            edges_color=m.BLACK,
+            edges_color=m.WHITE,
             edges_width=0.1,
         )
-        grid_mesh.fix_in_frame()
-        snapping_area_mesh = Manim2DMesh(
-            mesh=create_grid([(-2, 2, 5), (-2, 2, 5)]),
-            display_vertices=False,
-            display_edges=True,
-            display_faces=True,
-            faces_opacity=0.0,
-            edges_color=m.BLUE_A,
-            edges_width=30.0,  # Fixme: currently not coherent with snapping area?
-        )
-        # add thinner one later
-        self.add(snapping_area_mesh)
         self.add(grid_mesh)
-        # generate "random" points
+        # generate "random" points and define their color for later
+        p1 = [0.2, 0.1]; p2 = [0.5, 0.65]; p3 = [-1.2, 0.4]
+        other_vertices = np.array([[1, 1], [-1, 1.1], [-1.5, -1.4], [1.6, 1.7], [1.1, 1.5], [-0.15, -0.75],
+                                   [-0.15, 0.05], [-0.15, -1.15], [0.15, -1.15], [1.5, -1.5], [-0.95, 0.4]])
+        vertices_color = [2, 0, 1, 2, 2, 0, 1, 1, 2, 2, 2, 2, 0]
+        # create point mesh
         vertex_mesh = Manim2DMesh(
-            mesh=Mesh(
-                vertices=np.array([
-                    [1, 1], [0.2, 0.1], [0.5, 0.7], [-1, 1.1], [-1.5, -1.4], [-1.1, 0.2], [1.6, 1.7],
-                    [1.1, 1.5], [-0.15, -0.75], [-0.15, 0.75], [-0.15, -1.15], [0.15, -1.15], [1.5, -1.5]
-                ]),
-                faces=None,
-            ),
-            display_vertices=True,
+            mesh=Mesh(vertices=np.array([p1, p2, p3]), faces=None, parts=None),
+            display_vertices=True, display_faces=False, display_edges=False,
             clear_vertices=True,
-            verts_color=m.RED,
+            verts_color=m.YELLOW_E,
             verts_size=0.04,
         )
         self.add(vertex_mesh)
         self.wait(0.5)
-        vertex_mesh.move_to_grid(
-            scene=self,
-            grid_sizes=(1, 1),
-            threshold=(0.3, 0.3),
-            shift_vertices_runtime=3.0,
-        )
-        self.play(m.FadeOut(snapping_area_mesh))
+        # show Braces - manim needs 3D vertices
+        # define horizontal braces
+        brace1h = m.BraceBetweenPoints([0.0, p1[1], 0.0], p1 + [0], color=m.PURE_GREEN)
+        brace2h = m.BraceBetweenPoints(p2 + [0], [0.0, p2[1], 0.0], color=m.RED)
+        brace3h = m.BraceBetweenPoints([-1.0, p3[1], 0.0], p3 + [0], color=m.PURE_GREEN)
+        # define vertical braces
+        brace1v = m.BraceBetweenPoints(p1 + [0], [p1[0], 0.0, 0.0], color=m.PURE_GREEN)
+        brace2v = m.BraceBetweenPoints(p2 + [0], [p2[0], 1.0, 0.0], color=m.RED)
+        brace3v = m.BraceBetweenPoints(p3 + [0], [p3[0], 0.0, 0.0], color=m.RED)
+        # show distances as braces in colors
+        self.play(m.FadeIn(brace1h), m.FadeIn(brace2h), m.FadeIn(brace3h))
         self.wait(0.5)
+        self.play(m.FadeOut(brace1h), m.FadeOut(brace2h), m.FadeOut(brace3h))
+        self.wait(0.5)
+        self.play(m.FadeIn(brace1v), m.FadeIn(brace2v), m.FadeIn(brace3v))
+        self.wait(0.5)
+        # color points
+        self.play(
+            m.FadeOut(brace2v),
+            m.FadeIn(brace1h),
+            m.FadeIn(brace3h),
+            vertex_mesh.get_vertex(0).animate.set_color(m.PURE_GREEN),  # p1
+            vertex_mesh.get_vertex(1).animate.set_color(m.RED),  # p2
+            vertex_mesh.get_vertex(2).animate.set_color(m.GREEN_E),  # p3
+        )
+        self.wait(0.5)
+        self.play(m.FadeOut(brace1h), m.FadeOut(brace1v), m.FadeOut(brace3h), m.FadeOut(brace3v))
+        # zoom out to be able to show all the vertices
+        self.play(self.camera.animate.scale(2.0))  # previously 0.3
+        # add additional points to mesh. then show and color them
+        vertex_mesh.mesh.add_vertices(other_vertices)
+        colors = {0: m.RED, 1: m.GREEN_E, 2: m.PURE_GREEN}
+        # fade out current ones, fade in all vertices, color everything
+        self.play(
+            m.FadeOut(vertex_mesh.vertices),
+            m.FadeIn(vertex_mesh.setup_vertices()),
+            *[vertex_mesh.get_vertex(i).animate.set_color(colors[other_color])
+              for i, other_color in enumerate(vertices_color)]
+        )
+        self.wait(0.5)
+        # start move to grid
+        vertex_mesh.move_to_grid(scene=self, grid_sizes=(1, 1), threshold=(0.3, 0.3), shift_vertices_runtime=3.0)
+        # turn all points yellow once more
+        self.play(
+            *[vertex_mesh.get_vertex(i).animate.set_color(m.YELLOW_E)
+              for i in range(len(vertices_color))]
+        )
+        self.wait(1.0)
+        # ---- Fade out everything so far to create blank slate ----
+        self.play(*[m.FadeOut(mob) for mob in self.mobjects])
+        # explanatory text
+        edges_text = m.Text(
+            "Moving points, whats the purpose?\n\n"
+            "- connect close-by vertices created due to e.g. errors while measuring\n"
+            "- this results in less holes and in practice creates more useful\n"
+            "  points and faces resulting in a more regular mesh",
+            should_center=True, font_size=24
+        ).to_corner(m.ORIGIN)
+        edges_text.set_color(m.WHITE)
+        edges_text.fix_in_frame()
+        self.play(m.FadeIn(edges_text))
+        self.wait(6.0)  # should be enough time to read?
+        self.play(m.FadeOut(edges_text))
+        # redefine mesh with edges - no parts
+        edges_mesh = Manim2DMesh(
+            mesh=Mesh(
+                vertices=np.vstack((np.array([p1, p2, p3]), other_vertices)),
+                faces=[[0, 11, 12], [5, 10, 13], [2, 9, 8], [2, 4, 9], [1, 4, 9], [1, 3, 4], [3, 4, 7], [3, 6, 7]],
+                parts=None,
+            ),
+            display_vertices=True, display_faces=True, display_edges=True,
+            faces_opacity=0.8,
+            clear_vertices=True,
+            verts_color=m.YELLOW_E,
+            verts_size=0.04,
+        )
+        # create statistics plus table to present them
+        converged = deepcopy(edges_mesh.mesh)
+        converged.snap_to_grid(grid_sizes=(1, 1), threshold=(0.3, 0.3), update_verts=True)
+        statistics = m.IntegerTable(
+            [[len(edges_mesh.mesh.split_mesh_into_objects()), len(converged.split_mesh_into_objects())],
+             [len(edges_mesh.mesh.vertices), len(converged.vertices)]],
+            col_labels=[m.Text("before", fill_color=m.WHITE), m.Text("after", fill_color=m.WHITE)],
+            row_labels=[m.Text("nof Meshes", fill_color=m.WHITE), m.Text("nof Nodes", fill_color=m.WHITE)],
+        ).align_on_border(0.2 * m.UL).scale(0.2)
+        # show points and statistics
+        self.play(m.FadeIn(edges_mesh), m.FadeIn(statistics))
+        self.wait(1.5)
+        # edge mesh move to grid with merging of points
+        edges_mesh.move_to_grid(scene=self, grid_sizes=(1, 1), threshold=(0.3, 0.3), shift_vertices_runtime=3)
+        self.wait(3.0)

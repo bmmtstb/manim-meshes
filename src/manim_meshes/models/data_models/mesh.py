@@ -1,6 +1,7 @@
 """
 Mesh structure
 """
+from copy import deepcopy
 # python imports
 # third-party imports
 from typing import List, Set, Tuple, Union
@@ -60,7 +61,6 @@ class Mesh:
         self._parts: Parts = [np.array(p, dtype=int) for p in parts] if parts is not None else []
         self._edges = self.extract_edges()
         self.test_for_dangling = dangling
-        self.dim = conv_vertices.shape[1]
 
     def __add__(self, other) -> 'Mesh':
         if isinstance(other, Mesh):
@@ -76,6 +76,7 @@ class Mesh:
 
     def __eq__(self, other: 'Mesh') -> bool:
         """Equality check for Mesh vs Mesh"""
+
         def replace_part_ids_with_vertex_ids(parts: Parts, faces: Faces, vertices: Vertices) -> VarArray:
             """
             takes parts as list np.ndarray referencing faces referencing vertices
@@ -117,6 +118,11 @@ class Mesh:
         if isinstance(other, Mesh):
             return not self.__eq__(other)
         raise NotImplementedError(f'Not equal is not defined for mesh and {type(other)}')
+
+    @property
+    def dim(self) -> int:
+        """get the shape / dimension of every vertex"""
+        return self._vertices.shape[1]
 
     @property
     def vertices(self) -> Vertices:
@@ -360,8 +366,9 @@ class Mesh:
     def split_mesh_into_objects(self) -> List['Mesh']:
         """
         given a mesh, return a list of independent meshes that are not interconnected
-        returns meshes with updated indices and references
+        returns meshes with updated indices and references, does not change current mesh
         """
+
         def get_references_from_ids(ids: Set[int], nested: VarArray) -> Set[int]:
             """given a list of ids, return all the reference ids that contain at least one of these ids"""
             return {i for i, nest in enumerate(nested) if any(_id in nest for _id in ids)}
@@ -395,7 +402,7 @@ class Mesh:
             new_ids: List[int] = sorted(list(int(_id) for _id in obj_vert_ids))
             new_faces: List[int] = sorted(list(face_ids))
             new_meshes.append(Mesh(
-                vertices=np.vstack(self._vertices[_id] for _id in new_ids),
+                vertices=np.vstack([self._vertices[_id] for _id in new_ids]),
                 faces=[np.array([new_ids.index(old_vertex_id) for old_vertex_id in self._faces[f_id]])
                        for f_id in face_ids],
                 parts=[np.array([new_faces.index(old_face_id) for old_face_id in self._parts[p_id]])
@@ -523,23 +530,31 @@ class Mesh:
             # add differences to vertices to snap every modified value
             # possibility to move stepwise for later animation
             vertices[:, d] = self._vertices[:, d] + (differences / steps)
+            # Fixme: should the result be rounded to force points to be exactly on the edge
         if update_verts:
             self._vertices = vertices
+            self.remove_duplicates()
         return vertices
 
-    def remove_duplicate_vertices(self) -> None:
-        """remove exact duplicates in vertices"""
+    def remove_duplicate_vertices(self, precision: int = 10) -> None:
+        """
+        remove (exact) duplicates in vertices, possibility to change how precise
+        :param precision: what is considered equal -> default 10 -> 1e-10
+        """
+        old_vertices = deepcopy(self._vertices)
         # get unique vertices, indices, and the inverse references
-        new_verts, indices, inverse = np.unique(self._vertices, axis=0, return_index=True, return_inverse=True)
+        unique_verts, indices = np.unique(np.around(self._vertices, decimals=precision), axis=0, return_index=True)
         # sort indices, to keep current sorting for faces, then set unique vertices
         permutation = indices.argsort()
-        self._vertices = new_verts[permutation]
+        self._vertices = unique_verts[permutation]
         # switch index of every face that contains a value that is duplicate
-        for i_inv, i_idx in enumerate(inverse):
-            # for every index in inverse (which are original indices)
-            # replace it with the value indices[i_idx] for every face
-            for face in self._faces:
-                np.place(face, face == i_inv, indices[i_idx])
+        for old_idx, old_vert in enumerate(old_vertices):
+            # skip if index of vertex in current list is the same as the old one
+            new_idx = np.argwhere(np.all(np.abs(self._vertices - old_vert) <= pow(0.1, precision), axis=1))[0, 0]
+            if new_idx != old_idx:
+                for f_i, face in enumerate(self._faces):
+                    np.place(self._faces[f_i], face == old_idx, new_idx)
+        # current faces are fixed now
         # edges may be changed # Fixme: update only partly
         self._edges = self.extract_edges()
 
