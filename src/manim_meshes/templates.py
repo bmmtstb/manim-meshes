@@ -156,13 +156,13 @@ def create_coplanar_points() -> Mesh:
     create a basic 2D mesh without faces
     """
     vertices = [
-        [-1, 1],
-        [1, 2],
-        [1, 0],
+        [-2.2, 1.3],
+        [1.5, 2.1],
+        [1.4, 0],
         [0, 0],
-        [-1, -1],
+        [-1.6, -1.1],
         [1, -1],
-        [-1, 2],
+        [-1.3, 2],
     ]
     return Mesh(
         vertices=vertices,

@@ -263,7 +263,7 @@ class Mesh:
         # use indices to update self._parts
         fix_references(self._parts, indices)
         # remove faces at all the indices
-        for index in indices:
+        for index in sorted(indices, reverse=True):
             del self._faces[index]
         # edges may be changed # Fixme: update only partly
         self._edges = self.extract_edges()

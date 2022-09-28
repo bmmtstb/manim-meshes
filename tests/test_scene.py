@@ -10,7 +10,7 @@ import manim as m
 import numpy as np
 
 from manim_meshes.delaunay.delaunay_criterion import get_point_indices_violating_delaunay, is_point_violating_delaunay
-from manim_meshes.delaunay.divide_and_conquer import split_points
+from manim_meshes.delaunay.divide_and_conquer import divide_and_conquer
 from manim_meshes.models.data_models.mesh import Mesh
 from manim_meshes.models.manim_models.basic_mesh import ManimMesh, Manim2DMesh
 from manim_meshes.models.manim_models.triangle_mesh import TriangleManim2DMesh
@@ -158,11 +158,10 @@ class DivideAndConquerScene(m.ThreeDScene):
         text.fix_in_frame()
         self.add(text)
         mesh = create_coplanar_points()
-        mesh_2d = TriangleManim2DMesh(mesh=mesh, display_vertices=True)
+        mesh_2d = TriangleManim2DMesh(mesh=mesh, display_vertices=True, display_edges=True, edges_color=m.BLACK)
         self.add(mesh_2d)
-        self.wait(1)
-        verts_a, verts_b, anims = split_points(mesh_2d.vertices.submobjects, m.BLUE, m.RED)
-        self.play(*anims)
+        self.wait(0.5)
+        divide_and_conquer(self, mesh_2d)
         self.wait(2)
 
 

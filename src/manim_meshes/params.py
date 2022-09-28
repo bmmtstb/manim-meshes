@@ -38,7 +38,7 @@ BM2DM: DefaultParameters = {
     "clear_edges":                                (bool, True),
     "clear_faces":                                (bool, True),
     "edges_color":                                (Color, Color(m.LIGHT_GREY)),
-    "edges_width":                                (float, 2.),
+    "edges_width":                                (float, 1.5),
     "faces_color":                                (Color, Color(m.BLUE_E)),
     "faces_opacity":                              (float, 1.),
     "verts_color":                                (Color, Color(m.GREEN)),

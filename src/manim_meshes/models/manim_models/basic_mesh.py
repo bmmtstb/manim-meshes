@@ -121,6 +121,66 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
             opacity=0.,
         )
 
+    def add_face(self, face: np.ndarray, color=None):
+        """adds the given face to the mesh, returns the resulting manim objects for the face and edges"""
+        if color is None:
+            color = self.faces_color
+        old_edges = self.mesh.edges
+        self.mesh.add_faces([face])
+        verts_3d = self.mesh.get_3d_vertices()
+        face_points = [verts_3d[i] for i in face]
+        face_points.append(verts_3d[face[0]])
+        new_face = m.ThreeDVMobject()
+        new_face.set_points_as_corners(
+            face_points
+        )
+        new_face.set_fill(
+            color=color,
+            opacity=self.faces_opacity
+        )
+        new_face.set_stroke(
+            color=color,
+            width=0.,
+            opacity=0.,
+        )
+        self.faces.add(new_face)
+        # update edges
+        new_edges = []
+        if self.display_edges:
+            vertices = self.mesh.get_3d_vertices()
+            for edge_verts in set(self.mesh.edges).difference(set(old_edges)):
+                vert_1 = vertices[edge_verts[0]]
+                vert_2 = vertices[edge_verts[1]]
+                edge = m.ThreeDVMobject()
+                edge.set_points_as_corners([vert_1, vert_2])
+                edge.set_fill(
+                    color=self.edges_color,
+                    opacity=1.0,
+                )
+                edge.set_stroke(
+                    color=self.edges_color,
+                    width=self.edges_width,
+                    opacity=1.0,
+                )
+                self.edges.add(edge)
+                new_edges.append(edge)
+
+        return new_face, new_edges
+
+    def remove_face(self, face_idx):
+        """removes face by face index, returns the removed manim objects for the face and edges"""
+        old_edges = self.mesh.edges
+        self.mesh.remove_faces([face_idx])
+        removed_face = self.faces.submobjects[face_idx]
+        del self.faces.submobjects[face_idx]
+        removed_edges = []
+        if self.display_edges:
+            del_indices = [old_edges.index(edge) for edge in set(old_edges).difference(set(self.mesh.edges))]
+            for index in sorted(del_indices, reverse=True):
+                removed_edges.append(self.edges.submobjects[index])
+                del self.edges.submobjects[index]
+        return removed_face, removed_edges
+
     def get_vertex(self, vertex_idx):
         """get the vertex with the given id"""
         return  self.vertices.submobjects[vertex_idx]

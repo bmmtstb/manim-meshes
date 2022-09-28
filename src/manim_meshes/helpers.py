@@ -47,7 +47,7 @@ def is_twice_nested_iterable(obj: Any, min_lens: Tuple[int, int] = (1, 3)) -> bo
     check whether obj is Array-Like exactly twice
     -> e.g. 2-dim np.ndarray, List[List[int|float]] or similar
     :params obj: Array-Like object to be checked
-    :params lens: min lengths that the respective layer has to have, default 1 object at least 3 sub-objects
+    :params lens: min lengths that the respective layer has to have, default 1 object at least 2 sub-objects
     """
     # easy case np.ndarray with correct specs
     if isinstance(obj, np.ndarray) and len(obj.shape) == 2:
