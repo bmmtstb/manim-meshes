@@ -158,7 +158,7 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
         new_edges = []
         if self.display_edges:
             vertices = self.mesh.get_3d_vertices()
-            for edge_verts in set(self.mesh.edges).difference(set(old_edges)):
+            for edge_verts in sorted(set(self.mesh.edges).difference(set(old_edges))):
                 vert_1 = vertices[edge_verts[0]]
                 vert_2 = vertices[edge_verts[1]]
                 edge = m.ThreeDVMobject()
@@ -172,7 +172,7 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
                     width=self.edges_width,
                     opacity=1.0,
                 )
-                self.edges.add(edge)
+                self.edges.insert(self.mesh.get_edge_index(edge_verts), edge)
                 new_edges.append(edge)
 
         return new_face, new_edges

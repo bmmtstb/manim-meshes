@@ -5,6 +5,7 @@ functions to create delaunay meshes by divide and conquer
 from typing import List
 import numpy as np
 # third-party imports
+from scipy.spatial import ConvexHull
 import manim as m
 # local imports
 
@@ -73,8 +74,8 @@ class DivideAndConquer:
         # z > 0 -> always draw in front
         split_line = m.DashedLine(start=np.array([x_mid, y_min, 0.01]), end=np.array([x_mid, y_max, 0.01]),
                                   stroke_width=line_width, dash_length=dash_length)
-        self.scene.play(m.Create(split_line, run_time=0.5 * speed))
-        self.scene.wait(0.15 * speed)
+        self.scene.play(m.Create(split_line, run_time=1. * speed))
+        self.scene.wait(0.3 * speed)
 
         # return indices of resulting sets
         return sorted_vert_indices[:split_index], sorted_vert_indices[split_index:], split_line
@@ -96,7 +97,7 @@ class DivideAndConquer:
             # update hack (corrects drawing order)
             self.scene.renderer.update_frame(self.scene)
 
-    def _right_candidate(self, base_lr, rr_edges, run_time=0.3):
+    def _right_candidate(self, base_lr, rr_edges, speed = 1.):
         """ Find and return right potential candidate (or None if not found)
         to build triangle for merging, deletes RR edges if necessary """
         endpoints = [edge[0] if base_lr[1] != edge[0] else edge[1] for edge in rr_edges if base_lr[1] in edge]
@@ -123,11 +124,12 @@ class DivideAndConquer:
                         face_idx_to_delete = face_idx
                         break
                 face, edges = self.triangle_mesh.remove_face(face_idx_to_delete)
-                self.scene.play(m.Uncreate(face, run_time=run_time), m.FadeOut(*edges, run_time=run_time))
                 rr_edges.remove(tuple(sorted((base_lr[1], potential_candidate))))
+                self.scene.play(m.FadeOut(face, *edges, run_time=1.* speed))
+                self.scene.wait(0.3 * speed)
         return None
 
-    def _left_candidate(self, base_lr, ll_edges, run_time=0.3):
+    def _left_candidate(self, base_lr, ll_edges, speed = 1.):
         """ Find and return left potential candidate (or None if not found)
         to build triangle for merging, deletes LL edges if necessary """
         endpoints = [edge[0] if base_lr[0] != edge[0] else edge[1] for edge in ll_edges if base_lr[0] in edge]
@@ -154,7 +156,8 @@ class DivideAndConquer:
                         break
                 face, edges = self.triangle_mesh.remove_face(face_idx_to_delete)
                 ll_edges.remove(tuple(sorted((base_lr[0], potential_candidate))))
-                self.scene.play(m.FadeOut(face, *edges, run_time=run_time))
+                self.scene.play(m.FadeOut(face, *edges, run_time=0.5* speed))
+                self.scene.wait(0.3 * speed)
         return None
 
     def merge_sets(self, indices_left: List, indices_right: List, split_line: m.DashedLine, speed=1.):
@@ -164,8 +167,8 @@ class DivideAndConquer:
         speed: animation speed, lower = faster """
 
         # remove split line
-        self.scene.play(m.Uncreate(split_line), run_time=0.5 * speed)
-        self.scene.wait(0.15 * speed)
+        self.scene.play(m.Uncreate(split_line), run_time=1. * speed)
+        self.scene.wait(0.3 * speed)
 
         base_lr = self._find_base_lr(indices_left, indices_right)
         # check edge[0] != edge[1]: class Mesh does not support plain edges without a face, thus they are drawn as
@@ -175,8 +178,8 @@ class DivideAndConquer:
         ll_edges = set(edge for edge in self.triangle_mesh.mesh.extract_edges() if edge[0] != edge[1]
                        and edge[0] in indices_left and edge[1] in indices_left)
         while True:
-            r_candidate = self._right_candidate(base_lr, rr_edges, 0.3 * speed)
-            l_candidate = self._left_candidate(base_lr, ll_edges)
+            r_candidate = self._right_candidate(base_lr, rr_edges, speed)
+            l_candidate = self._left_candidate(base_lr, ll_edges, speed)
             if r_candidate is None and l_candidate is None:
                 break  # merge complete
             if r_candidate is not None and l_candidate is not None:
@@ -200,7 +203,7 @@ class DivideAndConquer:
             # add new face
             _, _ = self.triangle_mesh.add_face(np.array([base_lr[0], base_lr[1], candidate]))
             base_lr = (base_lr[0], candidate) if r_candidate is not None else (candidate, base_lr[1])
-            self.scene.wait(0.15 * speed)
+            self.scene.wait(0.3 * speed)
         merged_indices = indices_left.copy()
         merged_indices.extend(indices_right)
         return merged_indices
@@ -209,47 +212,48 @@ class DivideAndConquer:
         """ Finds and returns the base_lr (l,r) , where l and r are vertex indices, between two vertex sets
             given by indices (indices_a, indices_b)"""
 
-        def next_on_left_hull(cur_idx):
-            verts = self.triangle_mesh.mesh.get_3d_vertices()
-            endpoints = [edge[0] if cur_idx != edge[0] else edge[1]
-                         for edge in self.triangle_mesh.mesh.get_vertex_edges(cur_idx) if edge[0] != edge[1]]
-            angles = np.array([get_counter_clockwise_angle(verts[endpoint] - verts[cur_idx],
-                                                           np.array([0, 1, 0]) - verts[cur_idx])
-                               for endpoint in endpoints])
-            order = np.argsort(angles)
-            return endpoints[order[0]]
+        def next_on_left_hull(cur_idx, left_hull):
+            for i in range(len(left_hull)-1, -1, -1):
+                if left_hull[i] == cur_idx:
+                    return left_hull[(i-1) % len(left_hull)]
+            return None
 
-        def next_on_right_hull(cur_idx):
-            verts = self.triangle_mesh.mesh.get_3d_vertices()
-            endpoints = [edge[0] if cur_idx != edge[0] else edge[1]
-                         for edge in self.triangle_mesh.mesh.get_vertex_edges(cur_idx) if edge[0] != edge[1]]
-            angles = np.array([get_clockwise_angle(verts[endpoint] - verts[cur_idx],
-                                                           np.array([0, 1, 0]) - verts[cur_idx])
-                               for endpoint in endpoints])
-            order = np.argsort(angles)
-            return endpoints[order[0]]
+        def next_on_right_hull(cur_idx, right_hull):
+            for i in range(0, len(right_hull), 1):
+                if right_hull[i] == cur_idx:
+                    return right_hull[(i+1) % len(right_hull)]
+            return None
 
         def on_right(tangent, point):
             return ((tangent[1][0] - tangent[0][0]) * (point[1] - tangent[0][1]) -
                     (tangent[1][1] - tangent[0][1]) * (point[0] - tangent[0][0])) < 0
 
         verts = self.triangle_mesh.mesh.get_3d_vertices()
-        x_max_left = max((v[0], i) for i, v in enumerate(verts[indices_left]))[1]
-        x_min_right = min((v[0], i) for i, v in enumerate(verts[indices_right]))[1]
-        left = indices_left[x_max_left]
-        right = indices_right[x_min_right]
+        left_hull = ConvexHull(verts[indices_left][:, :2]).vertices if len(indices_left) > 2 else range(2)
+        right_hull = ConvexHull(verts[indices_right][:, :2]).vertices if len(indices_right) > 2 else range(2)
+        left = max((v[0], i) for i, v in enumerate(verts[indices_left]))[1]
+        right = min((v[0], i) for i, v in enumerate(verts[indices_right]))[1]
 
         # move tangent 'down'
-        next_left = next_on_left_hull(left)
-        while on_right((verts[left], verts[right]), verts[next_left]):
-            left = next_left
-            next_left = next_on_left_hull(left)
-        next_right = next_on_right_hull(right)
-        while on_right((verts[left], verts[right]), verts[next_right]):
-            right = next_right
-            next_right = next_on_right_hull(right)
+        next_left = next_on_left_hull(left, left_hull)
+        next_right = next_on_right_hull(right, right_hull)
+        move_left = on_right((verts[indices_left][left], verts[indices_right][right]),
+                             verts[indices_left][next_left])
+        move_right = on_right((verts[indices_left][left], verts[indices_right][right]),
+                              verts[indices_right][next_right])
+        while move_left or move_right:
+            if move_left:
+                left = next_left
+                next_left = next_on_left_hull(left, left_hull)
+            else:
+                right = next_right
+                next_right = next_on_right_hull(right, right_hull)
+            move_left = on_right((verts[indices_left][left], verts[indices_right][right]),
+                                 verts[indices_left][next_left])
+            move_right = on_right((verts[indices_left][left], verts[indices_right][right]),
+                                  verts[indices_right][next_right])
 
-        return left, right
+        return indices_left[left], indices_right[right]
 
     def divide_and_conquer_recursive(self, speed=1.):
         """ Runs complete (recurive) algorithm to create a delaunay triangulation by divide and conquer.
@@ -270,7 +274,7 @@ class DivideAndConquer:
 
         if len(vert_indices) <= 3:
             self.triangulate_leq_3(vert_indices)
-            self.scene.wait(0.15 * speed)
+            self.scene.wait(0.3 * speed)
             return vert_indices
 
         indices_left, indices_right, line = self.split_points(vert_indices)

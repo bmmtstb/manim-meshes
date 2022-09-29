@@ -596,7 +596,7 @@ class Mesh:
         self.remove_duplicate_parts()
 
     def extract_edges(self) -> Edges:
-        """returns all edges of the mesh as list of sorted 2-tuples of vertex indices, e.g. [(1,2), (2,3)]"""
+        """returns all edges of the mesh as List of sorted 2-tuples of vertex indices, e.g. [(1,2), (2,3)]"""
         # TODO: possibility to update edges only partly (e.g. by index)
         edges: Edges = []
         for face in self._faces:
@@ -608,4 +608,4 @@ class Mesh:
                 last_vertex = vertex_idx
                 if edge not in edges:
                     edges.append(edge)
-        return edges
+        return sorted(edges)

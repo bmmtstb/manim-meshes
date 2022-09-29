@@ -153,17 +153,19 @@ def create_coplanar_triangles() -> Mesh:
 
 def create_coplanar_points() -> Mesh:
     """
-    create a basic 2D mesh without faces
+    create a basic 2D mesh without faces ~> 2D point cloud / set
     """
-    vertices = [
-        [-2.2, 1.3],
-        [1.5, 2.1],
-        [1.4, 0],
-        [0, 0],
-        [-1.6, -1.1],
-        [1, -1],
-        [-1.3, 2],
-    ]
+    vertices = np.array([[ 1.77291731, -2.42097974],
+                         [ 1.72006063,  2.77386102],
+                         [-2.47248328, -1.53451374],
+                         [ 0.32320519,  2.34811395],
+                         [-0.83498357,  0.34056556],
+                         [ 0.43649618,  0.79539595],
+                         [-0.2441386 , -2.04571182],
+                         [ 2.83770675,  2.33446802],
+                         [ 1.27516666, -0.08275843],
+                         [ 1.94458474, -2.79598506]]
+                        )
     return Mesh(
         vertices=vertices,
         faces=[]
