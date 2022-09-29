@@ -161,10 +161,16 @@ class DivideAndConquerScene(m.ThreeDScene):
         text.fix_in_frame()
         self.add(text)
         mesh = create_coplanar_points()
+        # make sure TriangleManim2DMesh only consists of vertices / no faces and
+        # that display_edges=True, display_vertices=True, else the algorithm is not visualized properly
         mesh_2d = TriangleManim2DMesh(mesh=mesh, display_vertices=True, display_edges=True, edges_color=m.BLACK)
         self.add(mesh_2d)
         self.wait(0.5)
         dac = DivideAndConquer(self, mesh_2d)
+        # runs the complete algorithm, you could also write a modified version of this method to add additional objects
+        # like explanatory text (e.g. create subclass of DivideAndConquer and overwrite divide_and_conquer_recursive) or
+        # use the other methods like dac.split_points, dac.triangulate_leq_3 and dac.merge_sets to implement the
+        # individual steps of the algorithm yourself
         dac.divide_and_conquer_recursive()
         self.wait(3)
 
