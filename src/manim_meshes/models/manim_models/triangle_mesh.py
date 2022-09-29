@@ -7,7 +7,6 @@
 import manim as m
 import numpy as np
 # local imports
-from manim_meshes.delaunay.delaunay_criterion import get_triangle_circum_circle_params
 from manim_meshes.exceptions import InvalidMeshException
 from manim_meshes.models.data_models.mesh import Mesh
 from manim_meshes.models.manim_models.basic_mesh import Manim2DMesh
@@ -27,17 +26,6 @@ class TriangleManim2DMesh(Manim2DMesh):
             *args,
             **kwargs,
         )
-
-    def get_circle(self, face_idx: int, **kwargs):
-        """create a circum-circle around face with given idx"""
-        face = self.mesh.faces[face_idx]
-        vertices = [self.mesh.get_3d_vertices()[i] for i in face]
-        center, radius = get_triangle_circum_circle_params(*vertices)
-        if 'stroke_width' not in kwargs:
-            kwargs['stroke_width'] = 2
-        circ = m.Circle(radius, **kwargs)
-        circ.shift(center)
-        return circ
 
     def edge_flip(self, scene: m.Scene, face_idx_1: int, face_idx_2: int, **kwargs):
         """

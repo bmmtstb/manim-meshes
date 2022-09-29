@@ -131,7 +131,8 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
         return self.faces
 
     def add_face(self, face: np.ndarray, color=None):
-        """adds the given face to the mesh, returns the resulting manim objects for the face and edges"""
+        """ Adds the given face to the mesh, returns the resulting manim objects for the face and edges.
+            If color is None, self.faces_color is used"""
         if color is None:
             color = self.faces_color
         old_edges = self.mesh.edges
@@ -181,13 +182,14 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
         old_edges = self.mesh.edges
         self.mesh.remove_faces([face_idx])
         removed_face = self.faces.submobjects[face_idx]
-        del self.faces.submobjects[face_idx]
+        self.faces.remove(removed_face)
         removed_edges = []
         if self.display_edges:
             del_indices = [old_edges.index(edge) for edge in set(old_edges).difference(set(self.mesh.edges))]
             for index in sorted(del_indices, reverse=True):
-                removed_edges.append(self.edges.submobjects[index])
-                del self.edges.submobjects[index]
+                removed_edge = self.edges.submobjects[index]
+                removed_edges.append(removed_edge)
+                self.edges.remove(removed_edge)
         return removed_face, removed_edges
 
     def get_vertex(self, vertex_idx) -> m.mobject:

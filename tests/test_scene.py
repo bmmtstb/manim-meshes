@@ -11,8 +11,9 @@ import manim as m
 # local imports
 import numpy as np
 
-from manim_meshes.delaunay.delaunay_criterion import get_point_indices_violating_delaunay, is_point_violating_delaunay
-from manim_meshes.delaunay.divide_and_conquer import divide_and_conquer
+from manim_meshes.delaunay.delaunay_criterion import get_point_indices_violating_delaunay, is_point_violating_delaunay, \
+    get_circum_circle
+from manim_meshes.delaunay.divide_and_conquer import DivideAndConquer
 from manim_meshes.models.data_models.mesh import Mesh
 from manim_meshes.models.manim_models.basic_mesh import ManimMesh, Manim2DMesh
 from manim_meshes.models.manim_models.triangle_mesh import TriangleManim2DMesh
@@ -84,16 +85,16 @@ class TriangleScene(m.ThreeDScene):
         self.add(mesh_2d)
         triangle = mesh_2d.get_face(0)
         self.play(triangle.animate.set_fill(m.YELLOW_D, None))  # mark triangle
-        circle = mesh_2d.get_circle(0)  # circumcircle around triangle
+        circle = get_circum_circle(mesh_2d, 0)  # circumcircle around triangle
         self.play(m.Create(circle))
-        indices = get_point_indices_violating_delaunay(mesh_2d.mesh, 0)  # vertex indices
+        indices = get_point_indices_violating_delaunay(mesh_2d, 0)  # vertex indices
         points = mesh_2d.get_dots(indices)
         assert len(points) == 1  # should be one in this example
         self.play(m.FadeIn(points[0]))
         # add updater which colors the circle and point green if it is not violating the delaunay criteria
         # w.r.t. triangle (face index 0)
         points[0].add_updater(lambda mo: (mo.set_color(m.GREEN), circle.set_color(m.GREEN)) \
-            if not is_point_violating_delaunay(mesh_2d.mesh, indices[0], 0) else None)
+            if not is_point_violating_delaunay(mesh_2d, indices[0], 0) else None)
         # use mesh_2d.move_vertex_to and mesh_2d.shift_vertex instead of e.g. self.play(points[0].animate.move_to)
         # -> otherwise the faces will not be updated
         mesh_2d.shift_vertex(self, indices[0], 0.35 * m.DL[:2])
@@ -102,9 +103,9 @@ class TriangleScene(m.ThreeDScene):
         self.play(triangle.animate.set_fill(mesh_2d.faces_color, None))  # unmark triangle
         # check delaunay for each triangle (except first ~> already checked above)
         for f in range(1, len(mesh_2d.mesh.faces)):
-            circ = mesh_2d.get_circle(f)  # circumcircle around triangle
+            circ = get_circum_circle(mesh_2d, f)  # circumcircle around triangle
             self.play(m.Create(circ, run_time=0.4))
-            points = mesh_2d.get_dots(get_point_indices_violating_delaunay(mesh_2d.mesh, f))
+            points = mesh_2d.get_dots(get_point_indices_violating_delaunay(mesh_2d, f))
             if len(points) == 0:  # no violating points, mark circle green
                 self.play(circ.animate(run_time=0.4).set_color(m.GREEN))
             self.play(m.Uncreate(circ, run_time=0.4))
@@ -114,11 +115,11 @@ class TriangleScene(m.ThreeDScene):
         triangle_b = mesh_2d.get_face(3)
         self.play(triangle_a.animate.set_fill(m.YELLOW_D, None), triangle_b.animate.set_fill(m.YELLOW_D, None))
         mesh_2d.edge_flip(self, 2, 3)
-        circle_a = mesh_2d.get_circle(2)  # circumcircle around triangle
-        circle_b = mesh_2d.get_circle(3)  # circumcircle around triangle
+        circle_a = get_circum_circle(mesh_2d, 2)  # circumcircle around triangle
+        circle_b = get_circum_circle(mesh_2d, 3)  # circumcircle around triangle
         self.play(m.Create(circle_a), m.Create(circle_b), self.camera.animate.shift(m.DOWN))
-        points_a = mesh_2d.get_dots(get_point_indices_violating_delaunay(mesh_2d.mesh, 2))
-        points_b = mesh_2d.get_dots(get_point_indices_violating_delaunay(mesh_2d.mesh, 3))
+        points_a = mesh_2d.get_dots(get_point_indices_violating_delaunay(mesh_2d, 2))
+        points_b = mesh_2d.get_dots(get_point_indices_violating_delaunay(mesh_2d, 3))
         all_points = []
         all_points.extend(points_a)
         all_points.extend(points_b)
@@ -136,8 +137,8 @@ class TriangleScene(m.ThreeDScene):
         # flip
         mesh_2d.edge_flip(self, 2, 3)
         # get new circles
-        circle_a = mesh_2d.get_circle(2)  # circumcircle around triangle
-        circle_b = mesh_2d.get_circle(3)  # circumcircle around triangle
+        circle_a = get_circum_circle(mesh_2d, 2)  # circumcircle around triangle
+        circle_b = get_circum_circle(mesh_2d, 3)  # circumcircle around triangle
         self.play(m.Create(circle_a), m.Create(circle_b))
         # mark circle green, then remove them
         self.play(circle_a.animate.set_color(m.GREEN), circle_b.animate.set_color(m.GREEN))
@@ -163,8 +164,9 @@ class DivideAndConquerScene(m.ThreeDScene):
         mesh_2d = TriangleManim2DMesh(mesh=mesh, display_vertices=True, display_edges=True, edges_color=m.BLACK)
         self.add(mesh_2d)
         self.wait(0.5)
-        divide_and_conquer(self, mesh_2d)
-        self.wait(2)
+        dac = DivideAndConquer(self, mesh_2d)
+        dac.divide_and_conquer_recursive()
+        self.wait(3)
 
 
 # manim --renderer=opengl --write_to_movie tests/test_scene.py SnapToGridScene
@@ -198,7 +200,9 @@ class SnapToGridScene(m.ThreeDScene):
         )
         self.add(grid_mesh)
         # generate "random" points and define their color for later
-        p1 = [0.2, 0.1]; p2 = [0.5, 0.65]; p3 = [-1.2, 0.4]
+        p1 = [0.2, 0.1];
+        p2 = [0.5, 0.65];
+        p3 = [-1.2, 0.4]
         other_vertices = np.array([[1, 1], [-1, 1.1], [-1.5, -1.4], [1.6, 1.7], [1.1, 1.5], [-0.15, -0.75],
                                    [-0.15, 0.05], [-0.15, -1.15], [0.15, -1.15], [1.5, -1.5], [-0.95, 0.4]])
         vertices_color = [2, 0, 1, 2, 2, 0, 1, 1, 2, 2, 2, 2, 0]

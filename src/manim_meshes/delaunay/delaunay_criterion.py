@@ -5,8 +5,9 @@ functions to check delaunay criterion
 
 # third-party imports
 import numpy as np
+import manim as m
 # local imports
-from manim_meshes.models.data_models.mesh import Mesh
+from manim_meshes.models.manim_models.triangle_mesh import TriangleManim2DMesh
 
 
 def get_triangle_circum_circle_params(
@@ -29,14 +30,26 @@ def get_triangle_circum_circle_params(
     return center, radius
 
 
-def get_point_indices_violating_delaunay(mesh: Mesh, face_id: int):
+def get_circum_circle(triangle_mesh: TriangleManim2DMesh, face_idx: int, **kwargs):
+    """create a circum-circle around face with given idx"""
+    face = triangle_mesh.mesh.faces[face_idx]
+    vertices = [triangle_mesh.mesh.get_3d_vertices()[i] for i in face]
+    center, radius = get_triangle_circum_circle_params(*vertices)
+    if 'stroke_width' not in kwargs:
+        kwargs['stroke_width'] = 2
+    circ = m.Circle(radius, **kwargs)
+    circ.shift(center)
+    return circ
+
+
+def get_point_indices_violating_delaunay(triangle_mesh: TriangleManim2DMesh, face_id: int):
     """given a triangle by id, get all indices of points violating delaunay criterion"""
     indices = []
-    face = mesh.faces[face_id]
-    center, radius = get_triangle_circum_circle_params(*[mesh.get_3d_vertices()[i] for i in face])
+    face = triangle_mesh.mesh.faces[face_id]
+    center, radius = get_triangle_circum_circle_params(*[triangle_mesh.mesh.get_3d_vertices()[i] for i in face])
 
     # TODO: [improve to be faster] don't loop all vertices, only loop ones that are "close"
-    for idx, point in enumerate(mesh.get_3d_vertices()):
+    for idx, point in enumerate(triangle_mesh.mesh.get_3d_vertices()):
         if idx not in face:
             distance = np.linalg.norm(center - point)
             if distance < radius:  # inside circle
@@ -44,13 +57,13 @@ def get_point_indices_violating_delaunay(mesh: Mesh, face_id: int):
     return indices
 
 
-def is_point_violating_delaunay(mesh: Mesh, vertex_idx: int, face_idx):
+def is_point_violating_delaunay(triangle_mesh: TriangleManim2DMesh, vertex_idx: int, face_idx):
     """
         returns True if the vertex with index vertex_idx is violating the delaunay criterion
         w.r.t. the provided face (face_idx).
     """
-    point = mesh.get_3d_vertices()[vertex_idx]
-    face = mesh.faces[face_idx]
-    center, radius = get_triangle_circum_circle_params(*[mesh.get_3d_vertices()[i] for i in face])
+    point = triangle_mesh.mesh.get_3d_vertices()[vertex_idx]
+    face = triangle_mesh.mesh.faces[face_idx]
+    center, radius = get_triangle_circum_circle_params(*[triangle_mesh.mesh.get_3d_vertices()[i] for i in face])
     distance = np.linalg.norm(center - point)
     return distance < radius
