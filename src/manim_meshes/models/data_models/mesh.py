@@ -83,8 +83,8 @@ class Mesh:
             returns the np.ndarray of the vertex coordinates retrieved from nested face ids
             """
             return [
-                np.hstack(np.hstack((vertices[vert_idx]) for vert_idx in faces[face_idx])
-                          for face_idx in part) for part in parts
+                np.hstack([np.hstack([vertices[vert_idx] for vert_idx in faces[face_idx]])
+                          for face_idx in part]) for part in parts
             ]
 
         def replace_face_ids_with_vertex_ids(faces: Faces, vertices: Vertices) -> VarArray:
@@ -92,7 +92,7 @@ class Mesh:
             takes parts as list np.arrays referencing faces
             returns the np.array of the vertex ids retreved from faces
             """
-            return [np.hstack((vertices[vert_idx]) for vert_idx in face) for face in faces]
+            return [np.hstack([vertices[vert_idx] for vert_idx in face]) for face in faces]
 
         if isinstance(other, Mesh):
             # vertex array contain every other vertex, coordinates must be exact equal, no rolling
@@ -208,7 +208,7 @@ class Mesh:
         if len(new_vertices.shape) != 2 or new_vertices.shape[1] != self.dim:
             raise InvalidMeshDimensionsException(
                 actual=new_vertices.shape, expected=("N", self.dim), name="new_vertices")
-        self._vertices = np.vstack((self._vertices, new_vertices))
+        self._vertices = np.vstack([self._vertices, new_vertices])
 
     def remove_vertices(self, indices: Union[np.ndarray, List[int]]) -> None:
         """remove multiple vertices - does not support negative indexing"""
@@ -376,7 +376,7 @@ class Mesh:
         def get_ids_from_references(ids: Set[int], referenced: VarArray) -> Set[int]:
             """given a list of ids of nested, return all the referenced objects"""
             if len(ids) > 0:
-                return set(np.unique(np.stack(referenced[_id] for _id in ids)))
+                return set(np.unique(np.stack([referenced[_id] for _id in ids])))
             return set()
 
         new_meshes: List['Mesh'] = []

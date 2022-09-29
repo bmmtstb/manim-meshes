@@ -49,7 +49,7 @@ jobs:
 
     - name: Test with pytest
       run: |
-        poetry run python -m pytest -n auto -q tests/
+        poetry run python -m pytest -q tests/
 
     - name: Lint with pylint
       run: |
