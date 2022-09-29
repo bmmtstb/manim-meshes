@@ -1,4 +1,4 @@
-[![Python Test and Lint](https://github.com/bmmtstb/manim-meshes/actions/workflows/python_ci_test.yaml/badge.svg)](https://github.com/bmmtstb/manim-meshes/actions/workflows/python_ci_test.yaml)
+[![Python Test and Lint](https://github.com/bmmtstb/manim-meshes/actions/workflows/python_ci_test.yaml/badge.svg)](https://github.com/bmmtstb/manim-meshes/actions/workflows/python_ci_test.yaml) [![CodeQL](https://github.com/bmmtstb/manim-meshes/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/bmmtstb/manim-meshes/actions/workflows/codeql-analysis.yml)
 # Manim for Meshes
 
 > ⚠️ Work in progress
