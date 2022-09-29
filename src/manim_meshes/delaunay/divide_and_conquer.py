@@ -5,7 +5,7 @@ functions to create delaunay meshes by divide and conquer
 from typing import List
 import numpy as np
 # third-party imports
-from scipy.spatial import ConvexHull
+from scipy.spatial import ConvexHull  # pylint: disable=no-name-in-module
 import manim as m
 # local imports
 

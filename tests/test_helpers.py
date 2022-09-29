@@ -8,23 +8,23 @@ import numpy as np
 from manim_meshes.helpers import find_in_vararray, is_in_vararray, is_vararray_equal, is_twice_nested_iterable, \
     fix_references
 
-vararrays = [
+vararrays_equality = [
     ([], [], True),  # empty
     ([np.array([0, 1, 2])], [np.arange(3)], True),  # differently initialised still same
     ([np.array([0, 1, 2]), np.ones(1)], [np.arange(3)], False),  # unequal matching in both directions
     ([np.array([0, 1, 2])], [np.arange(3), np.ones(1)], False),  # unequal matching in both directions
-    ([np.array([2, 1, 0])], [np.arange(3)], False),  # FIXME: how do we decide this case?
+    ([np.array([2, 1, 0])], [np.arange(3)], False),  # rolling is not known, therefore no rolling is the default
     ([np.arange(3), np.ones(3)], [np.array([1, 1, 1]), np.array([0, 1, 2])], True),  # sorting does not matter
 ]
 
 
-@pytest.mark.parametrize("vararrs", vararrays)
+@pytest.mark.parametrize("vararrs", vararrays_equality)
 def test_is_vararray_equal(vararrs):
     obj_1, obj_2, b = vararrs
     assert b == is_vararray_equal(obj_1, obj_2)
 
 
-objs = [
+twice_nested_objs = [
     ([], True),
     ((), True),
     (np.ones((4, 3)), True),
@@ -40,7 +40,7 @@ objs = [
 ]
 
 
-@pytest.mark.parametrize("item", objs)
+@pytest.mark.parametrize("item", twice_nested_objs)
 def test_is_twice_nested_iterable(item):
     obj, b = item
     assert b == is_twice_nested_iterable(obj)
@@ -65,7 +65,7 @@ def test_fix_references(refs):
     assert is_vararray_equal(pre_obj, post_obj)
 
 
-vararray = [
+vararray_contains = [
     ([], np.arange(3), True, False),  # empty
     ([np.array([0, 1, 2])], np.arange(3), False, True),  # equality
     ([np.array([2, 0, 1])], np.arange(3), False, False),  # no rolling
@@ -74,7 +74,7 @@ vararray = [
 ]
 
 
-@pytest.mark.parametrize("vararr", vararray)
+@pytest.mark.parametrize("vararr", vararray_contains)
 def test_is_in_vararray(vararr):
     arr, item, roll, contained = vararr
     assert contained == is_in_vararray(arr, item, rolling=roll)

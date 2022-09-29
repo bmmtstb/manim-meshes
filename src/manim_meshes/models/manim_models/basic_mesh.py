@@ -46,7 +46,6 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
         vertices, edges and faces are groups, so we can easily access them later on
         finally setup everything that needs to be rendered
         """
-        super().__init__(*args)
         self.mesh: Mesh = mesh
         self.vertices: m.Group = m.Group()
         self.edges: m.VGroup = m.VGroup()
@@ -55,6 +54,8 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
         # set all the parameters
         for param_name in BM3DM:
             self.__setattr__(param_name, get_param_or_default(param_name, kwargs, BM3DM))
+
+        super().__init__(*args, **remove_keys_from_dict(kwargs, list(BM3DM.keys())))
 
         self.setup()
 
@@ -113,11 +114,10 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
         verts_3d = self.mesh.get_3d_vertices()
         for face_indices in self.mesh.faces:
             face_points = [verts_3d[i] for i in face_indices]
+            # make sure to add the first point to have a closed loop
             face_points.append(verts_3d[face_indices[0]])
             new_face = m.ThreeDVMobject()
-            new_face.set_points_as_corners(
-                face_points
-            )
+            new_face.set_points_as_corners(face_points)
             self.faces.add(new_face)
         self.faces.set_fill(
             color=self.faces_color,
@@ -141,9 +141,7 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
         face_points = [verts_3d[i] for i in face]
         face_points.append(verts_3d[face[0]])
         new_face = m.ThreeDVMobject()
-        new_face.set_points_as_corners(
-            face_points
-        )
+        new_face.set_points_as_corners(face_points)
         new_face.set_fill(
             color=color,
             opacity=self.faces_opacity
@@ -216,7 +214,10 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
 
     def _update_vertex(self, vertex_idx: int, pos: np.ndarray):
         """
-        TODO
+        change the position of a vertex to pos
+        if vertices are displayed, make sure to change the corresponding vertex object
+        if faces are displayed, every face with vertex has to be recreated
+        if edges are displayed, every edge with vertex has to be re-rendered
         """
         # update mesh
         self.mesh.update_vertex(vertex_idx, pos)
@@ -228,16 +229,10 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
             # update faces
             for face_idx, face in enumerate(self.mesh.faces):
                 if vertex_idx in face:
-                    triangle = [self.mesh.get_3d_vertices()[i] for i in face]
-                    face = self.get_face(face_idx)
-                    face.set_points_as_corners(
-                        [
-                            triangle[0],
-                            triangle[1],
-                            triangle[2],
-                            triangle[0]
-                        ],
-                    )
+                    mesh_vertices = [self.mesh.get_3d_vertices()[i] for i in face]
+                    mesh_vertices.append(mesh_vertices[0])
+                    drawn_face = self.get_face(face_idx)
+                    drawn_face.set_points_as_corners(mesh_vertices)
         if self.display_edges:
             # update edges
             for edge in self.mesh.get_vertex_edges(vertex_idx):
@@ -252,6 +247,17 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
         vert_2 = self.mesh.get_3d_vertices()[edge[1]]
         e.set_points_as_corners([vert_1, vert_2])
 
+    def shift(self, *vectors: np.ndarray) -> None:
+        """
+        override shift so self.mesh gets updated correctly
+        accepts a multiple vectors of the same size and just adds them up
+        """
+        total_shift = np.sum(vectors, axis=0)
+        # update vertices of self.mesh
+        self.mesh.translate_mesh(total_shift)
+        # shift manim vertices, edges and faces
+        super().shift(total_shift)
+
     def shift_vertex(self, scene: m.Scene, vertex_idx: int, shift: np.ndarray, **kwargs):
         """
         shift vertex by id and update faces
@@ -261,7 +267,9 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
         """
         start = self.mesh.vertices[vertex_idx].copy()
         tracker = m.ValueTracker(0)
-        tracker.add_updater(lambda mo: self._update_vertex(vertex_idx, start + tracker.get_value() * shift, **kwargs))
+        tracker.add_updater(
+            # make sure even with multiple calls lambda has the correct values
+            lambda mo, go=start, move=shift: self._update_vertex(vertex_idx, go + tracker.get_value() * move, **kwargs))
         scene.add(tracker)
         scene.play(
             tracker.animate(**kwargs).set_value(1),

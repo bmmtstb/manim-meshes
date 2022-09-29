@@ -60,11 +60,29 @@ class PyramidScene(m.ThreeDScene):
 
     def construct(self):
         self.set_camera_orientation(70 * m.DEGREES, 30 * m.DEGREES)
-        mesh = create_pyramid()
-        manim_mesh_obj = ManimMesh(mesh=mesh, display_vertices=True)
-        self.add(manim_mesh_obj)
+        # pyramid with only triangles
+        manim_triangle_pyramid = ManimMesh(mesh=deepcopy(create_pyramid(triangles_only=True)), display_vertices=True, name="Tri Mesh")
+        manim_triangle_pyramid.shift(m.OUT)
+        self.add(manim_triangle_pyramid)
+        # pyramid with triangles and a quad bottom to test the renderer
+        manim_quad_pyramid = ManimMesh(mesh=deepcopy(create_pyramid(triangles_only=False)), display_vertices=True, name="Quad Mesh")
+        manim_quad_pyramid.shift(m.IN, m.IN)
+        self.add(manim_quad_pyramid)
         self.play(
-            manim_mesh_obj.get_face(0).animate.set_fill(m.RED, 1)
+            m.Rotate(manim_triangle_pyramid, angle=2 * m.PI, about_point=m.ORIGIN, run_time=2.0),
+            m.Rotate(manim_quad_pyramid, angle=2 * m.PI, about_point=m.ORIGIN, run_time=2.0),
+        )
+        # color faces
+        self.play(
+            manim_triangle_pyramid.get_face(0).animate.set_fill(m.RED, 1),
+            manim_quad_pyramid.get_face(4).animate.set_fill(m.GREEN, 1),
+        )
+        # test re-rendering of meshes
+        manim_triangle_pyramid.move_vertex_to(vertex_idx=0, scene=self, pos=np.array([2, 2, 1])),
+        manim_quad_pyramid.move_vertex_to(vertex_idx=1, scene=self, pos=np.array([2, -1.5, -1.5])),
+        self.play(
+            m.Rotate(manim_triangle_pyramid, angle=2 * m.PI, about_point=m.ORIGIN, run_time=2.0),
+            m.Rotate(manim_quad_pyramid, angle=2 * m.PI, about_point=m.ORIGIN, run_time=2.0),
         )
 
 

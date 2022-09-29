@@ -154,7 +154,7 @@ class Mesh:
 
     def get_edge_index(self, edge: Edge) -> int:
         """return index of given edge"""
-        # fixme, additionally look for rolling (inverse edge) ?
+        # Fixme, additionally look for inverse edge ?
         return self._edges.index(edge)
 
     def get_vertex_edges(self, vertex_idx: int) -> Edges:
@@ -481,7 +481,7 @@ class Mesh:
 
     def snap_to_grid(
             self, grid_sizes: Tuple[float, ...], threshold: Tuple[float, ...], steps: int = 1,
-            update_verts: bool = False
+            update_verts: bool = False, precision: int = 10
     ) -> np.ndarray:
         """
         given vertices of a mesh, move vertices to exact locations if they are close-by.
@@ -498,6 +498,7 @@ class Mesh:
         :type steps: positive integer
         :param update_verts: whether to update self._vertices after snap to grid is run
         :type update_verts: boolean
+        :param precision: results get rounded after completion, default 1e-10, to decrease floating precision errors
         :returns: np array of the new vertex positions
         """
         if len(grid_sizes) != self.dim:
@@ -530,7 +531,8 @@ class Mesh:
             # add differences to vertices to snap every modified value
             # possibility to move stepwise for later animation
             vertices[:, d] = self._vertices[:, d] + (differences / steps)
-            # Fixme: should the result be rounded to force points to be exactly on the edge
+        # round the result to reduce floating point precision errors
+        vertices.round(decimals=precision)
         if update_verts:
             self._vertices = vertices
             self.remove_duplicates()

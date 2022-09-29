@@ -3,6 +3,7 @@ define a few basic mesh-structures to be used as examples or test
 """
 # python imports
 import pathlib
+from copy import deepcopy
 from typing import List, Tuple
 # third-party imports
 import numpy as np
@@ -66,9 +67,9 @@ def create_pyramid(triangles_only: bool = True) -> Mesh:
             [0, 1, 2, 3, 4],
         ]
     return Mesh(
-        vertices=vertices,
-        faces=faces,
-        parts=parts,
+        vertices=deepcopy(vertices),
+        faces=deepcopy(faces),
+        parts=deepcopy(parts),
     )
 
 
@@ -174,7 +175,7 @@ def create_coplanar_points() -> Mesh:
 
 def create_grid(areas: List[Tuple[float, float, int]]) -> Mesh:
     """
-    given min, max and mount per direction create a mesh as a grid
+    given min, max and amount per direction create a mesh as a grid
     :param areas: list with one tuple per dimension, with every tuple consisting of
                  min, max and point-amount in this direction
     """
@@ -196,11 +197,11 @@ def create_grid(areas: List[Tuple[float, float, int]]) -> Mesh:
         ]) for j in range(v - 1) for i in range(u - 1)]
         parts = None
     elif dim == 3:
-        # FIXME implement 3D
         # u, v, w = areas[0][2], areas[1][2], areas[2][2]
-        # faces = None
+        # faces = [... for k in range(w - 1) for j in range(v - 1) for i in range(u - 1)]
         # parts = None
-        raise NotImplementedError("3D not yet implemented")
+        # TODO fully implement 3D grid
+        raise NotImplementedError("3D grid generation is not yet implemented")
     else:
         raise ValueError("Only 1D, 2D and 3D meshes implemented.")
     return Mesh(
