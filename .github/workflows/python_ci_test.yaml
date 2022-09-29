@@ -47,6 +47,10 @@ jobs:
       if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
       run: poetry install --no-interaction --no-root
 
+    - name: Add .scr folder to PythonPath
+      run: | 
+        echo "PYTHONPATH=./src/" >> $GITHUB_ENV
+
     - name: Lint with pylint
       run: |
         poetry run python -m pylint $(git ls-files '*.py' -x 'test_*.py')
