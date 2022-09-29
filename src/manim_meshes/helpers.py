@@ -52,7 +52,7 @@ def is_twice_nested_iterable(obj: Any, min_lens: Tuple[int, int] = (1, 3)) -> bo
     # easy case np.ndarray with correct specs
     if isinstance(obj, np.ndarray) and len(obj.shape) == 2:
         return obj.shape[0] >= min_lens[0] and obj.shape[1] >= min_lens[1]
-    if obj in ([], ()):
+    if isinstance(obj, (list, tuple)) and len(obj) == 0:
         return True
 
     if isinstance(obj, (list, tuple, np.ndarray)) and \

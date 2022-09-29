@@ -73,7 +73,7 @@ def test_find_vertex():
 def test_find_face():
     m = Mesh(
         vertices=np.array([[1, 2, 3], [1, 2, 3], [1, 0, 1], [1, 2, 3]]),
-        faces=np.array([[1, 2, 3], [2, 3, 1], [1, 3, 2], [1, 2, 0], [3, 1, 2], [3, 1, 2, 3]])
+        faces=[[1, 2, 3], [2, 3, 1], [1, 3, 2], [1, 2, 0], [3, 1, 2], [3, 1, 2, 3]]
     )
     assert m.find_face(np.array([1, 2, 3])) == [0, 1, 4]
     assert m.find_face(np.array([3, 1, 2]), start=2) == [4]
