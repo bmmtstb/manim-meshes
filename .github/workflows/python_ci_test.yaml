@@ -2,7 +2,7 @@ name: Python Test and Lint
 
 on: [push, pull_request]
 jobs:
-  test:
+  test_and_lint:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -47,10 +47,10 @@ jobs:
       if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
       run: poetry install --no-interaction --no-root
 
-    - name: Test with pytest
-      run: |
-        poetry run python -m pytest -q tests/
-
     - name: Lint with pylint
       run: |
         poetry run python -m pylint $(git ls-files '*.py' -x 'test_*.py')
+
+    - name: Test with pytest
+      run: |
+        poetry run python -m pytest -q tests/
