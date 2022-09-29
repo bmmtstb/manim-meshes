@@ -30,7 +30,7 @@ jobs:
 
     - name: Set up cache
       uses: actions/cache@v3
-      id: cache
+      id: cache  # name for referring later
       with:
         path: .venv
         key: venv-${{ runner.os }}-${{ steps.full-python-version.outputs.version }}-${{ hashFiles('**/poetry.lock') }}
@@ -49,8 +49,8 @@ jobs:
 
     - name: Test with pytest
       run: |
-        poetry run -m pytest -n auto -q tests/
+        poetry run python -m pytest -n auto -q tests/
 
     - name: Lint with pylint
       run: |
-        poetry run -m pylint $(git ls-files '*.py' -x 'test_*.py')
+        poetry run python -m pylint $(git ls-files '*.py' -x 'test_*.py')
