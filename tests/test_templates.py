@@ -28,7 +28,7 @@ def test_basic_pyramid():
     assert any(len(f) == 4 for f in mesh.faces)
 
 
-def test_armadillo():
+def test_cone():
     """test loading of predefined meshes"""
     mesh = create_model(name="tail_topper")
     assert len(mesh.vertices) != 0
