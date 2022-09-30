@@ -32,18 +32,9 @@ class FastManimMeshScene(m.ThreeDScene):
         mesh = create_model(name="armadillo")
         mesh.apply_rotation(90 * m.DEGREES, m.RIGHT)
         mesh.scale_mesh(0.03)
-        fast_manim_mesh = FastManimMesh(mesh=mesh)
-        fast_manim_mesh.set_color(m.GREEN_E)
+        fast_manim_mesh = FastManimMesh(mesh=mesh, color=m.GREEN_E)
         self.add(fast_manim_mesh)
-        self.play(
-            m.Rotate(
-                fast_manim_mesh,
-                angle=2 * m.PI,
-                about_point=m.ORIGIN,
-                rate_func=m.linear,
-                run_time=5
-            )
-        )
+
 
 # #### ManimMesh #####
 class ConeScene(m.ThreeDScene):

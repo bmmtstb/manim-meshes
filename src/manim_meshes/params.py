@@ -49,12 +49,12 @@ BM2DM: DefaultParameters = {
 
 # opengl_mesh_default_params
 OGLM: DefaultParameters = {
-    "color": m.GREY,
-    "depth_test": True,
-    "gloss": 0.3,
-    "opacity": 1.0,
-    "render_primitive": moderngl.TRIANGLES,
-    "shadow": 0.4,
+    "color": (Color, Color(m.GREY)),
+    "depth_test": (bool, True),
+    "gloss": (float, 0.3),
+    "opacity": (float, 1.0),
+    "render_primitive": (int, moderngl.TRIANGLES),
+    "shadow": (float, 0.4),
 }
 
 
