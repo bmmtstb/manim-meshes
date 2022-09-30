@@ -92,4 +92,3 @@ class VoronoiDelaunay:
                 triangle_indices.add(point_indices[0])
                 triangle_indices.add(point_indices[1])
         _, _ = self.triangle_mesh.add_face(np.array(list(triangle_indices)))
-
