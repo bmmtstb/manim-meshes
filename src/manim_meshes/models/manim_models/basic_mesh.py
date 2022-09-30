@@ -224,7 +224,8 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
         """fade in some additional vertices"""
         self.mesh.add_vertices(new_vertices)
         # fade out current ones, fade in all after add
-        scene.play(m.FadeOut(self.vertices), m.FadeIn(self.setup_vertices()))
+        if self.display_vertices:
+            scene.play(m.FadeOut(self.vertices), m.FadeIn(self.setup_vertices()))
 
     def _update_vertex(self, vertex_idx: int, pos: np.ndarray) -> None:
         """
@@ -253,8 +254,8 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
                 self._update_edge(edge)
 
     def _update_edge(self, edge: Tuple[int, int]) -> None:
-        """
-        TODO
+        """ updates the manim object of the edge given by param 'edge' to use the latest positions of
+        the end point vertices.
         """
         e = self.get_edge(self.mesh.get_edge_index(edge))
         vert_1 = self.mesh.get_3d_vertices()[edge[0]]
@@ -391,17 +392,29 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
 
 
 class Manim2DMesh(ManimMesh, metaclass=ConvertToOpenGL):
-    """
-    "2D" mesh implementation
+    """ '2D' mesh implementation
+
     printing Vertices in Manim is currently not supported for 2D vertices. Therefore, while printing the appropriate
     3D-vertices are used. Everything else should accept plain 2D values. Therefore, this Manim2DMesh class should
     support 2D vertices or 3D vertices with z-value == 0 on initialization
 
     This mesh is mainly for Educational purposes and has a few functions we needed for drawing basic
     mesh functionalities. It is performant up to a point and should not be used for large meshes.
-    """
-    # pylint:disable=abstract-method
 
+    possible kwargs:
+    display_vertices: whether to display the vertices
+    display_edges: whether to display the edges
+    display_faces: whether to display the faces
+    clear_vertices: whether to clear the vertices after WHAT?
+    clear_edges: whether to clear the edges after WHAT?
+    clear_faces: whether to clear the faces after WHAT?
+    edges_color: color of the edges
+    edges_width: width of the lines of the edges
+    faces_color: color of the faces
+    faces_opacity: opacity of the faces
+    verts_color: color of the vertices"""
+
+    # pylint:disable=abstract-method
     def __init__(self, mesh: Mesh, *args, **kwargs) -> None:
         # validate if we have a useful 2D mesh
         if mesh.dim == 3:
@@ -433,7 +446,8 @@ class Manim2DMesh(ManimMesh, metaclass=ConvertToOpenGL):
 
     def get_dots(self, indices) -> List[m.Dot]:
         """
-        :returns: manim Dot objects for each vertex with index in indices
+        :returns: manim Dot objects for each vertex with index in indices. The dots move if position of the
+        corresponding underlying .mesh.vertices change
         """
         dots = []
         vertices = self.mesh.get_3d_vertices()

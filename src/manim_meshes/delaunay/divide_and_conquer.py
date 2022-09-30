@@ -54,7 +54,7 @@ class DivideAndConquer:
             and then split by their x-coordinate. Calculates a dashed line between both sets.
 
             Returns indices of resulting sets and DashedLine manim object
-            ~> tuple (indices_left: List, indices_right: List, line: DashedLine)
+            :returns: tuple (indices_left: List, indices_right: List, line: DashedLine)
 
             :param vert_indices: indices of vertices in set
             :param dash_length: dash length of dashed line between both sets
@@ -100,7 +100,7 @@ class DivideAndConquer:
             self.scene.renderer.update_frame(self.scene)
 
     def _right_candidate(self, base_lr, rr_edges, speed: float = 1.0):
-        """ Find and return right potential candidate (or None if not found)
+        """ Find and return index of right potential candidate (or None if not found)
         to build triangle for merging, deletes RR edges if necessary """
         endpoints = [edge[0] if base_lr[1] != edge[0] else edge[1] for edge in rr_edges if base_lr[1] in edge]
         vertices = self.triangle_mesh.mesh.get_3d_vertices()
@@ -132,7 +132,7 @@ class DivideAndConquer:
         return None
 
     def _left_candidate(self, base_lr, ll_edges, speed: float = 1.0):
-        """ Find and return left potential candidate (or None if not found)
+        """ Find and return index of left potential candidate (or None if not found)
         to build triangle for merging, deletes LL edges if necessary """
         endpoints = [edge[0] if base_lr[0] != edge[0] else edge[1] for edge in ll_edges if base_lr[0] in edge]
         vertices = self.triangle_mesh.mesh.get_3d_vertices()
@@ -164,7 +164,7 @@ class DivideAndConquer:
 
     def merge_sets(self, indices_left: List, indices_right: List, split_line: m.DashedLine, speed: float = 1.0):
         """ Merges two delaunay triangulated vertex sets, given by indices (indices_left, indices_right)
-        to combined delaunay triangulation, returns vertex indices of combined set.
+        to combined delaunay triangulation, returns list of vertex indices of combined set.
 
         :param indices_left: indices of the vertices in the left set
         :param indices_right: indices of the vertices in the right set
@@ -219,6 +219,7 @@ class DivideAndConquer:
 
         :param indices_left: indices of the vertices in the left set
         :param indices_right: indices of the vertices in the right set
+        :returns: (l,r)
         """
 
         def next_index(cur_idx, indices):

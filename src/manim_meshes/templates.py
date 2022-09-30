@@ -124,7 +124,7 @@ def create_cube(triangles_only: bool = True) -> Mesh:
 
 def create_coplanar_triangles() -> Mesh:
     """
-    create a basic 2D mesh
+    create a basic 2D mesh consisting of triangles
     """
     vertices = [
         [-1, 1],

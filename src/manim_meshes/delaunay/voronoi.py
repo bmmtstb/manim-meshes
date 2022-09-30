@@ -28,7 +28,7 @@ class VoronoiDelaunay:
     def create_voronoi(self):
         """ Creates voronoi diagram of the vertices in triangle_mesh.
         Returns voronoi vertices and lines as VGroups for rendering.
-        -> tuple (vertices: VGroup(Dot), lines: VGroup(Line))
+        :returns: tuple (vertices: VGroup(Dot), lines: VGroup(Line))
 
         ~> based on source code of scipy.spatial.voronoi_plot_2d
         """
@@ -69,16 +69,16 @@ class VoronoiDelaunay:
 
         return vert_group, line_group
 
-    def get_circum_circle(self, voronoi_vertex_index):
+    def get_circum_circle(self, voronoi_vertex_index, color=m.ORANGE):
         """ Returns circum-circle around the triangle, which corresponds to the voronoi_vertex with index
-        voronoi_vertex_index as manim Circle object"""
+        voronoi_vertex_index as manim Circle object with given color"""
         verts = self.triangle_mesh.mesh.get_3d_vertices()
         voronoi_vertices = np.pad(self.voronoi.vertices, ((0, 0), (0, 1)))
         for point_indices, segment in zip(self.voronoi.ridge_points, self.voronoi.ridge_vertices):
             if voronoi_vertex_index in segment:
                 vert_a = voronoi_vertices[voronoi_vertex_index]
                 vert_b = verts[point_indices[0]]
-                circle = m.Circle(radius=np.linalg.norm(vert_b - vert_a), stroke_width=2, color=m.ORANGE)
+                circle = m.Circle(radius=np.linalg.norm(vert_b - vert_a), stroke_width=2, color=color)
                 circle.shift(vert_a)
                 return circle
         return None  # should never get here

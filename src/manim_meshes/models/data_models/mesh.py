@@ -92,8 +92,8 @@ class Mesh:
 
         def replace_face_ids_with_vertex_ids(faces: Faces, vertices: Vertices) -> VarArray:
             """
-            takes parts as list np.arrays referencing faces
-            returns the np.array of the vertex ids retreved from faces
+            takes faces as list np.arrays referencing vertices
+            returns the np.array of the vertex coordinates retrieved from faces
             """
             return [np.hstack([vertices[vert_idx] for vert_idx in face]) for face in faces]
 
@@ -480,6 +480,7 @@ class Mesh:
         implemented only for 2D and 3D
         2D is equal to rotation around (non-existent) z axis
         3D rotates all vertices around the given axis
+
         :param angle: rotation angle in radians
         :param axis: for 3D - rotation axis
         :param about_point: rotate about a point

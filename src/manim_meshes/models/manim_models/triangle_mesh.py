@@ -13,7 +13,21 @@ from manim_meshes.models.manim_models.basic_mesh import Manim2DMesh
 
 
 class TriangleManim2DMesh(Manim2DMesh, metaclass=ConvertToOpenGL):
-    """2D Mesh implementation that has additional methods especially for triangles"""
+    """2D Mesh implementation that has additional methods especially for triangles
+
+    possible kwargs:
+    display_vertices: whether to display the vertices
+    display_edges: whether to display the edges
+    display_faces: whether to display the faces
+    clear_vertices: whether to clear the vertices after WHAT?
+    clear_edges: whether to clear the edges after WHAT?
+    clear_faces: whether to clear the faces after WHAT?
+    edges_color: color of the edges
+    edges_width: width of the lines of the edges
+    faces_color: color of the faces
+    faces_opacity: opacity of the faces
+    verts_color: color of the vertices"""
+
     # pylint:disable=abstract-method
     def __init__(self, mesh: Mesh, *args, **kwargs) -> None:
         if any(len(face) != 3 for face in mesh.faces):
@@ -27,8 +41,8 @@ class TriangleManim2DMesh(Manim2DMesh, metaclass=ConvertToOpenGL):
 
     def edge_flip(self, scene: m.Scene, face_idx_1: int, face_idx_2: int, **kwargs) -> None:
         """
-        Flips the edge shared by the given triangles. Raises an error if the faces are not triangles
-        or do not share exactly one edge
+        Flips the edge shared by the triangles given by their face indices. Raises an error if the faces are not
+        triangles or do not share exactly one edge
         """
         face_arr_1 = self.mesh.faces[face_idx_1]
         face_arr_2 = self.mesh.faces[face_idx_2]
@@ -46,21 +60,26 @@ class TriangleManim2DMesh(Manim2DMesh, metaclass=ConvertToOpenGL):
         anims = []
         if 'run_time' not in kwargs:
             kwargs['run_time'] = 1
-        for face_idx in [face_idx_1, face_idx_2]:
-            face = self.mesh.faces[face_idx]
-            triangle = [self.mesh.get_3d_vertices()[i] for i in face]
-            face = self.get_face(face_idx)
-            new_face = face.copy()
-            new_face.set_points_as_corners(
-                [
-                    triangle[0],
-                    triangle[1],
-                    triangle[2],
-                    triangle[0]
-                ],
-            )
-            anims.append(face.animate(**kwargs).become(new_face))
-        new_edge = old_edge.copy()
-        new_edge.set_points_as_corners([self.mesh.get_3d_vertices()[v_1], self.mesh.get_3d_vertices()[v_2]])
-        anims.append(old_edge.animate(**kwargs).become(new_edge))
-        scene.play(*anims)
+        if self.display_faces:
+            for face_idx in [face_idx_1, face_idx_2]:
+                face = self.mesh.faces[face_idx]
+                triangle = [self.mesh.get_3d_vertices()[i] for i in face]
+                face = self.get_face(face_idx)
+                new_face = face.copy()
+                new_face.set_points_as_corners(
+                    [
+                        triangle[0],
+                        triangle[1],
+                        triangle[2],
+                        triangle[0]
+                    ],
+                )
+                anims.append(face.animate(**kwargs).become(new_face))
+        if self.display_edges:
+            self.edges.remove(old_edge)
+            self.edges.insert(self.mesh.get_edge_index(tuple(sorted([v_1, v_2]))), old_edge)
+            new_edge = old_edge.copy()
+            new_edge.set_points_as_corners([self.mesh.get_3d_vertices()[v_1], self.mesh.get_3d_vertices()[v_2]])
+            anims.append(old_edge.animate(**kwargs).become(new_edge))
+        if len(anims) > 0:
+            scene.play(*anims)

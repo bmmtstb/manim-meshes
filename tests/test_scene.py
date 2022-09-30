@@ -213,7 +213,8 @@ class DivideAndConquerScene(m.ThreeDScene):
         mesh = create_coplanar_points()
         # make sure TriangleManim2DMesh only consists of vertices / no faces and
         # that display_edges=True, display_vertices=True, else the algorithm is not visualized properly
-        mesh_2d = TriangleManim2DMesh(mesh=mesh, display_vertices=True, display_edges=True, edges_color=m.BLACK)
+        mesh_2d = TriangleManim2DMesh(mesh=mesh, display_vertices=True, display_edges=True,
+                                      edges_color=m.BLACK, faces_color=m.BLUE_D)
         self.add(mesh_2d)
         self.wait(0.5)
         dac = DivideAndConquer(self, mesh_2d)
@@ -226,7 +227,7 @@ class DivideAndConquerScene(m.ThreeDScene):
 
 
 # run in manim-meshes
-# preview: manim -p --renderer=opengl tests/test_scene.py DivideAndConquerScene
+# preview: manim -p --renderer=opengl tests/test_scene.py VoronoiDelaunayScene
 # use --write_to_movie instead of -p to render to file
 class VoronoiDelaunayScene(m.ThreeDScene):
     """simple 2D mesh scene, visualizes duality of voronoi diagram and delaunay triangulation"""
@@ -240,7 +241,8 @@ class VoronoiDelaunayScene(m.ThreeDScene):
         mesh = create_coplanar_points()
         # make sure TriangleManim2DMesh only consists of vertices / no faces and
         # that display_edges=True, display_vertices=True, else the algorithm is not visualized properly
-        mesh_2d = TriangleManim2DMesh(mesh=mesh, display_vertices=True, display_edges=True, edges_color=m.BLACK)
+        mesh_2d = TriangleManim2DMesh(mesh=mesh, display_vertices=True, display_edges=True,
+                                      edges_color=m.BLACK, faces_color=m.BLUE_D)
         self.add(mesh_2d)
         self.wait(0.5)
         vd = VoronoiDelaunay(self, mesh_2d)
