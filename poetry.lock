@@ -204,7 +204,7 @@ tests = ["rich", "littleutils", "pytest", "asttokens"]
 
 [[package]]
 name = "fonttools"
-version = "4.37.3"
+version = "4.37.4"
 description = "Tools to manipulate font files"
 category = "main"
 optional = false
@@ -949,7 +949,7 @@ tests = ["cython", "littleutils", "pygments", "typeguard", "pytest"]
 
 [[package]]
 name = "svgelements"
-version = "1.8.3"
+version = "1.8.4"
 description = "Svg Elements Parsing"
 category = "main"
 optional = false
