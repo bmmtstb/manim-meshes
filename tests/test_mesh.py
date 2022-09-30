@@ -766,27 +766,20 @@ def test_translate_vertex():
 
 def test_apply_rotation():
     m = Mesh(vertices=np.identity(3), faces=None)
-    # invalid axis raises error
-    with pytest.raises(InvalidRequestException) as _:
-        m_err_1 = deepcopy(m)
-        m_err_1.apply_rotation(0, 4)
-    with pytest.raises(InvalidRequestException) as _:
-        m_err_2 = deepcopy(m)
-        m_err_2.apply_rotation(0, -1)
     # turning by 0 or 360° = 2*pi degree keeps Mesh same
     m1 = deepcopy(m)
-    m1.apply_rotation(0, 1)
+    m1.apply_rotation(0, np.array([0,1,0]))
     assert np.allclose(m1.vertices, m.vertices)
     m2 = deepcopy(m)
-    m2.apply_rotation(2 * np.pi, 2)
+    m2.apply_rotation(2 * np.pi, np.array([0,0,1]))
     assert np.allclose(m2.vertices, m.vertices)
     # turning single vector around z-axis then around y-axis and finally x-axis, all 90°
     m3 = Mesh(vertices=np.array([[1, 2, 3]]), faces=None)
-    m3.apply_rotation(0.5 * np.pi, 2)
+    m3.apply_rotation(0.5 * np.pi, np.array([0, 0, 1]))
     assert np.allclose(m3.vertices, np.array([[-2, 1, 3]]))
-    m3.apply_rotation(0.5 * np.pi, 1)
+    m3.apply_rotation(0.5 * np.pi, np.array([0, 1, 0]))
     assert np.allclose(m3.vertices, np.array([[3, 1, 2]]))
-    m3.apply_rotation(0.5 * np.pi, 0)
+    m3.apply_rotation(0.5 * np.pi, np.array([1, 0, 0]))
     assert np.allclose(m3.vertices, np.array([[3, -2, 1]]))
     # turning 2D mesh
     m_2d = Mesh(vertices=np.array([[1, 2], [3, 4]]), faces=None)
@@ -794,9 +787,9 @@ def test_apply_rotation():
     assert np.allclose(m_2d.vertices, np.array([[-2, 1], [-4, 3]]))
     # turning identity by 90 deg around x then turning it back
     m4 = deepcopy(m)
-    m4.apply_rotation(0.5 * np.pi, 0)
+    m4.apply_rotation(0.5 * np.pi, np.array([1, 0, 0]))
     assert np.allclose(m4.vertices, np.array([[1, 0, 0], [0, 0, 1], [0, -1, 0]]))
-    m4.apply_rotation(-0.5 * np.pi, 0)
+    m4.apply_rotation(-0.5 * np.pi, np.array([1, 0, 0]))
     assert np.allclose(m4.vertices, np.identity(3))
 
 

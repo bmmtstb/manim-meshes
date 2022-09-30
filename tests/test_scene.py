@@ -17,10 +17,34 @@ from manim_meshes.delaunay.divide_and_conquer import DivideAndConquer
 from manim_meshes.delaunay.voronoi import VoronoiDelaunay
 from manim_meshes.models.data_models.mesh import Mesh
 from manim_meshes.models.manim_models.basic_mesh import ManimMesh, Manim2DMesh
+from manim_meshes.models.manim_models.opengl_mesh import FastManimMesh
 from manim_meshes.models.manim_models.triangle_mesh import TriangleManim2DMesh
 from manim_meshes.templates import create_grid, create_pyramid, create_model, create_coplanar_triangles, \
     create_coplanar_points
 
+
+# some test scenes
+
+# preview: manim --renderer=opengl -p faster_models.py FastMeshTest
+class FastManimMeshScene(m.ThreeDScene):
+    """render / display FastManimMesh"""
+
+    def construct(self):
+        self.camera.set_phi(90 * m.DEGREES)
+        mesh = create_model(name="armadillo")
+        mesh.apply_rotation(90 * m.DEGREES, m.RIGHT)
+        mesh.scale_mesh(0.03)
+        fast_manim_mesh = FastManimMesh(mesh=mesh)
+        self.add(fast_manim_mesh)
+        self.play(
+            m.Rotate(
+                fast_manim_mesh,
+                angle=2 * m.PI,
+                about_point=m.ORIGIN,
+                rate_func=m.linear,
+                run_time=5
+            )
+        )
 
 # #### ManimMesh #####
 class ConeScene(m.ThreeDScene):
@@ -55,7 +79,9 @@ class SuzanneScene(m.ThreeDScene):
             )
         )
 
-
+# run in manim-meshes
+# preview: manim -p --renderer=opengl tests/test_scene.py PyramidScene
+# use --write_to_movie instead of -p to render to file
 class PyramidScene(m.ThreeDScene):
     """pyramid mesh, changes a face color"""
 
@@ -73,6 +99,10 @@ class PyramidScene(m.ThreeDScene):
             m.Rotate(manim_triangle_pyramid, angle=2 * m.PI, about_point=m.ORIGIN, run_time=2.0),
             m.Rotate(manim_quad_pyramid, angle=2 * m.PI, about_point=m.ORIGIN, run_time=2.0),
         )
+        # ATTENTION: default animation m.Rotate does not work (yet) properly with our implementation
+        # currently you have to call .mesh.apply_rotation with the same parameters after the m.Rotate is played
+        manim_triangle_pyramid.mesh.apply_rotation(angle=2 * m.PI, about_point=m.ORIGIN)
+        manim_quad_pyramid.mesh.apply_rotation(angle=2 * m.PI, about_point=m.ORIGIN)
         # color faces
         self.play(
             manim_triangle_pyramid.get_face(0).animate.set_fill(m.RED, 1),
@@ -85,6 +115,9 @@ class PyramidScene(m.ThreeDScene):
             m.Rotate(manim_triangle_pyramid, angle=2 * m.PI, about_point=m.ORIGIN, run_time=2.0),
             m.Rotate(manim_quad_pyramid, angle=2 * m.PI, about_point=m.ORIGIN, run_time=2.0),
         )
+        # ATTENTION, see above
+        manim_triangle_pyramid.mesh.apply_rotation(angle=2 * m.PI, about_point=m.ORIGIN)
+        manim_quad_pyramid.mesh.apply_rotation(angle=2 * m.PI, about_point=m.ORIGIN)
 
 
 # run in manim-meshes
@@ -218,6 +251,8 @@ class VoronoiDelaunayScene(m.ThreeDScene):
         self.wait(0.3)
         # create delaunay triangulation from voronoi diagram
         for idx, manim_vert in enumerate(voronoi_vertices):
+            # voronoi vertices are centers of circum-circles of the delaunay triangles, show circle,
+            # then create triangle
             circle = vd.get_circum_circle(idx)
             self.play(m.Create(circle))
             self.wait(0.3)

@@ -268,9 +268,54 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
         """
         total_shift = np.sum(vectors, axis=0)
         # update vertices of self.mesh
-        self.mesh.translate_mesh(total_shift)
+        self.mesh.translate_mesh(total_shift[:self.mesh.dim])
         # shift manim vertices, edges and faces
         super().shift(total_shift)
+
+    def scale(self, scale_factor: float, **kwargs):
+        """
+        override manim internal scale so self.mesh gets updated correctly
+        """
+        about_point = self.get_bounding_box_point(m.ORIGIN)[:self.mesh.dim]
+        self.mesh.scale_mesh(scale_factor, about_point)
+        super().scale(scale_factor, **kwargs)
+
+    def stretch(self, factor, dim, **kwargs):
+        """
+        override manim internal stretch so self.mesh gets updated correctly
+        """
+        if dim >= self.mesh.dim:
+            raise LookupError("dim must lower than ManimMesh.mesh.dim!")
+        about_point = self.get_bounding_box_point(m.ORIGIN)[:self.mesh.dim]
+        self.mesh.stretch_mesh(factor, dim, about_point)
+        super().stretch(factor, dim, **kwargs)
+
+    def rotate(
+        self,
+        angle,
+        axis=m.OUT,
+        about_point=None,
+        **kwargs,
+    ):
+        """
+        override manim internal rotate so self.mesh gets updated correctly
+        always rotate about center of object
+        """
+        if about_point is None:
+            about_point = self.get_bounding_box_point(m.ORIGIN)
+
+        if self.mesh.dim == 2:  # always rotate about Z if mesh is 2D
+            self.mesh.apply_rotation(angle, m.OUT, about_point[:2])
+        else:
+            self.mesh.apply_rotation(angle, axis, about_point)
+        super().rotate(angle, axis, about_point, **kwargs)
+
+    def flip(self, axis=m.UP, **kwargs):
+        """
+        override manim internal flip -> not implemented
+        """
+        # Fixme implement flip on axis for mesh.py
+        raise NotImplementedError
 
     def shift_vertex(self, scene: m.Scene, vertex_idx: int, shift: np.ndarray, **kwargs) -> None:
         """

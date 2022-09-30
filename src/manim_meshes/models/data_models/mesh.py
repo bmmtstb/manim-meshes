@@ -7,6 +7,8 @@ from copy import deepcopy
 from typing import List, Set, Tuple, Union
 import numpy as np
 # local imports
+from scipy.spatial.transform import Rotation
+
 from manim_meshes.decorators import dangling_face_decorator, dangling_vert_decorator
 from manim_meshes.exceptions import InvalidMeshDimensionsException, InvalidMeshException, InvalidRequestException, \
     InvalidTypeException, MeshIndexException
@@ -436,9 +438,23 @@ class Mesh:
         unique = np.unique(np.concatenate(self._parts).ravel())
         return any(f_idx not in unique for f_idx in range(len(self._faces)))
 
-    def scale_mesh(self, scaling: float) -> None:
+    def scale_mesh(self, scaling: float, about_point=None) -> None:
         """scales all vertices by a factor"""
-        self._vertices *= float(scaling)
+        if about_point is not None:
+            self._vertices -= about_point
+            self._vertices *= float(scaling)
+            self._vertices += about_point
+        else:
+            self._vertices *= float(scaling)
+
+    def stretch_mesh(self, factor: float, dim: int, about_point=None) -> None:
+        """stretches all vertices by a factor along the given dimension"""
+        if about_point is not None:
+            self._vertices -= about_point
+            self._vertices[:,dim] *= float(factor)
+            self._vertices += about_point
+        else:
+            self._vertices[:,dim] *= float(factor)
 
     def translate_mesh(self, translation: np.ndarray) -> None:
         """translates (shift) all vertices by a given vector"""
@@ -458,34 +474,46 @@ class Mesh:
             raise InvalidMeshDimensionsException(name="Translation", expected=self.dim, actual=translation.shape)
         self._vertices[v_id] += translation
 
-    def apply_rotation(self, angle: float, axis: int = None) -> None:
+    def apply_rotation(self, angle: float, axis: np.ndarray = np.array([0, 0, 1]), about_point=None) -> None:
         """
         rotates all vertices around a given axis
         implemented only for 2D and 3D
         2D is equal to rotation around (non-existent) z axis
         3D rotates all vertices around the given axis
         :param angle: rotation angle in radians
-        :param axis: for 3D - rotation axis, x (axis=0), y (axis=1) or z (axis=2)
+        :param axis: for 3D - rotation axis
+        :param about_point: rotate about a point
         """
+
+        def rotation_matrix(
+                angle: float,
+                axis: np.ndarray,
+        ) -> np.ndarray:
+            """
+            Rotation in R^3 about a specified axis of rotation.
+            """
+            rot_mat = Rotation.from_rotvec(
+                angle * np.array(axis)/np.linalg.norm(np.array(axis))
+            ).as_matrix()
+            return rot_mat
+
         # define basic rotation matrix
         rot_2d = np.array([[np.cos(angle), -np.sin(angle)],
                            [np.sin(angle), np.cos(angle)]])
+
+        if about_point is not None:
+            self._vertices -= about_point
+
         if self.dim == 2:
             self._vertices = self._vertices @ rot_2d.T  # transposed because we got row vectors not col vecs
         elif self.dim == 3:  # 3d uses the 2D matrix in different columns
-            rotation_matrix = np.eye(3)
-
-            if axis == 0:
-                rotation_matrix[1:, 1:] = rot_2d
-            elif axis == 1:
-                rotation_matrix[2::-2, 2::-2] = rot_2d
-            elif axis == 2:
-                rotation_matrix[:-1, :-1] = rot_2d
-            else:
-                raise InvalidRequestException('In 3D parameter \'axis\' must be 0, 1 or 2')
-            self._vertices = self._vertices @ rotation_matrix.T  # transposed because we got row vectors not col vecs
+            rot_matrix = rotation_matrix(angle, axis)
+            self._vertices = np.dot(self._vertices, rot_matrix.T)  # transposed because we got row vectors not col vecs
         else:
             raise NotImplementedError("No implementation for n-Dimensional vector rotation")
+
+        if about_point is not None:
+            self._vertices += about_point
 
     def snap_to_grid(
             self, grid_sizes: Tuple[float, ...], threshold: Tuple[float, ...], steps: int = 1,
