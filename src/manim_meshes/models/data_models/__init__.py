@@ -1,3 +1,3 @@
 """
-classes for underlying mesh structure
+classes for the underlying mesh structure
 """

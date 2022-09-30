@@ -2,10 +2,12 @@
 functions to check delaunay criterion
 """
 # python imports
+from typing import List
 import numpy as np
 # third-party imports
 import manim as m
 # local imports
+
 from manim_meshes.models.manim_models.triangle_mesh import TriangleManim2DMesh
 
 
@@ -29,7 +31,7 @@ def get_triangle_circum_circle_params(
     return center, radius
 
 
-def get_circum_circle(triangle_mesh: TriangleManim2DMesh, face_idx: int, **kwargs):
+def get_circum_circle(triangle_mesh: TriangleManim2DMesh, face_idx: int, **kwargs) -> m.Circle:
     """ create a circum-circle around face with given idx, returns manim Circle object
 
         :param triangle_mesh: the triangle 2D mesh
@@ -46,13 +48,14 @@ def get_circum_circle(triangle_mesh: TriangleManim2DMesh, face_idx: int, **kwarg
     return circ
 
 
-def get_point_indices_violating_delaunay(triangle_mesh: TriangleManim2DMesh, face_id: int):
+def get_point_indices_violating_delaunay(triangle_mesh: TriangleManim2DMesh, face_id: int) -> List[int]:
     """given a triangle by id, get all indices of points violating delaunay criterion"""
-    indices = []
+    indices: List[int] = []
     face = triangle_mesh.mesh.faces[face_id]
     center, radius = get_triangle_circum_circle_params(*[triangle_mesh.mesh.get_3d_vertices()[i] for i in face])
 
-    # TODO: [improve to be faster] don't loop all vertices, only loop ones that are "close"
+    # TODO: [improve to be faster] don't loop all vertices, only loop ones that are "close", how?
+    #  should be possible to do using numpy functions, should be faster and more readable
     for idx, point in enumerate(triangle_mesh.mesh.get_3d_vertices()):
         if idx not in face:
             distance = np.linalg.norm(center - point)
@@ -61,11 +64,8 @@ def get_point_indices_violating_delaunay(triangle_mesh: TriangleManim2DMesh, fac
     return indices
 
 
-def is_point_violating_delaunay(triangle_mesh: TriangleManim2DMesh, vertex_idx: int, face_idx):
-    """
-        returns True if the vertex with index vertex_idx is violating the delaunay criterion
-        w.r.t. the provided face (face_idx).
-    """
+def is_point_violating_delaunay(triangle_mesh: TriangleManim2DMesh, vertex_idx: int, face_idx) -> bool:
+    """returns whether the vertex with index vertex_idx is violating the delaunay criterion w.r.t. the provided face"""
     point = triangle_mesh.mesh.get_3d_vertices()[vertex_idx]
     face = triangle_mesh.mesh.faces[face_idx]
     center, radius = get_triangle_circum_circle_params(*[triangle_mesh.mesh.get_3d_vertices()[i] for i in face])
