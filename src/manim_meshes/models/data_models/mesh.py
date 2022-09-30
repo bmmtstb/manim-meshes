@@ -1,8 +1,8 @@
 """
 Mesh structure
 """
-from copy import deepcopy
 # python imports
+from copy import deepcopy
 # third-party imports
 from typing import List, Set, Tuple, Union
 import numpy as np
@@ -34,6 +34,7 @@ class Mesh:
         :type faces: 2D Array-like or None, can e.g. be list of different sized np.ndarray
         :param parts: list of face ids that form a 3D object as list
         :type parts: 2D Array-like or None, can e.g. be list of different sized np.ndarray
+                     can not be != None if faces is None
         :param dangling: whether to check and warn regularly for dangling nodes and faces
         :type dangling: bool
         """
@@ -62,7 +63,7 @@ class Mesh:
         self._edges = self.extract_edges()
         self.test_for_dangling = dangling
 
-    def __add__(self, other) -> 'Mesh':
+    def __add__(self, other: 'Mesh') -> 'Mesh':
         if isinstance(other, Mesh):
             self.add_to_mesh(other)
             return self
@@ -114,7 +115,7 @@ class Mesh:
         raise NotImplementedError(f'Not equal is not defined for mesh and {type(other)}')
 
     def __ne__(self, other: 'Mesh') -> bool:
-        """Overrides the default implementation (kind of unnecessary in Python 3)"""
+        """Overrides the default implementation of inequality (kind of unnecessary in Python 3)"""
         if isinstance(other, Mesh):
             return not self.__eq__(other)
         raise NotImplementedError(f'Not equal is not defined for mesh and {type(other)}')
@@ -145,7 +146,7 @@ class Mesh:
         return self._edges
 
     def get_3d_vertices(self) -> Vertices:
-        """Get 3D vertices, for 1D, 2D, 3D meshes, to be able to draw them"""
+        """Get 3D vertices, for 1D, 2D, 3D meshes, to be able to draw them using the manim functions"""
         if self.dim < 3:
             return np.pad(self._vertices, ((0, 0), (0, 3 - self.dim)))
         if self.dim == 3:
@@ -154,11 +155,11 @@ class Mesh:
 
     def get_edge_index(self, edge: Edge) -> int:
         """return index of given edge"""
-        # Fixme, additionally look for inverse edge ?
+        # currently edges are sorted indices and not start->end, therefore check for inverse is not necessary
         return self._edges.index(edge)
 
     def get_vertex_edges(self, vertex_idx: int) -> Edges:
-        """return all edges containing vertex_idx"""
+        """return a list of edges containing vertex_idx"""
         vertex_edges = []
         for edge in self._edges:
             if vertex_idx in edge:
@@ -173,17 +174,16 @@ class Mesh:
         return list(vert_ids)
 
     def convert_vertices_to_3d(self) -> None:
-        """transforms currents mesh vertices to be 3D, works if dim is < 3"""
+        """transforms currents mesh vertices permanently to be 3D, works if dim is < 3"""
         if self.dim < 3:
             self._vertices = np.pad(self._vertices, ((0, 0), (0, 3 - self.dim)))
-            self.dim = 3
         elif self.dim > 3:
             raise InvalidRequestException(f'Can not Broadcast from {self.dim}-D Mesh to 3D Mesh.')
 
     def find_vertex(self, vertex: np.ndarray, start: int = 0) -> List[int]:
         """
         return list of indices where self._vertices == vertex
-        possibility to start loop at different index, will always end at end of list
+        possibility to start loop at a different index, will always end at end of list
         """
         if len(vertex) != self.dim:
             return []
@@ -191,18 +191,24 @@ class Mesh:
                 if np.array_equal(vertex, v)]
 
     def find_face(self, face: np.ndarray, start: int = 0) -> List[int]:
-        """return all indices where face is found in self._faces"""
+        """
+        return all indices where face is found in self._faces
+        possibility to start loop at a different index, will always end at end of list
+        """
         return find_in_vararray(array=self._faces, item=face, start=start)
 
     def find_part(self, part: np.ndarray, start: int = 0) -> List[int]:
-        """return all indices where part is found in self._parts"""
+        """
+        return all indices where part is found in self._parts
+        possibility to start loop at a different index, will always end at end of list
+        """
         # Fixme: are two parts equal even if the faces are randomly sorted, not clockwise?
         #  [1,2,3] ?=? [1,3,2] or is it "rolling" like faces?
         return find_in_vararray(array=self._parts, item=part, start=start)
 
     @dangling_vert_decorator()
     def add_vertices(self, new_vertices: Vertices) -> None:
-        """add given vertices to current ones"""
+        """add given vertices behind the current ones"""
         if not isinstance(new_vertices, np.ndarray):
             raise InvalidMeshException(f'new_vertices has invalid type {new_vertices}')
         if len(new_vertices.shape) != 2 or new_vertices.shape[1] != self.dim:
@@ -211,7 +217,7 @@ class Mesh:
         self._vertices = np.vstack([self._vertices, new_vertices])
 
     def remove_vertices(self, indices: Union[np.ndarray, List[int]]) -> None:
-        """remove multiple vertices - does not support negative indexing"""
+        """remove (multiple) vertices - does not support negative indexing"""
         if any(len(self._vertices) <= idx or idx < 0 for idx in indices):
             raise MeshIndexException('Vertex index out of range')
         # use indices to update self._faces
@@ -224,7 +230,7 @@ class Mesh:
         self._edges = self.extract_edges()
 
     def update_vertex(self, idx: int, new_vert: Vertex) -> None:
-        """update the position of the vertex at given index - does not support negative indexing"""
+        """update the locations of the vertex at given index - does not support negative indexing"""
         if len(self._vertices) <= idx or idx < 0:
             raise MeshIndexException(f'Vertex index {idx} out of range for vertices of length {len(self._vertices)}')
         if isinstance(new_vert, np.ndarray) and len(new_vert.shape) != 1:
@@ -240,7 +246,7 @@ class Mesh:
 
     @dangling_face_decorator()
     def add_faces(self, new_faces: Faces) -> None:
-        """adds new faces"""
+        """adds new faces behind the current ones"""
         # type-check whole array
         if not is_twice_nested_iterable(new_faces):
             raise InvalidMeshException("new_faces should be twice nested iterable.")
@@ -290,7 +296,7 @@ class Mesh:
 
     @dangling_face_decorator()
     def add_parts(self, new_parts: Parts) -> None:
-        """adds new parts"""
+        """adds new parts behind the current ones"""
         # validate array type
         if not is_twice_nested_iterable(new_parts):
             raise InvalidMeshException('new_parts is not a valid nested iterable')
@@ -335,8 +341,10 @@ class Mesh:
     def add_to_mesh(self, other: 'Mesh') -> None:
         """
         add another mesh to current mesh
+
         To get consistent indices of the new mesh, the indices of other will be shifted by len(self.vertices).
-        Therefore, if you want to use the old indices, either subtract the len or use negative indices to start with.
+        Therefore, if you want to reference the old indices from the new mesh, either subtract the len or use negative
+        indices to start with. e.g. new_mesh index -1 references last index of old_mesh
         """
         # Mesh has to be a correct mesh therefore many checks can be omitted
         # check if vertices have the same dimension
@@ -366,7 +374,7 @@ class Mesh:
     def split_mesh_into_objects(self) -> List['Mesh']:
         """
         given a mesh, return a list of independent meshes that are not interconnected
-        returns meshes with updated indices and references, does not change current mesh
+        returns list of meshes with updated indices and references, does not change current mesh
         """
 
         def get_references_from_ids(ids: Set[int], nested: VarArray) -> Set[int]:
@@ -429,11 +437,11 @@ class Mesh:
         return any(f_idx not in unique for f_idx in range(len(self._faces)))
 
     def scale_mesh(self, scaling: float) -> None:
-        """scales all vertices """
+        """scales all vertices by a factor"""
         self._vertices *= float(scaling)
 
     def translate_mesh(self, translation: np.ndarray) -> None:
-        """translates all vertices by a given vector"""
+        """translates (shift) all vertices by a given vector"""
         if not isinstance(translation, np.ndarray):
             raise InvalidTypeException(f'Translation should be a np.ndarray, but was a {type(translation)} instead')
         if len(translation.shape) != 1 or translation.shape[0] != self.dim:
@@ -450,9 +458,9 @@ class Mesh:
             raise InvalidMeshDimensionsException(name="Translation", expected=self.dim, actual=translation.shape)
         self._vertices[v_id] += translation
 
-    def apply_rotation(self, angle, axis=None) -> None:
+    def apply_rotation(self, angle: float, axis: int = None) -> None:
         """
-        rotates all vertices
+        rotates all vertices around a given axis
         implemented only for 2D and 3D
         2D is equal to rotation around (non-existent) z axis
         3D rotates all vertices around the given axis
@@ -540,7 +548,7 @@ class Mesh:
 
     def remove_duplicate_vertices(self, precision: int = 10) -> None:
         """
-        remove (exact) duplicates in vertices, possibility to change how precise
+        remove (exact) duplicates in vertices, possibility to change how precise exact is
         :param precision: what is considered equal -> default 10 -> 1e-10
         """
         old_vertices = deepcopy(self._vertices)
@@ -561,7 +569,10 @@ class Mesh:
         self._edges = self.extract_edges()
 
     def remove_duplicate_faces(self) -> None:
-        """remove duplicates in faces, indices only have to be in the correct order, not at the exact places"""
+        """
+        remove duplicates in faces
+        indices of vertices only have to be in the correct rolling order, not at the exact places
+        """
         to_delete = []
         for i_face, face in enumerate(self._faces):
             if i_face in to_delete:  # skip indices marked for deletion
@@ -579,7 +590,10 @@ class Mesh:
         self._edges = self.extract_edges()
 
     def remove_duplicate_parts(self) -> None:
-        """remove duplicates in parts, indices only have to be in the correct order, not at the exact places"""
+        """
+        remove duplicates in parts
+        indices of faces only have to be in the correct rolling order, not at the exact places
+        """
         to_delete = []
         for i_part, part in enumerate(self._parts):
             if i_part in to_delete:  # skip indices marked for deletion
@@ -591,15 +605,19 @@ class Mesh:
             # exact duplicates can be removed
             del self._parts[del_p_idx]
 
-    def remove_duplicates(self) -> None:
-        """remove all duplicates in the current mesh"""
-        self.remove_duplicate_vertices()
+    def remove_duplicates(self, precision: int = 10) -> None:
+        """
+        remove all duplicates in the current mesh
+        precision of vertex equality can be changed as described in remove_duplicate_vertices()
+        """
+        self.remove_duplicate_vertices(precision=precision)
         self.remove_duplicate_faces()
         self.remove_duplicate_parts()
 
     def extract_edges(self) -> Edges:
         """returns all edges of the mesh as List of sorted 2-tuples of vertex indices, e.g. [(1,2), (2,3)]"""
         # TODO: possibility to update edges only partly (e.g. by index)
+        # TODO: possibly create a separate edge class to remove overhead from mesh
         edges: Edges = []
         for face in self._faces:
             last_vertex = face[-1]

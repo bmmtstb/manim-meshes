@@ -3,14 +3,11 @@ define a few basic mesh-structures to be used as examples or test
 """
 # python imports
 import pathlib
-from copy import deepcopy
 from typing import List, Tuple
 # third-party imports
 import numpy as np
 import trimesh
 # local imports
-
-
 from manim_meshes.models.data_models.mesh import Mesh
 
 
@@ -67,9 +64,9 @@ def create_pyramid(triangles_only: bool = True) -> Mesh:
             [0, 1, 2, 3, 4],
         ]
     return Mesh(
-        vertices=deepcopy(vertices),
-        faces=deepcopy(faces),
-        parts=deepcopy(parts),
+        vertices=vertices,
+        faces=faces,
+        parts=parts,
     )
 
 
@@ -154,18 +151,18 @@ def create_coplanar_triangles() -> Mesh:
 
 def create_coplanar_points() -> Mesh:
     """
-    create a basic 2D mesh without faces ~> 2D point cloud / set
+    create a basic 2D mesh without faces ~> exemplary 2D point cloud / set
     """
-    vertices = np.array([[ 1.77291731, -2.42097974],
-                         [ 1.72006063,  2.77386102],
+    vertices = np.array([[+1.77291731, -2.42097974],
+                         [+1.72006063,  2.77386102],
                          [-2.47248328, -1.53451374],
-                         [ 0.32320519,  2.34811395],
+                         [+0.32320519,  2.34811395],
                          [-0.83498357,  0.34056556],
-                         [ 0.43649618,  0.79539595],
-                         [-0.2441386 , -2.04571182],
-                         [ 2.83770675,  2.33446802],
-                         [ 1.27516666, -0.08275843],
-                         [ 1.94458474, -2.79598506]]
+                         [+0.43649618,  0.79539595],
+                         [-0.24413860, -2.04571182],
+                         [+2.83770675,  2.33446802],
+                         [+1.27516666, -0.08275843],
+                         [+1.94458474, -2.79598506]]
                         )
     return Mesh(
         vertices=vertices,
@@ -176,6 +173,7 @@ def create_coplanar_points() -> Mesh:
 def create_grid(areas: List[Tuple[float, float, int]]) -> Mesh:
     """
     given min, max and amount per direction create a mesh as a grid
+    currently works for 1D and 2D
     :param areas: list with one tuple per dimension, with every tuple consisting of
                  min, max and point-amount in this direction
     """
@@ -196,14 +194,14 @@ def create_grid(areas: List[Tuple[float, float, int]]) -> Mesh:
             i + (j + 1) * u  # top left
         ]) for j in range(v - 1) for i in range(u - 1)]
         parts = None
-    elif dim == 3:
-        # u, v, w = areas[0][2], areas[1][2], areas[2][2]
-        # faces = [... for k in range(w - 1) for j in range(v - 1) for i in range(u - 1)]
-        # parts = None
-        # TODO fully implement 3D grid
-        raise NotImplementedError("3D grid generation is not yet implemented")
+    # elif dim == 3:
+    #     # u, v, w = areas[0][2], areas[1][2], areas[2][2]
+    #     # faces = [... for k in range(w - 1) for j in range(v - 1) for i in range(u - 1)]
+    #     # parts = None
+    #     # TODO fully implement 3D grid
+    #     raise NotImplementedError("3D grid generation is not yet implemented")
     else:
-        raise ValueError("Only 1D, 2D and 3D meshes implemented.")
+        raise NotImplementedError("Only 1D, 2D meshes implemented.")
     return Mesh(
         vertices=vertices,
         faces=faces,
@@ -214,17 +212,21 @@ def create_grid(areas: List[Tuple[float, float, int]]) -> Mesh:
 def create_model(filepath: str = "", name: str = "") -> Mesh:
     """
     load a model from file in /data/models/
+    be careful, the larger meshes can not be displayed with the BasicMesh class (>32GB RAM, >30 min)
     """
     if len(name) == 0 and len(filepath) == 0:
         raise FileNotFoundError("Either provide a name or a filepath.")
     path_to_models = "data/models/"
+    # load the ply files
     if name in ["armadillo", "suzanne"]:
         filepath = pathlib.Path(__file__).parent.parent.parent.joinpath(
             path_to_models, name + ".ply")
+    # load the stl files
     elif name in ["Handle", "Land", "Octocat-v1", "squirrel", "tail_topper"]:
         filepath = pathlib.Path(__file__).parent.parent.parent.joinpath(
             path_to_models, name + ".stl")
     elif name != "":
         raise FileNotFoundError(f'{name} is not a valid object name.')
+    # use trimesh to load the files, no parts?
     tmesh = trimesh.load(filepath, force="mesh")
-    return Mesh(tmesh.vertices, tmesh.faces)
+    return Mesh(vertices=tmesh.vertices, faces=tmesh.faces)

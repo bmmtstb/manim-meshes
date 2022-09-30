@@ -6,7 +6,7 @@ additionally there is the mesh for only triangles in triangle_mesh.py
 """
 # python imports
 import copy
-from typing import Tuple
+from typing import List, Tuple
 # third-party imports
 import manim as m
 from manim.mobject.opengl.opengl_compatibility import ConvertToOpenGL
@@ -39,6 +39,7 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
         verts_color: color of the vertices
         pre_function_handle_to_anchor_scale_factor: ?
     """
+    # pylint:disable=abstract-method
 
     def __init__(self, mesh: Mesh, *args, **kwargs) -> None:
         """
@@ -59,8 +60,8 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
 
         self.setup()
 
-    def setup(self):
-        """set all the necessary mesh parameters"""
+    def setup(self) -> None:
+        """create all the necessary manim objects for the renderer"""
         if self.display_faces:
             self.setup_faces()
         if self.display_edges:
@@ -71,19 +72,27 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
         self.add(self.faces, self.edges, self.vertices)
 
     def setup_vertices(self) -> m.Group:
-        """set the vertices as 3D manim objects"""
+        """
+        set the vertices as 3D manim objects (Spheres)
+        :returns: returns the manim vertices objects as Group
+        """
+        # clear previous work if wanted
         if self.clear_vertices:
             self.vertices = m.Group()
-
+        # create and add all the points into self.vertices
         for v in self.mesh.get_3d_vertices():
             self.vertices.add(m.Sphere(v, radius=self.verts_size, color=self.verts_color))
         return self.vertices
 
     def setup_edges(self) -> m.VGroup:
-        """set the edges as manim objects"""
+        """
+        set the edges as manim objects
+        :returns: returns the manim edge objects as VGroup
+        """
+        # clear previous work if wanted
         if self.clear_edges:
             self.edges.clear_points()
-
+        # create and add all the edges into self.edges
         vertices = self.mesh.get_3d_vertices()
         for edge_verts in self.mesh.edges:
             vert_1 = vertices[edge_verts[0]]
@@ -91,7 +100,7 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
             edge = m.ThreeDVMobject()
             edge.set_points_as_corners([vert_1, vert_2])
             self.edges.add(edge)
-        # for all edges at once
+        # color, scale, ... all edges at once
         self.edges.set_fill(
             color=self.edges_color,
             opacity=1.0,
@@ -107,10 +116,12 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
         """
         set the current mesh up as manim objects
         should work for any sized face, not just triangles
+        :returns: returns the manim face objects as VGroup
         """
+        # clear previous work if wanted
         if self.clear_faces:
             self.faces.clear_points()
-
+        # create and add all the faces into self.faces
         verts_3d = self.mesh.get_3d_vertices()
         for face_indices in self.mesh.faces:
             face_points = [verts_3d[i] for i in face_indices]
@@ -119,6 +130,7 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
             new_face = m.ThreeDVMobject()
             new_face.set_points_as_corners(face_points)
             self.faces.add(new_face)
+        # color, scale, ... all faces at once
         self.faces.set_fill(
             color=self.faces_color,
             opacity=self.faces_opacity
@@ -130,9 +142,12 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
         )
         return self.faces
 
-    def add_face(self, face: np.ndarray, color=None):
-        """ Adds the given face to the mesh, returns the resulting manim objects for the face and edges.
-            If color is None, self.faces_color is used"""
+    def add_face(self, face: np.ndarray, color=None) -> (m.VGroup, m.VGroup):
+        """
+        Adds the given face to the mesh
+        if color is None, self.faces_color is used
+        :returns: the resulting manim objects for the face and edges
+        """
         if color is None:
             color = self.faces_color
         old_edges = self.mesh.edges
@@ -176,7 +191,10 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
         return new_face, new_edges
 
     def remove_face(self, face_idx):
-        """removes face by face index, returns the removed manim objects for the face and edges"""
+        """
+        removes face by face index
+        :returns: the removed manim objects for the face and edges
+        """
         old_edges = self.mesh.edges
         self.mesh.remove_faces([face_idx])
         removed_face = self.faces.submobjects[face_idx]
@@ -190,15 +208,15 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
                 self.edges.remove(removed_edge)
         return removed_face, removed_edges
 
-    def get_vertex(self, vertex_idx) -> m.mobject:
+    def get_vertex(self, vertex_idx: int) -> m.mobject:
         """get the vertex with the given id"""
         return self.vertices.submobjects[vertex_idx]
 
-    def get_face(self, face_idx) -> m.mobject:
+    def get_face(self, face_idx: int) -> m.mobject:
         """get the face with the given id"""
         return self.faces.submobjects[face_idx]
 
-    def get_edge(self, edge_idx) -> m.mobject:
+    def get_edge(self, edge_idx: int) -> m.mobject:
         """get the edge with the given id"""
         return self.edges.submobjects[edge_idx]
 
@@ -208,11 +226,7 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
         # fade out current ones, fade in all after add
         scene.play(m.FadeOut(self.vertices), m.FadeIn(self.setup_vertices()))
 
-    def align_points_with_larger(self, larger_mobject):
-        """abstract from super - please the linter"""
-        raise NotImplementedError
-
-    def _update_vertex(self, vertex_idx: int, pos: np.ndarray):
+    def _update_vertex(self, vertex_idx: int, pos: np.ndarray) -> None:
         """
         change the position of a vertex to pos
         if vertices are displayed, make sure to change the corresponding vertex object
@@ -238,7 +252,7 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
             for edge in self.mesh.get_vertex_edges(vertex_idx):
                 self._update_edge(edge)
 
-    def _update_edge(self, edge: Tuple[int, int]):
+    def _update_edge(self, edge: Tuple[int, int]) -> None:
         """
         TODO
         """
@@ -249,8 +263,8 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
 
     def shift(self, *vectors: np.ndarray) -> None:
         """
-        override shift so self.mesh gets updated correctly
-        accepts a multiple vectors of the same size and just adds them up
+        override manim internal shift so self.mesh gets updated correctly
+        accepts multiple vectors of the same size and just adds them up for the resulting shift
         """
         total_shift = np.sum(vectors, axis=0)
         # update vertices of self.mesh
@@ -258,7 +272,7 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
         # shift manim vertices, edges and faces
         super().shift(total_shift)
 
-    def shift_vertex(self, scene: m.Scene, vertex_idx: int, shift: np.ndarray, **kwargs):
+    def shift_vertex(self, scene: m.Scene, vertex_idx: int, shift: np.ndarray, **kwargs) -> None:
         """
         shift vertex by id and update faces
         expect shift to have the same dimensions as mesh.dim
@@ -269,7 +283,10 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
         tracker = m.ValueTracker(0)
         tracker.add_updater(
             # make sure even with multiple calls lambda has the correct values
-            lambda mo, go=start, move=shift: self._update_vertex(vertex_idx, go + tracker.get_value() * move, **kwargs))
+            lambda mo, go=start, move=shift: self._update_vertex(
+                vertex_idx, go + tracker.get_value() * move,
+                **remove_keys_from_dict(kwargs, ["shift_vertex_runtime"]))
+        )
         scene.add(tracker)
         scene.play(
             tracker.animate(**kwargs).set_value(1),
@@ -277,7 +294,7 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
         )
         scene.remove(tracker)
 
-    def shift_vertices(self, scene: m.Scene, shift: np.ndarray, **kwargs):
+    def shift_vertices(self, scene: m.Scene, shift: np.ndarray, **kwargs) -> None:
         """
         shift multiple vertices from self.mesh.vertices by shift using the manim tracker and updater
         make sure to update all points simultaneously, not one after the other
@@ -301,15 +318,15 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
         )
         scene.remove(tracker)
 
-    def move_vertices_to(self, scene: m.Scene, new_positions: np.ndarray, **kwargs):
+    def move_vertices_to(self, scene: m.Scene, new_positions: np.ndarray, **kwargs) -> None:
         """visually move all vertices to new positions and update faces. In the end update self.mesh as well"""
         if len(new_positions) != len(self.mesh.vertices):
             raise InvalidShapeException("new_positions", len(new_positions), len(self.mesh.vertices))
         shift: np.ndarray = new_positions - self.mesh.vertices
         self.shift_vertices(scene, shift=shift, **kwargs)
 
-    def move_vertex_to(self, scene: m.Scene, vertex_idx: int, pos: np.ndarray, **kwargs):
-        """visually move vertex to pos and update faces"""
+    def move_vertex_to(self, scene: m.Scene, vertex_idx: int, pos: np.ndarray, **kwargs) -> None:
+        """visually move vertex to position and update faces"""
         # expect pos and curr_pos / mesh.dim to have the same dimensions
         if self.mesh.dim != len(pos):
             raise InvalidMeshDimensionsException(len(pos), self.mesh.dim, "pos")
@@ -328,7 +345,7 @@ class ManimMesh(m.Group, metaclass=ConvertToOpenGL):
         self.move_vertices_to(scene, new_verts, **kwargs)
 
 
-class Manim2DMesh(ManimMesh):
+class Manim2DMesh(ManimMesh, metaclass=ConvertToOpenGL):
     """
     "2D" mesh implementation
     printing Vertices in Manim is currently not supported for 2D vertices. Therefore, while printing the appropriate
@@ -336,10 +353,12 @@ class Manim2DMesh(ManimMesh):
     support 2D vertices or 3D vertices with z-value == 0 on initialization
 
     This mesh is mainly for Educational purposes and has a few functions we needed for drawing basic
-    mesh functionalities. It is performant up to a point and should not be used for larger meshes.
+    mesh functionalities. It is performant up to a point and should not be used for large meshes.
     """
+    # pylint:disable=abstract-method
 
     def __init__(self, mesh: Mesh, *args, **kwargs) -> None:
+        # validate if we have a useful 2D mesh
         if mesh.dim == 3:
             if np.sum(np.abs(mesh.vertices[:, 2] != 0)):
                 raise InvalidMeshException("Mesh has z values != 0 and therefore is not 2D.")
@@ -355,17 +374,21 @@ class Manim2DMesh(ManimMesh):
         )
 
     def setup_vertices(self) -> m.Group:
-        """set the vertices as 3D manim objects"""
+        """
+        set the vertices as 3D manim objects
+        :returns: returns the manim vertices objects as Group
+        """
+        # clear previous work if wanted
         if self.clear_vertices:
             self.vertices = m.Group()
-
+        # create and add all the points into self.vertices
         for v in self.mesh.get_3d_vertices():
             self.vertices.add(m.Dot(v, radius=self.verts_size, color=self.verts_color))
         return self.vertices
 
-    def get_dots(self, indices):
+    def get_dots(self, indices) -> List[m.Dot]:
         """
-        returns manim Dot objects for each vertex with index in indices
+        :returns: manim Dot objects for each vertex with index in indices
         """
         dots = []
         vertices = self.mesh.get_3d_vertices()
@@ -374,7 +397,3 @@ class Manim2DMesh(ManimMesh):
             dot.add_updater(lambda mo, mesh=self.mesh, index=idx: mo.move_to(mesh.get_3d_vertices()[index]))
             dots.append(dot)
         return dots
-
-    def align_points_with_larger(self, larger_mobject):
-        """abstract from super - please the linter"""
-        raise NotImplementedError

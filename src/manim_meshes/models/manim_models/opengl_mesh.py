@@ -7,7 +7,6 @@ faster meshes (work in progress)
 
 import numpy as np
 import manim as m
-import moderngl
 from manim.mobject.opengl.opengl_mobject import OpenGLMobject
 
 from manim_meshes.helpers import remove_keys_from_dict
@@ -23,6 +22,7 @@ class FastManimMesh(OpenGLMobject):
         NOTE: requires to manipulate the manim lib
         -> copy directory 'mesh' (under manim_meshes/shaders/) to manim/renderer/shaders/
     """
+
     shader_dtype = [
         ("point", np.float32, (3,)),
         ("color", np.float32, (4,)),
@@ -45,7 +45,7 @@ class FastManimMesh(OpenGLMobject):
         )
         self.triangle_indices = np.hstack(mesh.faces)
 
-    def init_points(self):
+    def init_points(self) -> None:
         self.set_points(self.mesh.vertices)
 
     def get_triangle_indices(self):

@@ -1,5 +1,5 @@
 """
-some basic helpers
+some basic helpers for our models
 """
 # python imports
 from typing import Any, Dict, List, Tuple, Union
@@ -11,7 +11,9 @@ from manim_meshes.types import Edges, VarArray
 
 def is_in_vararray(array: VarArray, item: np.ndarray, rolling: bool = True) -> bool:
     """
-    return whether item is in array, possibility to check for rolling
+    is item in VarArray
+    possibility to check for rolling equality -> [1,2,3] ?= [2,3,1] != [1,3,2]
+    :returns: return whether item is in VarArray
     """
     if rolling:
         alternatives = [np.roll(item, i) for i in range(len(item))]
@@ -22,8 +24,10 @@ def is_in_vararray(array: VarArray, item: np.ndarray, rolling: bool = True) -> b
 
 def find_in_vararray(array: VarArray, item: np.ndarray, rolling: bool = True, start: int = 0) -> List[int]:
     """
-    return list of indices where array == item or a clockwise rolled / shifted alternative
-    possibility to start loop at different index
+    find indices of item in VarArray
+    possibility to start loop at different index to e.g. not find self
+    possibility to check for rolling equality -> [1,2,3] ?= [2,3,1] != [1,3,2]
+    :returns: returns list of indices where array == item
     """
     if rolling:
         alternatives = [np.roll(item, i) for i in range(len(item))]
@@ -35,19 +39,19 @@ def find_in_vararray(array: VarArray, item: np.ndarray, rolling: bool = True, st
 
 def is_vararray_equal(array1: VarArray, array2: VarArray, rolling: bool = True) -> bool:
     """
-    check whether l1 contains l2 and l2 contains l1 resulting in whether they are equal
+    check whether arr1 contains arr2 and arr2 contains arr1 resulting in whether they are equal
     possibility to additionally check with rolling
     """
-    return all(is_in_vararray(array=array1, item=value2, rolling=rolling) for value2 in array2) and\
+    return all(is_in_vararray(array=array1, item=value2, rolling=rolling) for value2 in array2) and \
            all(is_in_vararray(array=array2, item=value1, rolling=rolling) for value1 in array1)
 
 
 def is_twice_nested_iterable(obj: Any, min_lens: Tuple[int, int] = (1, 3)) -> bool:
     """
-    check whether obj is Array-Like exactly twice
+    check whether obj is Array-Like / iterable exactly twice
     -> e.g. 2-dim np.ndarray, List[List[int|float]] or similar
     :params obj: Array-Like object to be checked
-    :params lens: min lengths that the respective layer has to have, default 1 object at least 2 sub-objects
+    :params lens: min lengths that the respective layer has to have, default 1 object at least 3 sub-objects
     """
     # easy case np.ndarray with correct specs
     if isinstance(obj, np.ndarray) and len(obj.shape) == 2:
@@ -110,7 +114,10 @@ def fix_references(original: VarArray, indices: Union[np.ndarray, List[int]]) ->
 
 
 def remove_keys_from_dict(d: dict, keys: List[str]) -> Dict[str, Any]:
-    """given a dictionary remove all keys if they are present, does *not* throw KeyError"""
+    """
+    given a dictionary remove all keys if they are present, does *not* throw KeyError
+    :returns: returns modified dict
+    """
     for key in keys:
         try:
             del d[key]

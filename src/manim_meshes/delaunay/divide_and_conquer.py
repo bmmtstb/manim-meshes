@@ -3,17 +3,17 @@ functions to create delaunay meshes by divide and conquer
 """
 # python imports
 from typing import List
-import numpy as np
 # third-party imports
-from scipy.spatial import ConvexHull  # pylint: disable=no-name-in-module
 import manim as m
+import numpy as np
+# TODO will most likely be moved in the future
+from scipy.spatial import ConvexHull  # pylint: disable=no-name-in-module
 # local imports
-
 from manim_meshes.delaunay.delaunay_criterion import get_triangle_circum_circle_params
 from manim_meshes.models.manim_models.triangle_mesh import TriangleManim2DMesh
 
 
-def get_clockwise_angle(a, b):
+def get_clockwise_angle(a, b) -> float:
     """ Returns clockwise angle between 2D vectors a and b """
     dot = a[0] * b[0] + a[1] * b[1]  # proportional to cos
     det = a[0] * b[1] - b[0] * a[1]  # proportional to sin
@@ -23,7 +23,7 @@ def get_clockwise_angle(a, b):
     return angle
 
 
-def get_counter_clockwise_angle(a, b):
+def get_counter_clockwise_angle(a, b) -> float:
     """ Returns counter-clockwise angle between 2D vectors a and b """
     dot = a[0] * b[0] + a[1] * b[1]  # proportional to cos
     det = a[0] * b[1] - b[0] * a[1]  # proportional to sin
@@ -80,7 +80,7 @@ class DivideAndConquer:
         # return indices of resulting sets
         return sorted_vert_indices[:split_index], sorted_vert_indices[split_index:], split_line
 
-    def triangulate_leq_3(self, vert_indices: List):
+    def triangulate_leq_3(self, vert_indices: List) -> None:
         """ Triangulation of a vertices set given by vert_indices with no more than 3 points
             (len(vertices) must be lower-equal 3) ~> draws new triangle or segment if possible """
 
@@ -97,7 +97,7 @@ class DivideAndConquer:
             # update hack (corrects drawing order)
             self.scene.renderer.update_frame(self.scene)
 
-    def _right_candidate(self, base_lr, rr_edges, speed = 1.):
+    def _right_candidate(self, base_lr, rr_edges, speed: float = 1.0):
         """ Find and return right potential candidate (or None if not found)
         to build triangle for merging, deletes RR edges if necessary """
         endpoints = [edge[0] if base_lr[1] != edge[0] else edge[1] for edge in rr_edges if base_lr[1] in edge]
@@ -125,11 +125,11 @@ class DivideAndConquer:
                         break
                 face, edges = self.triangle_mesh.remove_face(face_idx_to_delete)
                 rr_edges.remove(tuple(sorted((base_lr[1], potential_candidate))))
-                self.scene.play(m.FadeOut(face, *edges, run_time=1.* speed))
+                self.scene.play(m.FadeOut(face, *edges, run_time=1. * speed))
                 self.scene.wait(0.3 * speed)
         return None
 
-    def _left_candidate(self, base_lr, ll_edges, speed = 1.):
+    def _left_candidate(self, base_lr, ll_edges, speed: float = 1.0):
         """ Find and return left potential candidate (or None if not found)
         to build triangle for merging, deletes LL edges if necessary """
         endpoints = [edge[0] if base_lr[0] != edge[0] else edge[1] for edge in ll_edges if base_lr[0] in edge]
@@ -156,11 +156,11 @@ class DivideAndConquer:
                         break
                 face, edges = self.triangle_mesh.remove_face(face_idx_to_delete)
                 ll_edges.remove(tuple(sorted((base_lr[0], potential_candidate))))
-                self.scene.play(m.FadeOut(face, *edges, run_time=0.5* speed))
+                self.scene.play(m.FadeOut(face, *edges, run_time=0.5 * speed))
                 self.scene.wait(0.3 * speed)
         return None
 
-    def merge_sets(self, indices_left: List, indices_right: List, split_line: m.DashedLine, speed=1.):
+    def merge_sets(self, indices_left: List, indices_right: List, split_line: m.DashedLine, speed: float = 1.0):
         """ Merges two delaunay triangulated vertex sets, given by indices (indices_left, indices_right)
         to combined delaunay triangulation, returns vertex indices of combined set.
 
@@ -213,15 +213,15 @@ class DivideAndConquer:
             given by indices (indices_a, indices_b)"""
 
         def next_on_left_hull(cur_idx, left_hull):
-            for i in range(len(left_hull)-1, -1, -1):
+            for i in range(len(left_hull) - 1, -1, -1):
                 if left_hull[i] == cur_idx:
-                    return left_hull[(i-1) % len(left_hull)]
+                    return left_hull[(i - 1) % len(left_hull)]
             return None
 
         def next_on_right_hull(cur_idx, right_hull):
             for i in range(0, len(right_hull), 1):
                 if right_hull[i] == cur_idx:
-                    return right_hull[(i+1) % len(right_hull)]
+                    return right_hull[(i + 1) % len(right_hull)]
             return None
 
         def on_right(tangent, point):
@@ -255,8 +255,8 @@ class DivideAndConquer:
 
         return indices_left[left], indices_right[right]
 
-    def divide_and_conquer_recursive(self, speed=1.):
-        """ Runs complete (recurive) algorithm to create a delaunay triangulation by divide and conquer.
+    def divide_and_conquer_recursive(self, speed: float = 1.0):
+        """ Runs complete (recursive) algorithm to create a delaunay triangulation by divide and conquer.
          Expects self.triangle_mesh to be without defined faces / triangles
 
         speed: animation speed, lower = faster """
@@ -267,7 +267,7 @@ class DivideAndConquer:
         vert_indices = list(range(len(self.triangle_mesh.mesh.vertices)))
         self._divide_and_conquer_recursive(vert_indices, speed)
 
-    def _divide_and_conquer_recursive(self, vert_indices: List, speed=1.):
+    def _divide_and_conquer_recursive(self, vert_indices: List, speed: float = 1.0):
         """ Recursive internal implementation used by method divide_and_conquer_recursive()
 
             speed: animation speed, lower = faster """

@@ -23,8 +23,8 @@ def dangling_vert_decorator():
 
 def dangling_face_decorator():
     """
-    decorator for mesh to check for dangling nodes at the end of the decorated function
-    check whether there are any dangling nodes - vertices that are not part of a face
+    decorator for mesh to check for dangling faces at the end of the decorated function
+    check whether there are any dangling faces - faces that are not part of a part
     """
     def decorator_func(func):
         """the decorated function"""

@@ -3,8 +3,8 @@ Parameters can get out of hand for the meshes, store defaults and casting in sep
 """
 # python imports
 from typing import Any
-from colour import Color
 # third-party imports
+from colour import Color
 import manim as m
 import moderngl
 # local imports
@@ -12,6 +12,7 @@ from manim_meshes.exceptions import BadParameterException
 from manim_meshes.types import DefaultParameters, Parameters
 
 # map from param name to type and default value
+
 # basic_manim_3d_mesh_default_params
 BM3DM: DefaultParameters = {
     "display_vertices":                           (bool, False),
@@ -78,4 +79,5 @@ def get_param_or_default(
     # get value from default parameters
     if value in default:
         return default[value][1]
+    # should this be raised?
     raise BadParameterException(f'Value {value} is not in params and not in default params.')
