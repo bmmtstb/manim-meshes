@@ -42,7 +42,7 @@ Multiple other examples can be found in the `tests/test_scene.py` file.
 [![see the PyramidScene for basic manim mesh uses](docs/images/PyramidScene.png)](https://user-images.githubusercontent.com/1500595/193240449-5978f46f-68b0-4d08-bf37-4ff1fea54f28.mp4)
 
 The general procedure is like in manim, create a class with a construct method. Then create and add the instance of the renderable mesh you like to use. This mesh will receive the real node-face mesh and manipulate it. 
-You can shift (translate), rotate, scale the whole mesh or single vertices. Additionally most of the manim functions are available as coloring single objects.
+You can shift (translate) and scale the whole mesh or single vertices. Additionally most of the manim functions are available as coloring single objects. Somehow Rotate does not work, because it only updates the copy of the rotation and therefore our own mesh class does not get updated.
 
 ### Parameters
 As parameters got a little overwhelming, there are a few default parameters for the meshes in `params.py`. You just need to pass kwargs that you want to change while creating the mesh.
