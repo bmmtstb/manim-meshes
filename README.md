@@ -23,13 +23,13 @@ Manim-meshes has been published to [pypi](https://pypi.org/project/manim-meshes/
 
 While executing a commandline manim script, make sure to set the `--renderer=opengl` flag, the Cairo renderer will ins most cases not work.
 
-The basic `ManimMesh` and `Manim2DMesh` from `manim_models/basic_mesh` can currently only be used for smaller meshes (<1k Nodes), because it is dependent on the manim internal shaders which are not really implemented optimally. This type of mesh can be easily used for 2D and smaller 3D explanatory videos, not for high resolution rendering.
+The basic `ManimMesh` and `Manim2DMesh` from `manim_models/basic_mesh` can currently only be used for smaller meshes (<1k Nodes), because it is dependent on the manim internal shaders which are not really implemented optimally. This type of mesh can be easily used for 2D and smaller 3D explanatory videos, not for high resolution rendering. Both these classes should give manim-functionalities like shift, rotate and scale. But due to the sheer amount of MObject functions we can not implement all of them, so make sure the renderer has overwritten the method you are trying to use if something does not look right.
 
-The more advanced `FastManimMesh` from `opengl_mesh` uses a custom shader which needs to be inserted into the base manim implementation at this time! But therefore it can render enormous meshes fast.
+The `TriangleManim2DMesh` from `triangle_mesh` implements further functions that are only reasonable for two-dimensional triangle meshes. (e.g. Delaunay) This was designed for educational purposes.
 
-The `TriangleManim2DMesh` from `triangle_mesh` implements further functions that are only reasonable for triangle meshes. (e.g. Delaunay) This is also mainly for educational purposes.
+The more advanced `FastManimMesh` from `opengl_mesh` uses a custom shader which needs to be inserted into the base manim implementation at this time! But therefore it can render enormous meshes fast. Sadly rendering is kind of everything this renderer is capable of at the moment.
 
-All these Mesh-Renders are based on the `Mesh`-Class, in `data_models`, which should implement a multitude of basic Mesh-functions. If you have the feeling something is missing, feel free to add it.
+All these Mesh-Renders reference a mesh based on the `Mesh`-Class, in `data_models`, which should implement a multitude of basic Mesh-functions.
 
 ## Example
 
