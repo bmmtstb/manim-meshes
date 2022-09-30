@@ -56,7 +56,10 @@ class DivideAndConquer:
             Returns indices of resulting sets and DashedLine manim object
             ~> tuple (indices_left: List, indices_right: List, line: DashedLine)
 
-            speed: animation speed, lower = faster """
+            :param vert_indices: indices of vertices in set
+            :param dash_length: dash length of dashed line between both sets
+            :param line_width: line width of dashed line between both sets
+            :param speed: animation speed, lower = faster """
 
         verts_3d = self.triangle_mesh.mesh.get_3d_vertices()
         vertices = verts_3d[vert_indices]
@@ -71,8 +74,7 @@ class DivideAndConquer:
         x_mid = (sorted_verts[split_index - 1][0] + sorted_verts[split_index][0]) / 2.
         y_max = np.max(verts_3d[:, 1])
         y_min = np.min(verts_3d[:, 1])
-        # z > 0 -> always draw in front
-        split_line = m.DashedLine(start=np.array([x_mid, y_min, 0.01]), end=np.array([x_mid, y_max, 0.01]),
+        split_line = m.DashedLine(start=np.array([x_mid, y_min, 0.]), end=np.array([x_mid, y_max, 0.]),
                                   stroke_width=line_width, dash_length=dash_length)
         self.scene.play(m.Create(split_line, run_time=1. * speed))
         self.scene.wait(0.3 * speed)
@@ -82,22 +84,22 @@ class DivideAndConquer:
 
     def triangulate_leq_3(self, vert_indices: List):
         """ Triangulation of a vertices set given by vert_indices with no more than 3 points
-            (len(vertices) must be lower-equal 3) ~> draws new triangle or segment if possible """
+            (len(vertices) must be lower-equal 3) ~> draws new triangle or segment if possible
+
+            :param vert_indices: indices of vertices in set
+        """
 
         if len(vert_indices) > 3:
             raise ValueError("len(vert_indices) must be lower-equal 3")
         if len(vert_indices) > 1:
-            new_objects = []
             if len(vert_indices) == 2:
                 vert_indices = vert_indices.copy()
                 vert_indices.append(vert_indices[0])
-            new_face, new_edges = self.triangle_mesh.add_face(np.array(vert_indices))
-            new_objects.append(new_face)
-            new_objects.extend(new_edges)
-            # update hack (corrects drawing order)
+            _, _ = self.triangle_mesh.add_face(np.array(vert_indices))
+            # update hack
             self.scene.renderer.update_frame(self.scene)
 
-    def _right_candidate(self, base_lr, rr_edges, speed = 1.):
+    def _right_candidate(self, base_lr, rr_edges, speed=1.):
         """ Find and return right potential candidate (or None if not found)
         to build triangle for merging, deletes RR edges if necessary """
         endpoints = [edge[0] if base_lr[1] != edge[0] else edge[1] for edge in rr_edges if base_lr[1] in edge]
@@ -129,7 +131,7 @@ class DivideAndConquer:
                 self.scene.wait(0.3 * speed)
         return None
 
-    def _left_candidate(self, base_lr, ll_edges, speed = 1.):
+    def _left_candidate(self, base_lr, ll_edges, speed=1.):
         """ Find and return left potential candidate (or None if not found)
         to build triangle for merging, deletes LL edges if necessary """
         endpoints = [edge[0] if base_lr[0] != edge[0] else edge[1] for edge in ll_edges if base_lr[0] in edge]
@@ -164,7 +166,10 @@ class DivideAndConquer:
         """ Merges two delaunay triangulated vertex sets, given by indices (indices_left, indices_right)
         to combined delaunay triangulation, returns vertex indices of combined set.
 
-        speed: animation speed, lower = faster """
+        :param indices_left: indices of the vertices in the left set
+        :param indices_right: indices of the vertices in the right set
+        :param split_line: manim DashedLine object between sets to remove
+        :param speed: animation speed, lower = faster """
 
         # remove split line
         self.scene.play(m.Uncreate(split_line), run_time=1. * speed)
@@ -210,18 +215,16 @@ class DivideAndConquer:
 
     def _find_base_lr(self, indices_left: List, indices_right: List):
         """ Finds and returns the base_lr (l,r) , where l and r are vertex indices, between two vertex sets
-            given by indices (indices_a, indices_b)"""
+        given by indices (indices_a, indices_b)
 
-        def next_on_left_hull(cur_idx, left_hull):
-            for i in range(len(left_hull)-1, -1, -1):
-                if left_hull[i] == cur_idx:
-                    return left_hull[(i-1) % len(left_hull)]
-            return None
+        :param indices_left: indices of the vertices in the left set
+        :param indices_right: indices of the vertices in the right set
+        """
 
-        def next_on_right_hull(cur_idx, right_hull):
-            for i in range(0, len(right_hull), 1):
-                if right_hull[i] == cur_idx:
-                    return right_hull[(i+1) % len(right_hull)]
+        def next_index(cur_idx, indices):
+            for i, idx in enumerate(indices):
+                if idx == cur_idx:
+                    return indices[(i+1) % len(indices)]
             return None
 
         def on_right(tangent, point):
@@ -235,8 +238,8 @@ class DivideAndConquer:
         right = min((v[0], i) for i, v in enumerate(verts[indices_right]))[1]
 
         # move tangent 'down'
-        next_left = next_on_left_hull(left, left_hull)
-        next_right = next_on_right_hull(right, right_hull)
+        next_left = next_index(left, left_hull[::-1])
+        next_right = next_index(right, right_hull)
         move_left = on_right((verts[indices_left][left], verts[indices_right][right]),
                              verts[indices_left][next_left])
         move_right = on_right((verts[indices_left][left], verts[indices_right][right]),
@@ -244,10 +247,10 @@ class DivideAndConquer:
         while move_left or move_right:
             if move_left:
                 left = next_left
-                next_left = next_on_left_hull(left, left_hull)
+                next_left = next_index(left, left_hull[::-1])
             else:
                 right = next_right
-                next_right = next_on_right_hull(right, right_hull)
+                next_right = next_index(right, right_hull)
             move_left = on_right((verts[indices_left][left], verts[indices_right][right]),
                                  verts[indices_left][next_left])
             move_right = on_right((verts[indices_left][left], verts[indices_right][right]),
@@ -257,9 +260,9 @@ class DivideAndConquer:
 
     def divide_and_conquer_recursive(self, speed=1.):
         """ Runs complete (recurive) algorithm to create a delaunay triangulation by divide and conquer.
-         Expects self.triangle_mesh to be without defined faces / triangles
+        Expects self.triangle_mesh to be without defined faces / triangles
 
-        speed: animation speed, lower = faster """
+        :param speed: animation speed, lower = faster """
 
         if len(self.triangle_mesh.mesh.faces) != 0:
             raise ValueError("self.triangle_mesh.mesh.faces must be empty to apply the divide and conquer algorithm!")
@@ -270,7 +273,8 @@ class DivideAndConquer:
     def _divide_and_conquer_recursive(self, vert_indices: List, speed=1.):
         """ Recursive internal implementation used by method divide_and_conquer_recursive()
 
-            speed: animation speed, lower = faster """
+        :param vert_indices: vertex indices to process
+        :param speed: animation speed, lower = faster """
 
         if len(vert_indices) <= 3:
             self.triangulate_leq_3(vert_indices)

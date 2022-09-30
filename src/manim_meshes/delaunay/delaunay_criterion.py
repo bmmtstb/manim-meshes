@@ -2,9 +2,8 @@
 functions to check delaunay criterion
 """
 # python imports
-
-# third-party imports
 import numpy as np
+# third-party imports
 import manim as m
 # local imports
 from manim_meshes.models.manim_models.triangle_mesh import TriangleManim2DMesh
@@ -31,7 +30,12 @@ def get_triangle_circum_circle_params(
 
 
 def get_circum_circle(triangle_mesh: TriangleManim2DMesh, face_idx: int, **kwargs):
-    """create a circum-circle around face with given idx"""
+    """ create a circum-circle around face with given idx, returns manim Circle object
+
+        :param triangle_mesh: the triangle 2D mesh
+        :param face_idx: index of face to create circle around
+        :param kwargs: key arguments passed to Circle, e.g. stroke_width
+    """
     face = triangle_mesh.mesh.faces[face_idx]
     vertices = [triangle_mesh.mesh.get_3d_vertices()[i] for i in face]
     center, radius = get_triangle_circum_circle_params(*vertices)

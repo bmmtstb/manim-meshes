@@ -14,6 +14,7 @@ import numpy as np
 from manim_meshes.delaunay.delaunay_criterion import get_point_indices_violating_delaunay, is_point_violating_delaunay, \
     get_circum_circle
 from manim_meshes.delaunay.divide_and_conquer import DivideAndConquer
+from manim_meshes.delaunay.voronoi import VoronoiDelaunay
 from manim_meshes.models.data_models.mesh import Mesh
 from manim_meshes.models.manim_models.basic_mesh import ManimMesh, Manim2DMesh
 from manim_meshes.models.manim_models.triangle_mesh import TriangleManim2DMesh
@@ -190,6 +191,39 @@ class DivideAndConquerScene(m.ThreeDScene):
         # use the other methods like dac.split_points, dac.triangulate_leq_3 and dac.merge_sets to implement the
         # individual steps of the algorithm yourself
         dac.divide_and_conquer_recursive()
+        self.wait(3)
+
+
+# run in manim-meshes
+# preview: manim -p --renderer=opengl tests/test_scene.py DivideAndConquerScene
+# use --write_to_movie instead of -p to render to file
+class VoronoiDelaunayScene(m.ThreeDScene):
+    """simple 2D mesh scene, visualizes duality of voronoi diagram and delaunay triangulation"""
+
+    # pylint: disable=too-many-statements
+    def construct(self):
+        text = m.Text('Voronoi & Delaunay').scale(0.5).to_corner(m.DL)
+        text.set_color(m.WHITE)
+        text.fix_in_frame()
+        self.add(text)
+        mesh = create_coplanar_points()
+        # make sure TriangleManim2DMesh only consists of vertices / no faces and
+        # that display_edges=True, display_vertices=True, else the algorithm is not visualized properly
+        mesh_2d = TriangleManim2DMesh(mesh=mesh, display_vertices=True, display_edges=True, edges_color=m.BLACK)
+        self.add(mesh_2d)
+        self.wait(0.5)
+        vd = VoronoiDelaunay(self, mesh_2d)
+        voronoi_vertices, voronoi_lines = vd.create_voronoi()  # manim Dot and Line objects
+        self.play(m.FadeIn(voronoi_vertices, voronoi_lines))
+        self.wait(0.3)
+        # create delaunay triangulation from voronoi diagram
+        for idx, manim_vert in enumerate(voronoi_vertices):
+            circle = vd.get_circum_circle(idx)
+            self.play(m.Create(circle))
+            self.wait(0.3)
+            vd.create_triangle(idx)
+            self.wait(0.3)
+            self.play(m.Uncreate(circle))
         self.wait(3)
 
 

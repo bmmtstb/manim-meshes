@@ -370,7 +370,7 @@ class Manim2DMesh(ManimMesh):
         dots = []
         vertices = self.mesh.get_3d_vertices()
         for idx in indices:
-            dot = m.Dot(vertices[idx], radius=0.03, color=m.RED)
+            dot = m.Dot(vertices[idx], radius=self.verts_size, color=m.RED)
             dot.add_updater(lambda mo, mesh=self.mesh, index=idx: mo.move_to(mesh.get_3d_vertices()[index]))
             dots.append(dot)
         return dots
