@@ -219,11 +219,11 @@ def create_model(filepath: str = "", name: str = "") -> Mesh:
     path_to_models = "data/models/"
     # load the ply files
     if name in ["armadillo", "suzanne"]:
-        filepath = pathlib.Path(__file__).parent.parent.parent.joinpath(
+        filepath = pathlib.Path(__file__).parent.joinpath(
             path_to_models, name + ".ply")
     # load the stl files
-    elif name in ["Handle", "Land", "Octocat-v1", "squirrel", "tail_topper"]:
-        filepath = pathlib.Path(__file__).parent.parent.parent.joinpath(
+    elif name in ["tail_topper"]:
+        filepath = pathlib.Path(__file__).parent.joinpath(
             path_to_models, name + ".stl")
     elif name != "":
         raise FileNotFoundError(f'{name} is not a valid object name.')
