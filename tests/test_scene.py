@@ -33,6 +33,7 @@ class FastManimMeshScene(m.ThreeDScene):
         mesh.apply_rotation(90 * m.DEGREES, m.RIGHT)
         mesh.scale_mesh(0.03)
         fast_manim_mesh = FastManimMesh(mesh=mesh)
+        fast_manim_mesh.set_color(m.GREEN_E)
         self.add(fast_manim_mesh)
         self.play(
             m.Rotate(
@@ -77,11 +78,12 @@ class SuzanneScene(m.ThreeDScene):
             )
         )
 
+
 # run in manim-meshes
 # preview: manim -p --renderer=opengl tests/test_scene.py PyramidScene
 # use --write_to_movie instead of -p to render to file
 class PyramidScene(m.ThreeDScene):
-    """pyramid mesh, changes a face color"""
+    """pyramid mesh, changes face color, moves vertices, rotates mesh"""
 
     def construct(self):
         self.set_camera_orientation(70 * m.DEGREES, 30 * m.DEGREES)
