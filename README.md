@@ -25,7 +25,8 @@ While executing a commandline manim script, make sure to set the `--renderer=ope
 
 The basic `ManimMesh` and `Manim2DMesh` from `manim_models/basic_mesh` can currently only be used for smaller meshes (<1k Nodes), because it is dependent on the manim internal shaders which are not really implemented optimally. This type of mesh can be easily used for 2D and smaller 3D explanatory videos, not for high resolution rendering. Both these classes should give manim-functionalities like shift, rotate and scale. But due to the sheer amount of MObject functions we can not implement all of them, so make sure the renderer has overwritten the method you are trying to use if something does not look right.
 
-The `TriangleManim2DMesh` from `triangle_mesh` implements further functions that are only reasonable for two-dimensional triangle meshes. (e.g. Delaunay) This was designed for educational purposes.
+The `TriangleManim2DMesh` from `triangle_mesh` implements further functions that are only reasonable for two-dimensional triangle meshes. (e.g. Delaunay) This was designed for educational purposes. There is also a package
+`delaunay` containing multiple useful functions regarding delaunay triangulations, e.g. Voronoi diagrams, checking the delaunay criterion or a divide & conquer algorithm.
 
 The more advanced `FastManimMesh` from `opengl_mesh` uses a custom shader which needs to be inserted into the base manim implementation at this time! But therefore it can render enormous meshes fast. Sadly rendering is kind of everything this renderer is capable of at the moment.
 
