@@ -94,8 +94,8 @@ class PyramidScene(m.ThreeDScene):
         manim_quad_pyramid.shift(m.IN, m.IN)
         self.add(manim_quad_pyramid)
         self.play(
-            m.Rotate(manim_triangle_pyramid, angle=m.PI, about_point=m.ORIGIN, run_time=2.0),
-            m.Rotate(manim_quad_pyramid, angle=m.PI, about_point=m.ORIGIN, run_time=2.0),
+            m.Rotate(manim_triangle_pyramid, angle=2 * m.PI, about_point=m.ORIGIN, run_time=2.0),
+            m.Rotate(manim_quad_pyramid, angle=2 * m.PI, about_point=m.ORIGIN, run_time=2.0),
         )
         # ATTENTION: default animation m.Rotate does not work (yet) properly with our implementation
         # currently you have to call .mesh.apply_rotation with the same parameters after the m.Rotate is played
@@ -110,8 +110,8 @@ class PyramidScene(m.ThreeDScene):
         manim_triangle_pyramid.move_vertex_to(vertex_idx=0, scene=self, pos=np.array([2, 2, 1])),
         manim_quad_pyramid.move_vertex_to(vertex_idx=1, scene=self, pos=np.array([2, -1.5, -1.5])),
         self.play(
-            m.Rotate(manim_triangle_pyramid, angle=m.PI, about_point=m.ORIGIN, run_time=2.0),
-            m.Rotate(manim_quad_pyramid, angle=m.PI, about_point=m.ORIGIN, run_time=2.0),
+            m.Rotate(manim_triangle_pyramid, angle=2 * m.PI, about_point=m.ORIGIN, run_time=2.0),
+            m.Rotate(manim_quad_pyramid, angle=2 * m.PI, about_point=m.ORIGIN, run_time=2.0),
         )
         # ATTENTION, see above
         manim_triangle_pyramid.mesh.apply_rotation(angle=2 * m.PI, about_point=m.ORIGIN)
