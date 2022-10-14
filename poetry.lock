@@ -1026,7 +1026,7 @@ test = ["pre-commit", "pytest"]
 
 [[package]]
 name = "trimesh"
-version = "3.15.4"
+version = "3.15.5"
 description = "Import, export, process, analyze and view triangular meshes."
 category = "main"
 optional = false
@@ -2017,8 +2017,8 @@ traitlets = [
     {file = "traitlets-5.4.0.tar.gz", hash = "sha256:3f2c4e435e271592fe4390f1746ea56836e3a080f84e7833f0f801d9613fec39"},
 ]
 trimesh = [
-    {file = "trimesh-3.15.4-py3-none-any.whl", hash = "sha256:b405b79a3e266a0ec6152c74853570c2bc9d2a3d787d2bba0ad0f483d229d6f8"},
-    {file = "trimesh-3.15.4.tar.gz", hash = "sha256:0fd8609da5fd61d62f600a48739201da11f22522459bd4e089ae4a970339e91c"},
+    {file = "trimesh-3.15.5-py3-none-any.whl", hash = "sha256:22c3d6708c287dc454c65c86b8546a80f75e7f3866ef56c84446239132d9642f"},
+    {file = "trimesh-3.15.5.tar.gz", hash = "sha256:8f3404b2b0b0481f8e63d5c69b3b64bdb3366734f899492e62f3bce9e77a5d47"},
 ]
 typing = [
     {file = "typing-3.7.4.3-py2-none-any.whl", hash = "sha256:283d868f5071ab9ad873e5e52268d611e851c870a2ba354193026f2dfb29d8b5"},
