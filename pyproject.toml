@@ -21,7 +21,7 @@ moderngl = "*"
 [tool.poetry.dev-dependencies]
 meshio = "^5.3.4"
 pylint = "*"
-pytest = "^7.1.2"
+pytest = "^7.2.0"
 typing = "*"
 
 [build-system]
