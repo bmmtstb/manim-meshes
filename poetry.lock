@@ -1029,7 +1029,7 @@ test = ["pre-commit", "pytest"]
 
 [[package]]
 name = "trimesh"
-version = "3.15.8"
+version = "3.16.0"
 description = "Import, export, process, analyze and view triangular meshes."
 category = "main"
 optional = false
@@ -1600,6 +1600,13 @@ moderngl = [
     {file = "moderngl-5.7.0-cp310-cp310-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:833d2ec5aa9eaef54bf2af826115ca156ecf2ed887c838da955bf2e4d3263bfb"},
     {file = "moderngl-5.7.0-cp310-cp310-win32.whl", hash = "sha256:4aec9c13530bd251fa743da7899e4fc78f0fec1e656118c4af87ec9fb7ca2d99"},
     {file = "moderngl-5.7.0-cp310-cp310-win_amd64.whl", hash = "sha256:f15229cd9d342f4b86727b8a69dcbe440145efed290b8ef0837d728d091ebbb5"},
+    {file = "moderngl-5.7.0-cp311-cp311-macosx_10_9_universal2.whl", hash = "sha256:7df011d6ee7c6629656867a5927f40d773641e42b4daffd81d1c6cb95c269755"},
+    {file = "moderngl-5.7.0-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:d703ebed889f0f728eea2743a7e26c8968e61c4e0b36b792a93fe98a51f6bc5d"},
+    {file = "moderngl-5.7.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:443ececbbee9344ce14e0f5b60b152dfe3810cbae8c83aef6c4db2a6d971e7a6"},
+    {file = "moderngl-5.7.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:fbcb09a0d21d32b8edb0e1ebc18cc756116a6ce9a48dc16000d9bd5e90d23ccd"},
+    {file = "moderngl-5.7.0-cp311-cp311-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:330faf6cc99c2e9c742f3e16c32f721f9806bb69b8eabc727e6b47df05220cc8"},
+    {file = "moderngl-5.7.0-cp311-cp311-win32.whl", hash = "sha256:b45004464d784061710fe2f456e53f5602736a133180e3c3fa905b5a71f4a694"},
+    {file = "moderngl-5.7.0-cp311-cp311-win_amd64.whl", hash = "sha256:f4e10ecaa8e7d0e900b1b6692fc14568635f061dd028c064fcd3df3220bc328d"},
     {file = "moderngl-5.7.0-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:c838f770653d94234921f5653dde246d96d898e22040f1897dae75750949ca1d"},
     {file = "moderngl-5.7.0-cp37-cp37m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:2ffab1a06096de2336ed8002854b5b1639c7a5672e21b28a899a9ab7871c5eba"},
     {file = "moderngl-5.7.0-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:301a6a32e14fcbc643cba95367f19e245aabb210db95b3508e2b5847785fa63a"},
@@ -2001,8 +2008,8 @@ traitlets = [
     {file = "traitlets-5.4.0.tar.gz", hash = "sha256:3f2c4e435e271592fe4390f1746ea56836e3a080f84e7833f0f801d9613fec39"},
 ]
 trimesh = [
-    {file = "trimesh-3.15.8-py3-none-any.whl", hash = "sha256:153b36b53fd59572eacb21e77258d6c9f460c2edeb448f632e3642e1c3cd7095"},
-    {file = "trimesh-3.15.8.tar.gz", hash = "sha256:6c55039baff85d4cb2accc5cd4a2aa6d58b5826509ecbc689de8bf1f19661b02"},
+    {file = "trimesh-3.16.0-py3-none-any.whl", hash = "sha256:613c1630d6e7cef2857095df87c301ef30b2090b7838a0d21c1625293c6dddc2"},
+    {file = "trimesh-3.16.0.tar.gz", hash = "sha256:2d565bb12916925e8f02dc0c65ab33e69dadd11e9a9f03e63b384e3560143f02"},
 ]
 typing = [
     {file = "typing-3.7.4.3-py2-none-any.whl", hash = "sha256:283d868f5071ab9ad873e5e52268d611e851c870a2ba354193026f2dfb29d8b5"},
