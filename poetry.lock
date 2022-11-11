@@ -1029,7 +1029,7 @@ test = ["pre-commit", "pytest"]
 
 [[package]]
 name = "trimesh"
-version = "3.15.8"
+version = "3.16.2"
 description = "Import, export, process, analyze and view triangular meshes."
 category = "main"
 optional = false
@@ -1039,8 +1039,8 @@ python-versions = "*"
 numpy = "*"
 
 [package.extras]
-all = ["chardet", "colorlog", "glooey", "jsonschema", "lxml", "mapbox-earcut", "meshio", "msgpack", "networkx", "pillow", "psutil", "pycollada", "pyglet", "python-fcl", "requests", "rtree", "scikit-image", "scipy", "setuptools", "shapely", "svg.path", "sympy", "xatlas", "xxhash"]
-easy = ["chardet", "colorlog", "jsonschema", "lxml", "mapbox-earcut", "msgpack", "networkx", "pillow", "pycollada", "pyglet", "requests", "rtree", "scipy", "setuptools", "shapely", "svg.path", "sympy", "xxhash"]
+all = ["chardet", "colorlog", "glooey", "jsonschema", "lxml", "mapbox-earcut", "meshio", "msgpack", "networkx", "pillow", "psutil", "pycollada", "pyglet (<2)", "python-fcl", "requests", "rtree", "scikit-image", "scipy", "setuptools", "shapely", "svg.path", "sympy", "xatlas", "xxhash"]
+easy = ["chardet", "colorlog", "jsonschema", "lxml", "mapbox-earcut", "msgpack", "networkx", "pillow", "pycollada", "pyglet (<2)", "requests", "rtree", "scipy", "setuptools", "shapely", "svg.path", "sympy", "xxhash"]
 test = ["coveralls", "ezdxf", "pyinstrument", "pytest", "pytest-cov"]
 
 [[package]]
@@ -2013,8 +2013,8 @@ traitlets = [
     {file = "traitlets-5.4.0.tar.gz", hash = "sha256:3f2c4e435e271592fe4390f1746ea56836e3a080f84e7833f0f801d9613fec39"},
 ]
 trimesh = [
-    {file = "trimesh-3.15.8-py3-none-any.whl", hash = "sha256:153b36b53fd59572eacb21e77258d6c9f460c2edeb448f632e3642e1c3cd7095"},
-    {file = "trimesh-3.15.8.tar.gz", hash = "sha256:6c55039baff85d4cb2accc5cd4a2aa6d58b5826509ecbc689de8bf1f19661b02"},
+    {file = "trimesh-3.16.2-py3-none-any.whl", hash = "sha256:d026370e9b409127dde94bd4d25a6d102eceb6529e6fea3026b3c6e0f4f815c9"},
+    {file = "trimesh-3.16.2.tar.gz", hash = "sha256:1fd5c4c34c63032d0d588f2dfdccfd87e2490aaeffc75cf70bed59e5edb9db8a"},
 ]
 typing = [
     {file = "typing-3.7.4.3-py2-none-any.whl", hash = "sha256:283d868f5071ab9ad873e5e52268d611e851c870a2ba354193026f2dfb29d8b5"},
