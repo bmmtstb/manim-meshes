@@ -422,7 +422,7 @@ validators = "*"
 
 [[package]]
 name = "manimpango"
-version = "0.4.1"
+version = "0.4.2"
 description = "Bindings for Pango for using with Manim."
 category = "main"
 optional = false
@@ -1491,19 +1491,22 @@ manimgl = [
     {file = "manimgl-1.6.1-py39-none-any.whl", hash = "sha256:b53deef6bb015859c397b0c7fc918005169969468aee81307636457eeea0435c"},
 ]
 manimpango = [
-    {file = "ManimPango-0.4.1-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:fc70c1ae3bb853b7244ea2c9b50c908e9d7a93062ec68315872e38771cc66969"},
-    {file = "ManimPango-0.4.1-cp310-cp310-win32.whl", hash = "sha256:5228e5326dc52753f4e6855ac4bf9667d78c0005315cddaf74fac5c2a6f87bc3"},
-    {file = "ManimPango-0.4.1-cp310-cp310-win_amd64.whl", hash = "sha256:a83da66451498d6cc3f6e637157ca6c7530b68f9bc0ac6fe043b04bf78c87073"},
-    {file = "ManimPango-0.4.1-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:fb84060069e35bbc220cc9a19658f3e694019a98cee2154fee1171a47bf3db44"},
-    {file = "ManimPango-0.4.1-cp37-cp37m-win32.whl", hash = "sha256:02eee359b971d8f900ecb4de0e0023abe1aaec8f5e1c39c663a99a4e2b4425b0"},
-    {file = "ManimPango-0.4.1-cp37-cp37m-win_amd64.whl", hash = "sha256:c59cadd9ed02c0d748fcf294ddb7d158c2ba2a50caa96d6af58ee0bcde327d67"},
-    {file = "ManimPango-0.4.1-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:d36b4df474149e958fadcc31a29cefc90ced6240053fa0e9cd3188a5649eca6b"},
-    {file = "ManimPango-0.4.1-cp38-cp38-win32.whl", hash = "sha256:5ed7b089681d1379c4250b070b668079e92d69251491ec8e010c083d21a80775"},
-    {file = "ManimPango-0.4.1-cp38-cp38-win_amd64.whl", hash = "sha256:7a0e42e17b2caae12bcd68502befa0e879c8503e6d31cd07e8d819b1e2567718"},
-    {file = "ManimPango-0.4.1-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:2375739e7a65a7f16e5856b392d930410c194066dd44cf6000d5ef2eb3b7d6f3"},
-    {file = "ManimPango-0.4.1-cp39-cp39-win32.whl", hash = "sha256:109f2f5298f7a53354871766b21bc3a40e41eba448030fdcdffb970a295ebf28"},
-    {file = "ManimPango-0.4.1-cp39-cp39-win_amd64.whl", hash = "sha256:ca35af36d490000a7155fdb3aae124bcdfe2a167086c95df0aeee92483f1dce1"},
-    {file = "ManimPango-0.4.1.tar.gz", hash = "sha256:f2da037ccdfe174040d3315001cc59bfc7405cd1b1191078bd4db0938005d649"},
+    {file = "ManimPango-0.4.2-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:71e2451057ffaa9f12d598ac13d8fa3b363427f81d25e31803f0426c946dbc09"},
+    {file = "ManimPango-0.4.2-cp310-cp310-win32.whl", hash = "sha256:f2bf1aa936b87907e958d1b37900f67fadee5ab34f1c51d1cd8f0bb3e099ba2d"},
+    {file = "ManimPango-0.4.2-cp310-cp310-win_amd64.whl", hash = "sha256:0ba9ab614af515122fa5fcb216dd088b0c3d1c358157b7e2290c56d487e38e0a"},
+    {file = "ManimPango-0.4.2-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:902c706284722aed9ff8c6b0daae62afc03070552448f37e9c3156d79149c259"},
+    {file = "ManimPango-0.4.2-cp311-cp311-win32.whl", hash = "sha256:ad2679e1652ce0213dcd03afc00817a6f17ac0545fcc5b92f2b84ef4d6c87bbd"},
+    {file = "ManimPango-0.4.2-cp311-cp311-win_amd64.whl", hash = "sha256:28312a2e0d8f7a9f0470e3601f127b17e924300d6eec06841b5b2b9f3de812b4"},
+    {file = "ManimPango-0.4.2-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:ab48d514c8f5331e14f00b4dcfaafff468a7277a2ec6ba8501fd6a6efeda478d"},
+    {file = "ManimPango-0.4.2-cp37-cp37m-win32.whl", hash = "sha256:07acb7010f2a17ce0d725dd562e57ac32c973639d3e3d6e539e161e6d21501e3"},
+    {file = "ManimPango-0.4.2-cp37-cp37m-win_amd64.whl", hash = "sha256:e222d2fe7a89d6908d3108fb5e8b5220919db2f1bb61bca0feaf83be0087b1d6"},
+    {file = "ManimPango-0.4.2-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:e445e16ec123fab75025f123d766f0dc16d7d4ccd59d7dafe7766ed28df75d34"},
+    {file = "ManimPango-0.4.2-cp38-cp38-win32.whl", hash = "sha256:a9c1d1c5fae5aa3a809a058313f0382d0236a8cf59fec6b09a5fa746c8d1b743"},
+    {file = "ManimPango-0.4.2-cp38-cp38-win_amd64.whl", hash = "sha256:2737f1265f5b7d6a0496a28d340bed99e2721540a2daec734070c6b87940c799"},
+    {file = "ManimPango-0.4.2-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:a80b26598873a3b4b4801ae32d59a35b93fafd9edfaec9b8ab34f27965560c4b"},
+    {file = "ManimPango-0.4.2-cp39-cp39-win32.whl", hash = "sha256:04f59c9861ceb8b99fc8b6b97d8ac9ec549805d688f48536f70204ab51ca004d"},
+    {file = "ManimPango-0.4.2-cp39-cp39-win_amd64.whl", hash = "sha256:37744cad3f2c88c19acf58140cdea677e9dc1be9e94144d849292016526a54db"},
+    {file = "ManimPango-0.4.2.tar.gz", hash = "sha256:7ce708b33f21682af90a2872852c06bb589a24bbb9ff723159245c7539acdaaa"},
 ]
 mapbox-earcut = [
     {file = "mapbox_earcut-0.12.11-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:421dbfc321871e66afe9264165848c0d13a37b27156f8a42a642bf5820bafdda"},
