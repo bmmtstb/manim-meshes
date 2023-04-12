@@ -1044,6 +1044,7 @@ category = "main"
 optional = false
 python-versions = ">=3.6"
 files = [
+    {file = "moderngl-window-2.4.2.tar.gz", hash = "sha256:5a31d790beed76964b4d4037c9d93302ff403bb813e7ba506c834895dfc59bb4"},
     {file = "moderngl_window-2.4.2-py3-none-any.whl", hash = "sha256:19aca4048ca037bd9f2ca8b154ac15d07e90a05ad2d5fce32d746be8ffcc319d"},
 ]
 
@@ -1890,23 +1891,23 @@ test = ["pre-commit", "pytest"]
 
 [[package]]
 name = "trimesh"
-version = "3.16.4"
+version = "3.21.5"
 description = "Import, export, process, analyze and view triangular meshes."
 category = "main"
 optional = false
 python-versions = "*"
 files = [
-    {file = "trimesh-3.16.4-py3-none-any.whl", hash = "sha256:50b9163603536f8ada154d263bd0a7aed6119bc6cbdca8794edaf624e4c294a7"},
-    {file = "trimesh-3.16.4.tar.gz", hash = "sha256:0f239031cab5e1e64c68b503e0df8491ead4c8a3ff7e6340eec9c6b9e1b05f48"},
+    {file = "trimesh-3.21.5-py3-none-any.whl", hash = "sha256:5ae1ca5e4f4a5f41aa79067a9c39e083e37d7148022bb150cb0e6f89ec614df3"},
+    {file = "trimesh-3.21.5.tar.gz", hash = "sha256:74741bc7f9fcb94b98951db8dc8ec8364a2ef52ac2ca0761c7ba06182ef329be"},
 ]
 
 [package.dependencies]
 numpy = "*"
 
 [package.extras]
-all = ["chardet", "colorlog", "glooey", "jsonschema", "lxml", "mapbox-earcut", "meshio", "msgpack", "networkx", "pillow", "psutil", "pycollada", "pyglet (<2)", "python-fcl", "requests", "rtree", "scikit-image", "scipy", "setuptools", "shapely", "svg.path", "sympy", "xatlas", "xxhash"]
-easy = ["chardet", "colorlog", "jsonschema", "lxml", "mapbox-earcut", "msgpack", "networkx", "pillow", "pycollada", "pyglet (<2)", "requests", "rtree", "scipy", "setuptools", "shapely", "svg.path", "sympy", "xxhash"]
-test = ["coveralls", "ezdxf", "pyinstrument", "pytest", "pytest-cov"]
+all = ["chardet", "colorlog", "glooey", "jsonschema", "lxml", "mapbox-earcut", "meshio", "networkx", "pillow", "psutil", "pycollada", "pyglet (<2)", "python-fcl", "requests", "rtree", "scikit-image", "scipy", "setuptools", "shapely", "svg.path", "sympy", "xatlas", "xxhash"]
+easy = ["chardet", "colorlog", "jsonschema", "lxml", "mapbox-earcut", "networkx", "pillow", "pycollada", "requests", "rtree", "scipy", "setuptools", "shapely", "svg.path", "sympy", "xxhash"]
+test = ["autopep8", "coveralls", "ezdxf", "pyinstrument", "pytest", "pytest-cov", "ruff"]
 
 [[package]]
 name = "typing"
