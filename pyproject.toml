@@ -14,15 +14,15 @@ decorator = "^5.0.9"
 manim = "^0.16.0"
 manimgl = "^1.6.1"
 ManimPango = "^0.4.1"
-numpy = "*"
+numpy = "^1.24.0"
 trimesh = "^3.12.5"
 moderngl = "*"
 
 [tool.poetry.dev-dependencies]
 meshio = "^5.3.4"
-pylint = "*"
+pylint = "3.0.1"
 pytest = "^7.2.0"
-typing = "*"
+typing = "^3.7"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
